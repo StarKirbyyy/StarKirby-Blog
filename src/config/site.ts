@@ -12,6 +12,14 @@ export const siteConfig = {
     name: "StarKirby",
     avatar: "/images/avatar.svg",
     bio: "热爱编程与开源的开发者。",
+    skills: [
+      "TypeScript",
+      "React",
+      "Next.js",
+      "Node.js",
+      "Tailwind CSS",
+      "MDX",
+    ],
     social: {
       github: "https://github.com/StarKirbyyy",
       twitter: "", // 填入 Twitter/X 链接
@@ -25,6 +33,7 @@ export const siteConfig = {
     { title: "文章", href: "/posts" },
     { title: "标签", href: "/tags" },
     { title: "关于", href: "/about" },
+    { title: "项目", href: "/projects" },
   ],
 
   // 文章列表配置
@@ -39,6 +48,17 @@ export const siteConfig = {
       icon: "github",
     },
     // 按需添加 Twitter、Email 等
+  ],
+
+  projects: [
+    {
+      name: "StarKirby Blog",
+      description:
+        "基于 Next.js 16 与 MDX 的个人技术博客，支持标签系统、SEO 自动化与文章静态生成。",
+      techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "MDX"],
+      github: "https://github.com/StarKirbyyy/starkirby-blog",
+      demo: "/",
+    },
   ],
 
   // RSS
