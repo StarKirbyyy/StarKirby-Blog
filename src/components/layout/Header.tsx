@@ -1,13 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { headers } from "next/headers";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 
-export async function Header() {
-  // 获取当前路径用于活跃链接高亮
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? "/";
+export function Header() {
+  const pathname = usePathname() ?? "/";
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/80 backdrop-blur-md">
@@ -36,7 +36,10 @@ export async function Header() {
         {/* 桌面端导航 */}
         <nav aria-label="主导航" className="hidden md:flex items-center gap-1">
           {siteConfig.nav.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}

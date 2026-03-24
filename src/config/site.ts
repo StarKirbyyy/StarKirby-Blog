@@ -10,7 +10,7 @@ export const siteConfig = {
   // 作者信息
   author: {
     name: "StarKirby",
-    avatar: "/images/avatar.jpg",
+    avatar: "/images/avatar.svg",
     bio: "热爱编程与开源的开发者。",
     social: {
       github: "https://github.com/StarKirbyyy",
