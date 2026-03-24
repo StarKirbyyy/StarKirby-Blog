@@ -4,7 +4,7 @@ export const siteConfig = {
   title: "StarKirby Blog",
   description: "StarKirby 的个人技术博客，分享编程、学习笔记与项目记录。",
   url: "https://blog.starkirby.dev",
-  ogImage: "/og-default.png",
+  ogImage: "/opengraph-image",
   locale: "zh-CN",
 
   // 作者信息

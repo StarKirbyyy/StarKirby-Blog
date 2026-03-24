@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { getAllPosts } from "@/lib/posts";
+
+export const metadata: Metadata = {
+  title: "首页",
+  description: siteConfig.description,
+  alternates: {
+    canonical: "/",
+  },
+};
 
 type SocialItem = {
   label: string;

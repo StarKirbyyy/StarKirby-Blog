@@ -101,13 +101,13 @@
 
 > 目标：让博客被搜索引擎正确收录
 
-- [ ] `src/app/sitemap.ts`：自动生成 Sitemap
-- [ ] `src/app/robots.ts`：生成 robots.txt
-- [ ] 所有页面的 Open Graph 图片（`og:image`）
+- [x] `src/app/sitemap.ts`：自动生成 Sitemap
+- [x] `src/app/robots.ts`：生成 robots.txt
+- [x] 所有页面的 Open Graph 图片（`og:image`）
   - 可用 Next.js `ImageResponse` 动态生成文章封面 OG 图
-- [ ] 文章页结构化数据（`BlogPosting` JSON-LD）
-- [ ] RSS Feed：`/rss.xml`（安装 `feed` 包）
-- [ ] Canonical URL 配置
+- [x] 文章页结构化数据（`BlogPosting` JSON-LD）
+- [x] RSS Feed：`/rss.xml`（安装 `feed` 包）
+- [x] Canonical URL 配置
 
 **📍 阶段产出**：Lighthouse SEO 评分 ≥ 95
 

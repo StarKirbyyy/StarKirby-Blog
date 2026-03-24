@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/site";
 import { getMDXContent } from "@/lib/mdx";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
 import { extractTableOfContents } from "@/lib/toc";
+import { toAbsoluteUrl } from "@/lib/url";
 
 interface PageProps {
   params: Promise<{
@@ -44,7 +45,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const postUrl = `${siteConfig.url}/posts/${post.slug}`;
+  const postUrl = toAbsoluteUrl(`/posts/${encodeURIComponent(post.slug)}`);
+  const ogImageUrl = toAbsoluteUrl(
+    `/posts/${encodeURIComponent(post.slug)}/opengraph-image`,
+  );
 
   return {
     title: post.title,
@@ -61,13 +65,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       publishedTime: post.date,
       modifiedTime: post.updated ?? post.date,
       tags: post.tags,
-      images: post.cover ? [{ url: post.cover }] : undefined,
+      images: [{ url: ogImageUrl }],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: post.cover ? [post.cover] : undefined,
+      images: [ogImageUrl],
     },
   };
 }
@@ -92,9 +96,35 @@ export default async function PostDetailPage({ params }: PageProps) {
     currentIndex >= 0 && currentIndex < allPosts.length - 1
       ? allPosts[currentIndex + 1]
       : null;
+  const postUrl = toAbsoluteUrl(`/posts/${encodeURIComponent(post.slug)}`);
+  const ogImageUrl = toAbsoluteUrl(
+    `/posts/${encodeURIComponent(post.slug)}/opengraph-image`,
+  );
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.updated ?? post.date,
+    author: {
+      "@type": "Person",
+      name: siteConfig.author.name,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+    image: [post.cover ? toAbsoluteUrl(post.cover) : ogImageUrl],
+    keywords: post.tags?.join(", "),
+  };
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link
         href="/posts"
         className="text-sm text-muted-fg transition-colors hover:text-accent"
