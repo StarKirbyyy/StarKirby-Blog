@@ -45,22 +45,22 @@
 > 目标：让博客能读取并渲染本地 MDX 文章
 
 ### 2.1 依赖引入
-- [ ] 安装 `next-mdx-remote` 或 `@next/mdx`（选型后确定）
-- [ ] 安装 `gray-matter`（解析 frontmatter）
-- [ ] 安装 `reading-time`（自动计算阅读时长）
-- [ ] 安装 `rehype-pretty-code` + `shiki`（代码高亮）
-- [ ] 安装 `rehype-slug` + `rehype-autolink-headings`（标题锚点）
-- [ ] 安装 `remark-gfm`（GFM 语法支持）
+- [x] 安装 `@next/mdx`（已选型）
+- [x] 安装 `gray-matter`（解析 frontmatter）
+- [x] 安装 `reading-time`（自动计算阅读时长）
+- [x] 安装 `rehype-pretty-code` + `shiki`（代码高亮）
+- [x] 安装 `rehype-slug` + `rehype-autolink-headings`（标题锚点）
+- [x] 安装 `remark-gfm`（GFM 语法支持）
 
 ### 2.2 内容工具函数（`src/lib/posts.ts`）
-- [ ] `getAllPosts()`：扫描 `content/posts/` 目录，返回所有文章元数据列表
-- [ ] `getPostBySlug(slug)`：读取单篇文章内容 + frontmatter
-- [ ] `getAllTags()`：聚合所有标签及其文章数
-- [ ] `getPostsByTag(tag)`：按标签过滤文章
-- [ ] 自动过滤 `draft: true` 的文章（生产环境）
+- [x] `getAllPosts()`：扫描 `content/posts/` 目录，返回所有文章元数据列表
+- [x] `getPostBySlug(slug)`：读取单篇文章内容 + frontmatter
+- [x] `getAllTags()`：聚合所有标签及其文章数
+- [x] `getPostsByTag(tag)`：按标签过滤文章
+- [x] 自动过滤 `draft: true` 的文章（生产环境）
 
 ### 2.3 创建示例文章
-- [ ] 在 `content/posts/` 下创建 2~3 篇示例 `.mdx` 文章（包含代码块、图片、表格等）用于调试
+- [x] 在 `content/posts/` 下创建 2~3 篇示例 `.mdx` 文章（包含代码块、图片、表格等）用于调试
 
 **📍 阶段产出**：`getAllPosts()` 能正确返回文章数据，示例文章可被读取
 

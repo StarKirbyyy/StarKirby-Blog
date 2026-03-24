@@ -1,0 +1,38 @@
+---
+title: "主题系统实验稿（草稿）"
+description: "用于验证 draft 字段在生产环境的自动过滤行为。"
+date: "2026-03-20"
+tags:
+  - "Theme"
+  - "CSS"
+  - "Draft"
+draft: true
+cover: "/images/covers/experimental-theme-playground.svg"
+slug: "experimental-theme-playground"
+---
+
+# 主题系统实验稿
+
+这是一篇草稿文章，用于测试 `draft: true` 的过滤行为。
+
+## 目标
+
+1. 验证亮暗主题切换体验
+2. 统一语义化设计 Token
+3. 确保生产环境不展示草稿
+
+## 代码片段
+
+```css filename="src/app/globals.css"
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #f9fafb;
+}
+```
+
+> 这篇在开发环境可见，生产环境应自动隐藏。

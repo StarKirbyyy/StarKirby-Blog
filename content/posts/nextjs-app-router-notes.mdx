@@ -1,0 +1,45 @@
+---
+title: "Next.js App Router 开发笔记"
+description: "记录 App Router 下路由、布局和元数据的常用实践。"
+date: "2026-03-22"
+tags:
+  - "Next.js"
+  - "App Router"
+  - "TypeScript"
+cover: "/images/covers/nextjs-app-router-notes.svg"
+slug: "nextjs-app-router-notes"
+---
+
+# Next.js App Router 开发笔记
+
+这篇示例主要用于验证：多级标题、代码块和图片在 MDX 中的表现。
+
+## 布局与页面
+
+`app/layout.tsx` 负责全局布局，`app/page.tsx` 对应首页。
+
+```tsx filename="src/app/layout.tsx"
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="zh-CN"><body>{children}</body></html>;
+}
+```
+
+## 常用命令
+
+```bash
+pnpm dev
+pnpm lint
+pnpm build
+```
+
+## 版本对照
+
+| 包名 | 版本 |
+| --- | --- |
+| `next` | `16.2.1` |
+| `react` | `19.2.4` |
+| `tailwindcss` | `^4` |
+
+![App Router 示意图](/images/posts/nextjs-app-router-notes/router.svg)

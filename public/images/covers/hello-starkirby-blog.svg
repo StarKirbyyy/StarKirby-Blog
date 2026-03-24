@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0F172A" />
+  <circle cx="980" cy="120" r="120" fill="#38BDF8" fill-opacity="0.35" />
+  <circle cx="1080" cy="520" r="170" fill="#22D3EE" fill-opacity="0.2" />
+  <text x="80" y="270" fill="#E2E8F0" font-size="72" font-family="sans-serif" font-weight="700">StarKirby Blog</text>
+  <text x="80" y="350" fill="#94A3B8" font-size="34" font-family="sans-serif">Welcome Post</text>
+</svg>

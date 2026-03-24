@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" fill="none">
+  <rect width="960" height="560" rx="24" fill="#F8FAFC" />
+  <rect x="80" y="90" width="240" height="120" rx="14" fill="#E2E8F0" stroke="#94A3B8" />
+  <rect x="360" y="90" width="240" height="120" rx="14" fill="#DBEAFE" stroke="#60A5FA" />
+  <rect x="640" y="90" width="240" height="120" rx="14" fill="#DCFCE7" stroke="#4ADE80" />
+  <text x="132" y="158" fill="#334155" font-size="26" font-family="sans-serif">content/</text>
+  <text x="406" y="158" fill="#1E3A8A" font-size="26" font-family="sans-serif">src/lib</text>
+  <text x="687" y="158" fill="#166534" font-size="26" font-family="sans-serif">public/</text>
+  <path d="M320 150H355" stroke="#94A3B8" stroke-width="3" />
+  <path d="M600 150H635" stroke="#94A3B8" stroke-width="3" />
+  <text x="80" y="300" fill="#64748B" font-size="24" font-family="sans-serif">Markdown/MDX -> parse -> render</text>
+  <text x="80" y="355" fill="#64748B" font-size="24" font-family="sans-serif">Frontmatter + reading time + tags</text>
+</svg>
