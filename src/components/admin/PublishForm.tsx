@@ -10,12 +10,64 @@ type PublishResult = {
   postUrl: string;
 };
 
+function stripFrontmatter(source: string) {
+  const normalized = source.replace(/\r\n/g, "\n");
+  if (!normalized.startsWith("---\n")) {
+    return normalized;
+  }
+  const end = normalized.indexOf("\n---\n", 4);
+  if (end === -1) {
+    return normalized;
+  }
+  return normalized.slice(end + 5);
+}
+
+function extractTitleFromMarkdown(source: string) {
+  const content = stripFrontmatter(source);
+  const lines = content.split(/\r?\n/);
+  let inCodeFence = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line.startsWith("```")) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+    if (inCodeFence) {
+      continue;
+    }
+    const matched = line.match(/^#\s+(.+?)\s*$/);
+    if (matched) {
+      return matched[1].trim();
+    }
+  }
+
+  return "";
+}
+
 export function PublishForm() {
   const [apiKey, setApiKey] = useState("");
   const [slug, setSlug] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
+  const [date, setDate] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<PublishResult | null>(null);
+
+  const onPostFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const source = await file.text();
+    const headingTitle = extractTitleFromMarkdown(source);
+    if (headingTitle) {
+      setTitle(headingTitle);
+    }
+  };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -23,6 +75,10 @@ export function PublishForm() {
     const formData = new FormData(form);
     formData.set("apiKey", apiKey);
     formData.set("slug", slug);
+    formData.set("title", title);
+    formData.set("description", description);
+    formData.set("tags", tags);
+    formData.set("date", date);
 
     setStatus("loading");
     setMessage("正在发布文章...");
@@ -44,6 +100,10 @@ export function PublishForm() {
       setResult(json);
       form.reset();
       setSlug("");
+      setTitle("");
+      setDescription("");
+      setTags("");
+      setDate("");
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "发布失败");
@@ -60,7 +120,7 @@ export function PublishForm() {
           上传 `.md/.mdx` 文件并可选封面图，系统会自动提交到 GitHub 仓库并触发部署。
         </p>
         <p className="mt-2 text-xs text-muted-fg">
-          Frontmatter 必填：`title`、`description`、`date`（YYYY-MM-DD）。
+          若文件缺少 frontmatter，系统会根据你填写的字段自动补全；`title` 默认读取 Markdown 一级标题。
         </p>
       </header>
 
@@ -84,8 +144,55 @@ export function PublishForm() {
             type="file"
             accept=".md,.mdx,text/markdown"
             required
+            onChange={onPostFileChange}
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-fg"
           />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-foreground">标题（可编辑）</span>
+          <input
+            name="title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            placeholder="默认读取 Markdown 一级标题"
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-foreground">描述（可选）</span>
+          <textarea
+            name="description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            placeholder="不填将自动使用正文首段作为摘要"
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-foreground">标签（可选）</span>
+          <input
+            name="tags"
+            value={tags}
+            onChange={(event) => setTags(event.target.value)}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            placeholder="多个标签用逗号分隔，如：Next.js,TypeScript,AI"
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-foreground">发布日期（可选）</span>
+          <input
+            name="date"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+          />
+          <p className="text-xs text-muted-fg">不选择则默认使用系统日期（YYYY-MM-DD）。</p>
         </label>
 
         <label className="block space-y-2">
