@@ -20,6 +20,10 @@ Notes:
 - `GITHUB_TOKEN` needs `contents:write` permission for the target repo.
 - Markdown files are committed to `content/posts/`.
 - Cover images are committed to `public/images/covers/`.
+- Frontmatter auto-fill for incomplete files: `title` uses form value or Markdown H1 (`# ...`).
+- Frontmatter auto-fill for incomplete files: `description` uses form value or first paragraph excerpt.
+- Frontmatter auto-fill for incomplete files: `date` uses form value or current system date (`YYYY-MM-DD`).
+- Frontmatter auto-fill for incomplete files: `tags` uses form value (comma-separated) when missing in file.
 
 ## Getting Started
 
