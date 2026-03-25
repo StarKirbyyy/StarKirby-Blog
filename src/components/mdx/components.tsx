@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Pre } from "./Pre";
+import { MdxLightboxImage } from "./MdxLightboxImage";
 
 type AnchorProps = ComponentPropsWithoutRef<"a">;
 type ImageProps = ComponentPropsWithoutRef<"img">;
@@ -50,14 +50,12 @@ function MdxImage({ src, alt = "", width, height }: ImageProps) {
   const isRemote = /^https?:\/\//.test(src);
 
   return (
-    <Image
+    <MdxLightboxImage
       src={src}
       alt={alt}
       width={toDimension(width, FALLBACK_IMAGE_WIDTH)}
       height={toDimension(height, FALLBACK_IMAGE_HEIGHT)}
-      sizes="(min-width: 1024px) 768px, 100vw"
-      className="h-auto w-full rounded-xl border border-border"
-      unoptimized={isRemote}
+      isRemote={isRemote}
     />
   );
 }

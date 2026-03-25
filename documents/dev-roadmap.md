@@ -141,10 +141,10 @@
 
 ## 阶段七：部署 & 上线
 
-- [ ] 连接 Vercel，配置自动部署（`main` 分支 → 生产）
-- [ ] 绑定自定义域名
-- [ ] 配置环境变量（`SITE_URL` 等）
-- [ ] 发布第一篇正式文章
+- [x] 连接 Vercel，配置自动部署（`main` 分支 → 生产）
+- [x] 绑定自定义域名
+- [x] 配置环境变量（`SITE_URL` 等）
+- [x] 发布第一篇正式文章
 - [ ] 提交 Google Search Console + Sitemap
 
 **📍 阶段产出**：🎉 博客正式上线
@@ -155,14 +155,16 @@
 
 > 根据需求文档第十一节确认后决定是否实现
 
-| 功能 | 推荐方案 | 优先级 |
-|---|---|---|
-| 评论系统 | Giscus（基于 GitHub Discussions） | 中 |
-| 全文搜索 | Pagefind（纯静态，零成本） | 中 |
-| 文章点赞/阅读量 | Vercel KV | 低 |
-| 数学公式 | KaTeX + rehype-katex | 低 |
-| 图片 Lightbox | yet-another-react-lightbox | 低 |
-| Newsletter | Buttondown | 低 |
+- [x] 用户系统需求分解与需求文档（`documents/user-system-requirements.md`）
+- [x] 用户系统 M1：认证骨架（Auth.js + Prisma + PostgreSQL）与 GitHub OAuth 登录闭环
+- [ ] 用户系统 M2：用户资料页与资料接口
+- [ ] 用户系统 M3：RBAC 与后台路由/API 权限保护
+- [x] 评论系统：Giscus（基于 GitHub Discussions）
+- [ ] 全文搜索：Pagefind（纯静态，零成本）
+- [ ] 文章点赞/阅读量：Vercel KV
+- [x] 数学公式：KaTeX + rehype-katex
+- [x] 图片 Lightbox（点击放大预览）
+- [ ] Newsletter：Buttondown
 
 ---
 

@@ -109,6 +109,19 @@ export function MobileMenu({ currentPath }: MobileMenuProps) {
               </li>
             );
           })}
+          <li>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className={`flex items-center rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                currentPath === "/login"
+                  ? "bg-accent/10 text-accent"
+                  : "text-foreground/70 hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              登录
+            </Link>
+          </li>
         </ul>
       </nav>
     </>

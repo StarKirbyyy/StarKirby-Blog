@@ -2,6 +2,8 @@ import type { JSX } from "react";
 import { evaluate } from "@mdx-js/mdx";
 import * as jsxRuntime from "react/jsx-runtime";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypePrettyCode from "rehype-pretty-code";
@@ -21,7 +23,7 @@ const prettyCodeOptions = {
 export async function getMDXContent(source: string) {
   const evaluated = await evaluate(source, {
     ...jsxRuntime,
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
       rehypeSlug,
       [
@@ -34,6 +36,7 @@ export async function getMDXContent(source: string) {
           },
         },
       ],
+      rehypeKatex,
       [rehypePrettyCode, prettyCodeOptions],
     ],
   });
