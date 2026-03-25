@@ -1,5 +1,26 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Online Publishing (Optional)
+
+This project supports publishing posts from a web page at `/admin/publish`.
+It uploads your markdown file and optional cover image to the GitHub repo.
+
+Required environment variables:
+
+```bash
+PUBLISH_API_KEY=your-strong-random-key
+GITHUB_TOKEN=github_pat_xxx
+GITHUB_OWNER=your-github-username-or-org
+GITHUB_REPO=starkirby-blog
+GITHUB_BRANCH=main
+```
+
+Notes:
+
+- `GITHUB_TOKEN` needs `contents:write` permission for the target repo.
+- Markdown files are committed to `content/posts/`.
+- Cover images are committed to `public/images/covers/`.
+
 ## Getting Started
 
 First, run the development server:
