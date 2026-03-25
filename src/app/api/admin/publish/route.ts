@@ -35,6 +35,31 @@ function normalizePostContent(content: string, slug: string, coverPath?: string)
   return matter.stringify(parsed.content, frontmatter);
 }
 
+function isValidDateString(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+}
+
+function validateFrontmatter(rawData: unknown) {
+  const data = (rawData ?? {}) as Record<string, unknown>;
+
+  if (typeof data.title !== "string" || !data.title.trim()) {
+    return "Frontmatter 缺少必填字段: title";
+  }
+  if (typeof data.description !== "string" || !data.description.trim()) {
+    return "Frontmatter 缺少必填字段: description";
+  }
+  if (typeof data.date !== "string" || !data.date.trim()) {
+    return "Frontmatter 缺少必填字段: date";
+  }
+  if (!isValidDateString(data.date.trim())) {
+    return "Frontmatter 字段 date 格式错误，需为 YYYY-MM-DD";
+  }
+
+  return null;
+}
+
 function getApiKeyFromForm(formData: FormData) {
   const value = formData.get("apiKey");
   return typeof value === "string" ? value.trim() : "";
@@ -69,6 +94,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const markdownSource = await markdownFile.text();
+    const parsed = matter(markdownSource);
+    const frontmatterError = validateFrontmatter(parsed.data);
+    if (frontmatterError) {
+      return Response.json({ error: frontmatterError }, { status: 400 });
+    }
+
     const customSlug = formData.get("slug");
     const rawSlug =
       (typeof customSlug === "string" && customSlug.trim()) ||
@@ -97,7 +129,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const markdownSource = await markdownFile.text();
     const normalizedMarkdown = normalizePostContent(markdownSource, slug, coverPath);
     const markdownRepoPath = `content/posts/${slug}.${markdownExt}`;
 

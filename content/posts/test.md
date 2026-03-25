@@ -1,6 +1,0 @@
----
-slug: test
----
-# TEST
-
-test

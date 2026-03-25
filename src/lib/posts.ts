@@ -50,6 +50,12 @@ function parseRequiredString(
   throw new Error(`Invalid "${field}" in "${fileName}" frontmatter.`);
 }
 
+function isValidDateString(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+}
+
 function parseOptionalString(value: unknown) {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
@@ -72,6 +78,11 @@ function parseFrontmatter(
 ): PostFrontmatter {
   const frontmatter = (data ?? {}) as Record<string, unknown>;
   const customSlug = parseOptionalString(frontmatter.slug);
+  const date = parseRequiredString(frontmatter.date, "date", fileName);
+
+  if (!isValidDateString(date)) {
+    throw new Error(`Invalid "date" format in "${fileName}" frontmatter. Use YYYY-MM-DD.`);
+  }
 
   return {
     title: parseRequiredString(frontmatter.title, "title", fileName),
@@ -80,7 +91,7 @@ function parseFrontmatter(
       "description",
       fileName,
     ),
-    date: parseRequiredString(frontmatter.date, "date", fileName),
+    date,
     updated: parseOptionalString(frontmatter.updated),
     tags: parseTags(frontmatter.tags),
     cover: parseOptionalString(frontmatter.cover),
@@ -136,11 +147,26 @@ async function readPostFromFile(fileName: string) {
   return { meta, content: parsed.content };
 }
 
+function warnInvalidPostFile(fileName: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.warn(`[posts] skip invalid post "${fileName}": ${message}`);
+}
+
 export async function getAllPosts() {
   const fileNames = await getPostFileNames();
-  const posts = await Promise.all(fileNames.map((fileName) => readPostFromFile(fileName)));
+  const posts = await Promise.all(
+    fileNames.map(async (fileName) => {
+      try {
+        return await readPostFromFile(fileName);
+      } catch (error) {
+        warnInvalidPostFile(fileName, error);
+        return null;
+      }
+    }),
+  );
 
   const filtered = posts
+    .filter((post): post is NonNullable<typeof post> => post !== null)
     .map((post) => post.meta)
     .filter((post) => shouldIncludePost(post));
 
@@ -152,7 +178,13 @@ export async function getPostBySlug(slug: string) {
   const fileNames = await getPostFileNames();
 
   for (const fileName of fileNames) {
-    const post = await readPostFromFile(fileName);
+    let post: Awaited<ReturnType<typeof readPostFromFile>>;
+    try {
+      post = await readPostFromFile(fileName);
+    } catch (error) {
+      warnInvalidPostFile(fileName, error);
+      continue;
+    }
     if (post.meta.slug !== targetSlug) continue;
     if (!shouldIncludePost(post.meta)) return null;
 

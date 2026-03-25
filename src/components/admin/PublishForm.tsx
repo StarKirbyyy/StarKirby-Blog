@@ -59,6 +59,9 @@ export function PublishForm() {
         <p className="mt-3 text-sm leading-6 text-muted-fg">
           上传 `.md/.mdx` 文件并可选封面图，系统会自动提交到 GitHub 仓库并触发部署。
         </p>
+        <p className="mt-2 text-xs text-muted-fg">
+          Frontmatter 必填：`title`、`description`、`date`（YYYY-MM-DD）。
+        </p>
       </header>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6">
