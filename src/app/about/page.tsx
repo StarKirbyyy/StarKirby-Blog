@@ -37,6 +37,7 @@ export default async function AboutPage() {
             alt={`${siteConfig.author.name} 头像`}
             width={104}
             height={104}
+            sizes="104px"
             className="h-24 w-24 rounded-2xl border border-border"
             priority
           />

@@ -174,3 +174,68 @@ body {
   padding: 0;
   border: none;
 }
+
+/* 页面切换动效（View Transitions API） */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: ease;
+}
+
+::view-transition-old(root) {
+  animation-name: view-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: view-fade-in;
+}
+
+@keyframes view-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes view-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.98;
+  }
+}
+
+/* 卡片 hover 微动效 */
+.card-hover {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px -24px rgba(15, 23, 42, 0.35);
+  border-color: color-mix(in oklab, var(--accent) 26%, var(--border));
+}
+
+/* 代码复制成功动画 */
+@keyframes copy-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

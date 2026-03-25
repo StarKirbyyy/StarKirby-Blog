@@ -164,9 +164,9 @@ export default async function PostDetailPage({ params }: PageProps) {
             alt={`${post.title} 封面图`}
             width={1200}
             height={630}
+            sizes="(min-width: 1024px) 960px, 100vw"
             className="h-auto w-full"
             priority
-            unoptimized
           />
         </div>
       ) : null}
@@ -181,7 +181,7 @@ export default async function PostDetailPage({ params }: PageProps) {
             aria-label="文章导航"
             className="mt-10 grid gap-4 border-t border-border pt-6 sm:grid-cols-2"
           >
-            <div className="min-h-20 rounded-lg border border-border p-4">
+            <div className="card-hover min-h-20 rounded-lg border border-border p-4">
               {olderPost ? (
                 <Link
                   href={`/posts/${olderPost.slug}`}
@@ -196,7 +196,7 @@ export default async function PostDetailPage({ params }: PageProps) {
                 <p className="text-sm text-muted-fg">没有更早的文章了</p>
               )}
             </div>
-            <div className="min-h-20 rounded-lg border border-border p-4 text-right">
+            <div className="card-hover min-h-20 rounded-lg border border-border p-4 text-right">
               {newerPost ? (
                 <Link
                   href={`/posts/${newerPost.slug}`}

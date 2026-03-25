@@ -3,7 +3,7 @@ export const siteConfig = {
   name: "StarKirby Blog",
   title: "StarKirby Blog",
   description: "StarKirby 的个人技术博客，分享编程、学习笔记与项目记录。",
-  url: "https://blog.starkirby.dev",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://starkirby.top",
   ogImage: "/opengraph-image",
   locale: "zh-CN",
 

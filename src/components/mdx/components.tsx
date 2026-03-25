@@ -47,6 +47,7 @@ function MdxAnchor({ href, children, ...props }: AnchorProps) {
 
 function MdxImage({ src, alt = "", width, height }: ImageProps) {
   if (typeof src !== "string" || !src) return null;
+  const isRemote = /^https?:\/\//.test(src);
 
   return (
     <Image
@@ -54,8 +55,9 @@ function MdxImage({ src, alt = "", width, height }: ImageProps) {
       alt={alt}
       width={toDimension(width, FALLBACK_IMAGE_WIDTH)}
       height={toDimension(height, FALLBACK_IMAGE_HEIGHT)}
+      sizes="(min-width: 1024px) 768px, 100vw"
       className="h-auto w-full rounded-xl border border-border"
-      unoptimized
+      unoptimized={isRemote}
     />
   );
 }

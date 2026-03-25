@@ -46,7 +46,11 @@ export function CodeBlock({ language, code, children }: CodeBlockProps) {
         <button
           type="button"
           onClick={onCopy}
-          className="rounded-md border border-border px-2 py-1 text-xs text-muted-fg transition-colors hover:bg-background hover:text-foreground"
+          className={`rounded-md border border-border px-2 py-1 text-xs transition-colors ${
+            copied
+              ? "bg-accent/10 text-accent [animation:copy-pop_220ms_ease-out]"
+              : "text-muted-fg hover:bg-background hover:text-foreground"
+          }`}
           aria-label="复制代码"
         >
           {copied ? "✓ 已复制" : "复制"}

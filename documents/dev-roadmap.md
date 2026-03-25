@@ -127,12 +127,12 @@
 
 > 目标：Lighthouse 各项指标达标，用户体验精细化
 
-- [ ] 所有图片改用 `next/image` 并配置适当 `sizes`
-- [ ] 页面切换动效（View Transitions API）
-- [ ] 卡片 hover 微动效、主题切换过渡动画
-- [ ] 代码块复制成功反馈动画（✓ 图标）
-- [ ] 字体子集化确认（Geist 仅 latin）
-- [ ] Vercel Analytics 集成（页面性能监控）
+- [x] 所有图片改用 `next/image` 并配置适当 `sizes`
+- [x] 页面切换动效（View Transitions API）
+- [x] 卡片 hover 微动效、主题切换过渡动画
+- [x] 代码块复制成功反馈动画（✓ 图标）
+- [x] 字体子集化确认（Geist 仅 latin）
+- [x] Vercel Analytics 集成（页面性能监控）
 - [ ] Lighthouse 全项跑分，针对性优化
 
 **📍 阶段产出**：Lighthouse Performance ≥ 90，体验流畅

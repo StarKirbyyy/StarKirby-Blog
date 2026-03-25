@@ -68,7 +68,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
         <ul className="mt-8 space-y-5">
           {paginatedPosts.map((post) => (
             <li key={post.slug}>
-              <article className="overflow-hidden rounded-xl border border-border bg-card">
+              <article className="card-hover overflow-hidden rounded-xl border border-border bg-card">
                 <div className="grid gap-4 p-5 sm:p-6 md:grid-cols-[1fr_180px] md:items-start">
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">
@@ -111,8 +111,8 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
                         alt={`${post.title} 封面图`}
                         width={360}
                         height={200}
+                        sizes="(min-width: 768px) 180px, 100vw"
                         className="h-auto w-full"
-                        unoptimized
                       />
                     </Link>
                   ) : null}

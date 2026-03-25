@@ -100,6 +100,7 @@ export default async function HomePage() {
             alt={`${siteConfig.author.name} 头像`}
             width={96}
             height={96}
+            sizes="96px"
             className="h-24 w-24 rounded-2xl border border-border"
             priority
           />
@@ -147,7 +148,7 @@ export default async function HomePage() {
           <ul className="space-y-4">
             {latestPosts.map((post) => (
               <li key={post.slug}>
-                <article className="rounded-xl border border-border bg-card p-5">
+                <article className="card-hover rounded-xl border border-border bg-card p-5">
                   <h3 className="text-lg font-semibold text-foreground">
                     <Link
                       href={`/posts/${post.slug}`}

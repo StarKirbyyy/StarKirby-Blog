@@ -32,7 +32,7 @@ export default function ProjectsPage() {
         <ul className="mt-8 grid gap-5 sm:grid-cols-2">
           {projects.map((project) => (
             <li key={project.name}>
-              <article className="h-full rounded-xl border border-border bg-card p-5">
+              <article className="card-hover h-full rounded-xl border border-border bg-card p-5">
                 <h2 className="text-lg font-semibold text-foreground">{project.name}</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-fg">
                   {project.description}
