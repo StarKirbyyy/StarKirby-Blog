@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const revalidate = 3600;
+
 function getTagStyle(count: number, minCount: number, maxCount: number) {
   if (maxCount === minCount) {
     return { fontSize: "1rem", opacity: 0.95 };

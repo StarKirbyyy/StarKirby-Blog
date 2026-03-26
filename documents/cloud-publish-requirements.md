@@ -1,6 +1,6 @@
 # StarKirby Blog — 云端内容发布需求文档
 
-> 版本：v0.1（草稿）  
+> 版本：v0.2（实施中）  
 > 日期：2026-03-26  
 > 关联文档：[需求文档 requirements.md](./requirements.md) / [开发流程文档 dev-roadmap.md](./dev-roadmap.md)
 
@@ -17,6 +17,12 @@
 - 内容发布与代码仓库强耦合，失败面较多（401/403、分支保护、API 限流等）。
 
 目标变更：将“文章与封面”改为上传到云端存储，不再写入 GitHub 仓库。
+
+### 实施状态（2026-03-26）
+- [x] M1：数据层与读取链路（Post 模型 + 数据库优先读取）
+- [x] M2：发布接口云端化（OSS 上传 + Post upsert）
+- [x] M3：页面与 SEO 联动（发布后 revalidate）
+- [x] M4：运维收尾（后台文章管理 + GitHub 发布链路清理）
 
 ---
 
@@ -40,7 +46,7 @@
 ### 3.1 V1 必做范围（MVP）
 - 云端内容存储（PostgreSQL）：
   - 保存文章元数据与原始 Markdown/MDX 文本。
-- 云端资源存储（Blob/S3）：
+- 云端资源存储（阿里云 OSS）：
   - 保存封面图，返回可访问 URL。
 - 发布后台改造：
   - `/api/admin/publish` 从“写 GitHub”切换为“写数据库 + 对象存储”。
@@ -68,7 +74,7 @@
 
 ### 4.1 推荐方案（V1）
 - 元数据与正文：PostgreSQL（Prisma）。
-- 封面图：对象存储（优先 Vercel Blob；兼容 S3/R2）。
+- 封面图/正文文件：阿里云 OSS（对象存储）。
 - 渲染：沿用现有 MDX 渲染管线（`src/lib/mdx.ts`）。
 
 选择理由：
@@ -89,7 +95,7 @@
 
 ### A1 文章实体
 - 新增 `Post` 模型（建议）：
-  - `id`, `slug`, `title`, `description`, `date`, `updated`, `tags`, `coverUrl`, `draft`, `source`, `readingTime`, `authorId`, `createdAt`, `updatedAt`, `publishedAt`。
+  - `id`, `slug`, `title`, `description`, `date`, `updated`, `tags`, `coverUrl`, `sourceUrl`, `draft`, `readingTime`, `authorId`, `createdAt`, `updatedAt`, `publishedAt`。
 - `slug` 全局唯一，冲突时阻止发布或提示改名。
 
 ### A2 状态管理
@@ -180,7 +186,7 @@ model Post {
   tags        String[]
   coverUrl    String?
   draft       Boolean  @default(false)
-  source      String   @db.Text
+  sourceUrl   String
   readingTime String
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
@@ -194,7 +200,7 @@ model Post {
 ```
 
 说明：
-- `source` 保存原始 Markdown/MDX 文本，避免依赖文件系统。
+- `sourceUrl` 保存 OSS 正文地址。
 - `date` 使用 `DateTime`，输入仍支持 `YYYY-MM-DD`。
 
 ---
@@ -206,22 +212,18 @@ model Post {
 CONTENT_SOURCE=database
 ```
 
-### 8.2 对象存储（方案 A：Vercel Blob）
+### 8.2 对象存储（阿里云 OSS）
 ```bash
-BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxx
+ALIYUN_OSS_BUCKET=your-bucket-name
+ALIYUN_OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
+ALIYUN_OSS_ACCESS_KEY_ID=LTAIxxxx
+ALIYUN_OSS_ACCESS_KEY_SECRET=xxxx
+# 可选
+ALIYUN_OSS_SECURITY_TOKEN=xxxx
+ALIYUN_OSS_PUBLIC_BASE_URL=https://cdn.example.com
 ```
 
-### 8.3 对象存储（方案 B：S3/R2 兼容）
-```bash
-S3_ENDPOINT=https://<endpoint>
-S3_REGION=auto
-S3_BUCKET=starkirby-blog-assets
-S3_ACCESS_KEY_ID=xxx
-S3_SECRET_ACCESS_KEY=xxx
-S3_PUBLIC_BASE_URL=https://cdn.example.com
-```
-
-说明：V1 二选一，不建议同时启用两套存储。
+说明：`sourceUrl/coverUrl` 最终存入数据库，渲染时直接使用。
 
 ---
 
@@ -290,4 +292,3 @@ S3_PUBLIC_BASE_URL=https://cdn.example.com
 3. 是否保留“同 slug 更新覆盖”语义，还是强制新 slug？
 4. 是否在 V1 就提供“文章编辑页”（不仅上传页）？
 5. 是否保留文件系统回退读取（迁移期）？
-

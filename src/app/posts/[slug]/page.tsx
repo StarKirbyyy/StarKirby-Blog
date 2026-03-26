@@ -17,7 +17,8 @@ interface PageProps {
   }>;
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
+export const revalidate = 3600;
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -28,6 +29,11 @@ function formatDate(date: string) {
 }
 
 export async function generateStaticParams() {
+  const isDatabaseContentSource =
+    (process.env.CONTENT_SOURCE ?? "").trim().toLowerCase() === "database";
+  if (isDatabaseContentSource) {
+    return [];
+  }
   const posts = await getAllPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
