@@ -3,8 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { mdxComponents } from "@/components/mdx/components";
+import { CommentsSection } from "@/components/posts/CommentsSection";
 import { TableOfContents } from "@/components/posts/TableOfContents";
-import { GiscusComments } from "@/components/posts/GiscusComments";
 import { siteConfig } from "@/config/site";
 import { getMDXContent } from "@/lib/mdx";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
@@ -214,7 +214,7 @@ export default async function PostDetailPage({ params }: PageProps) {
             </div>
           </nav>
 
-          <GiscusComments />
+          <CommentsSection postSlug={post.slug} />
         </article>
 
         <aside className="hidden lg:block">
