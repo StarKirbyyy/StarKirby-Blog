@@ -1,4 +1,5 @@
 import matter from "gray-matter";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import readingTime from "reading-time";
 import { authOptions } from "@/lib/auth";
@@ -349,6 +350,7 @@ export async function POST(request: Request) {
         id: true,
         coverUrl: true,
         publishedAt: true,
+        tags: true,
       },
     });
 
@@ -446,6 +448,23 @@ export async function POST(request: Request) {
 
       return upserted;
     });
+
+    revalidatePath("/");
+    revalidatePath("/posts");
+    revalidatePath(`/posts/${slug}`);
+    revalidatePath(`/posts/${slug}/opengraph-image`);
+    revalidatePath("/tags");
+    revalidatePath("/rss.xml");
+    revalidatePath("/sitemap.xml");
+
+    const relatedTags = new Set<string>([
+      ...(existingPost?.tags ?? []),
+      ...normalized.tags,
+    ]);
+    for (const tag of relatedTags) {
+      if (!tag.trim()) continue;
+      revalidatePath(`/tags/${encodeURIComponent(tag)}`);
+    }
 
     return Response.json({
       success: true,

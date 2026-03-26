@@ -24,6 +24,7 @@ Notes:
 
 - Markdown/MDX body is uploaded to OSS and persisted as `Post.sourceUrl`.
 - Cover image is uploaded to OSS and persisted as `Post.coverUrl`.
+- Publishing no longer requires `GITHUB_TOKEN/GITHUB_OWNER/GITHUB_REPO/GITHUB_BRANCH`.
 - Frontmatter auto-fill for incomplete files: `title` uses form value or Markdown H1 (`# ...`).
 - Frontmatter auto-fill for incomplete files: `description` uses form value or first paragraph excerpt.
 - Frontmatter auto-fill for incomplete files: `date` uses form value or current system date (`YYYY-MM-DD`).
@@ -40,6 +41,10 @@ Notes:
   - `GET /api/admin/comments` (admin list)
   - `PATCH/DELETE /api/admin/comments/:id` (admin moderation)
 - Admin moderation UI is available at `/admin/comments`.
+- Admin post management is available:
+  - `GET /api/admin/posts`
+  - `DELETE /api/admin/posts/:id`
+  - UI: `/admin/posts`
 
 If you want to enable Giscus comments, configure:
 

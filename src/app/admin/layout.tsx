@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    redirect("/login?callbackUrl=%2Fadmin%2Fpublish");
+    redirect("/login?callbackUrl=%2Fadmin%2Fposts");
   }
 
   if (session.user.status === "disabled") {
@@ -61,6 +61,12 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             className="rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80"
           >
             发布文章
+          </Link>
+          <Link
+            href="/admin/posts"
+            className="rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80"
+          >
+            文章管理
           </Link>
           <Link
             href="/admin/comments"

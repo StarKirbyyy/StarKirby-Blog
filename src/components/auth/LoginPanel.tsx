@@ -87,6 +87,12 @@ function LoginPanelInner() {
                   进入发布后台
                 </Link>
                 <Link
+                  href="/admin/posts"
+                  className="ml-2 inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80"
+                >
+                  管理文章
+                </Link>
+                <Link
                   href="/admin/comments"
                   className="ml-2 inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80"
                 >

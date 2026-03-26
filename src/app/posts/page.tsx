@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const revalidate = 3600;
+
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
