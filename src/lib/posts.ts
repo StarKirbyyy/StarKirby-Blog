@@ -241,39 +241,42 @@ async function readPostSourceContent(sourceUrl: string) {
     throw new Error(`Invalid sourceUrl: "${sourceUrl}"`);
   }
 
+  const objectKey = tryGetOssObjectKeyFromUrl(sourceUrl);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10_000);
+  let fetchFailureMessage: string | null = null;
 
   try {
     const response = await fetch(sourceUrl, {
       cache: "no-store",
       signal: controller.signal,
     });
-    if (!response.ok) {
-      const shouldTryOssFallback = response.status === 401 || response.status === 403;
-      if (shouldTryOssFallback) {
-        const objectKey = tryGetOssObjectKeyFromUrl(sourceUrl);
-        if (objectKey) {
-          try {
-            return await downloadTextFromOss({ objectKey });
-          } catch (fallbackError) {
-            const message =
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : String(fallbackError);
-            throw new Error(
-              `Failed to fetch source (${response.status}) and OSS fallback failed: ${message}`,
-            );
-          }
-        }
-      }
-      throw new Error(`Failed to fetch source: ${response.status}`);
+    if (response.ok) {
+      return await response.text();
     }
-
-    return await response.text();
+    fetchFailureMessage = `Failed to fetch source: ${response.status}`;
+  } catch (error) {
+    fetchFailureMessage =
+      error instanceof Error
+        ? `Failed to fetch source request: ${error.message}`
+        : `Failed to fetch source request: ${String(error)}`;
   } finally {
     clearTimeout(timer);
   }
+
+  if (objectKey) {
+    try {
+      return await downloadTextFromOss({ objectKey });
+    } catch (fallbackError) {
+      const fallbackMessage =
+        fallbackError instanceof Error
+          ? fallbackError.message
+          : String(fallbackError);
+      throw new Error(`${fetchFailureMessage}; OSS fallback failed: ${fallbackMessage}`);
+    }
+  }
+
+  throw new Error(fetchFailureMessage ?? `Failed to fetch source: ${sourceUrl}`);
 }
 
 async function getAllPostsFromDatabase() {
