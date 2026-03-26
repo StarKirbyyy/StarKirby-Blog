@@ -289,12 +289,12 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           />
         </label>
 
-        <label className="block space-y-2">
+        <div className="space-y-2">
           <span className="text-sm font-medium text-foreground">
             Markdown 正文（Typora 风格增强）
           </span>
           <MarkdownLiveEditor value={markdown} onChange={setMarkdown} disabled={saving} />
-        </label>
+        </div>
 
         {message ? (
           <p className="text-sm text-green-700 dark:text-green-300">{message}</p>

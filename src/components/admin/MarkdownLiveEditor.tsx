@@ -68,9 +68,10 @@ function prefixLines(
   selectionStart: number,
   selectionEnd: number,
   prefixText: string,
+  fallbackText = "",
 ): EditResult {
   const selectedRaw = source.slice(selectionStart, selectionEnd);
-  const selected = selectedRaw || "内容";
+  const selected = selectedRaw || fallbackText;
   const prefixed = selected
     .split("\n")
     .map((line) => `${prefixText}${line}`)
@@ -91,7 +92,7 @@ function unindentBySpaces(
   count: number,
 ): EditResult {
   const selectedRaw = source.slice(selectionStart, selectionEnd);
-  const selected = selectedRaw || "内容";
+  const selected = selectedRaw;
   const pattern = new RegExp(`^ {1,${count}}`);
   const next = selected
     .split("\n")
