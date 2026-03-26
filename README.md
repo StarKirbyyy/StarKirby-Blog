@@ -3,23 +3,27 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ## Online Publishing (Optional)
 
 This project supports publishing posts from a web page at `/admin/publish`.
-It uploads your markdown file and optional cover image to the GitHub repo.
+It uploads markdown and cover files to OSS, then upserts metadata into PostgreSQL.
 
 Required environment variables:
 
 ```bash
 PUBLISH_API_KEY=your-strong-random-key
-GITHUB_TOKEN=github_pat_xxx
-GITHUB_OWNER=your-github-username-or-org
-GITHUB_REPO=starkirby-blog
-GITHUB_BRANCH=main
+ALIYUN_OSS_BUCKET=your-bucket-name
+ALIYUN_OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
+ALIYUN_OSS_ACCESS_KEY_ID=LTAIxxxx
+ALIYUN_OSS_ACCESS_KEY_SECRET=xxxx
+# optional (STS)
+ALIYUN_OSS_SECURITY_TOKEN=xxxx
+# optional (CDN/public domain)
+ALIYUN_OSS_PUBLIC_BASE_URL=https://cdn.example.com
+CONTENT_SOURCE=database
 ```
 
 Notes:
 
-- `GITHUB_TOKEN` needs `contents:write` permission for the target repo.
-- Markdown files are committed to `content/posts/`.
-- Cover images are committed to `public/images/covers/`.
+- Markdown/MDX body is uploaded to OSS and persisted as `Post.sourceUrl`.
+- Cover image is uploaded to OSS and persisted as `Post.coverUrl`.
 - Frontmatter auto-fill for incomplete files: `title` uses form value or Markdown H1 (`# ...`).
 - Frontmatter auto-fill for incomplete files: `description` uses form value or first paragraph excerpt.
 - Frontmatter auto-fill for incomplete files: `date` uses form value or current system date (`YYYY-MM-DD`).

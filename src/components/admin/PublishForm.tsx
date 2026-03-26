@@ -4,9 +4,11 @@ import { useState } from "react";
 
 type PublishResult = {
   success: boolean;
+  mode: "created" | "updated";
   slug: string;
-  postPath: string;
-  coverPath: string | null;
+  postId: string;
+  sourceUrl: string;
+  coverUrl: string | null;
   postUrl: string;
 };
 
@@ -96,7 +98,7 @@ export function PublishForm() {
       }
 
       setStatus("success");
-      setMessage("发布成功，仓库已写入新内容。");
+      setMessage("发布成功，内容已写入 OSS 与数据库。");
       setResult(json);
       form.reset();
       setSlug("");
@@ -117,7 +119,7 @@ export function PublishForm() {
           在线发布文章
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
-          上传 `.md/.mdx` 文件并可选封面图，系统会自动提交到 GitHub 仓库并触发部署。
+          上传 `.md/.mdx` 文件并可选封面图，系统会自动上传到 OSS 并写入数据库。
         </p>
         <p className="mt-2 text-xs text-muted-fg">
           若文件缺少 frontmatter，系统会根据你填写的字段自动补全；`title` 默认读取 Markdown 一级标题。
@@ -238,9 +240,11 @@ export function PublishForm() {
           <p>{message}</p>
           {result ? (
             <div className="mt-2 space-y-1 text-xs">
+              <p>mode: {result.mode}</p>
               <p>slug: {result.slug}</p>
-              <p>postPath: {result.postPath}</p>
-              {result.coverPath ? <p>coverPath: public{result.coverPath}</p> : null}
+              <p>postId: {result.postId}</p>
+              <p>sourceUrl: {result.sourceUrl}</p>
+              {result.coverUrl ? <p>coverUrl: {result.coverUrl}</p> : null}
               <p>postUrl: {result.postUrl}</p>
             </div>
           ) : null}

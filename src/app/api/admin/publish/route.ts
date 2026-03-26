@@ -1,7 +1,10 @@
 import matter from "gray-matter";
 import { getServerSession } from "next-auth";
+import readingTime from "reading-time";
 import { authOptions } from "@/lib/auth";
-import { upsertRepoFile } from "@/lib/github";
+import { createAuditLogInput } from "@/lib/audit";
+import { uploadToOss } from "@/lib/oss";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +17,17 @@ type PublishSupplement = {
   description?: string;
   tags?: string;
   date?: string;
+};
+
+type NormalizedPostData = {
+  title: string;
+  description: string;
+  date: string;
+  updated?: string;
+  tags: string[];
+  draft: boolean;
+  readingTime: string;
+  markdownBody: string;
 };
 
 function sanitizeSlug(input: string) {
@@ -32,6 +46,26 @@ function sanitizeSlug(input: string) {
 function getExtension(filename: string) {
   const matched = filename.toLowerCase().match(/\.([a-z0-9]+)$/);
   return matched?.[1] || "";
+}
+
+function getImageContentType(ext: string) {
+  switch (ext) {
+    case "png":
+      return "image/png";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "webp":
+      return "image/webp";
+    case "avif":
+      return "image/avif";
+    case "gif":
+      return "image/gif";
+    case "svg":
+      return "image/svg+xml";
+    default:
+      return "application/octet-stream";
+  }
 }
 
 function isValidDateString(value: string) {
@@ -168,7 +202,7 @@ function normalizePostContent(
   content: string,
   slug: string,
   supplement: PublishSupplement,
-  coverPath?: string,
+  coverUrl?: string,
 ) {
   const parsed = matter(content);
   const frontmatter = { ...(parsed.data as Record<string, unknown>) };
@@ -204,11 +238,42 @@ function normalizePostContent(
   }
 
   frontmatter.slug = slug;
-  if (coverPath) {
-    frontmatter.cover = coverPath;
+  if (coverUrl) {
+    frontmatter.cover = coverUrl;
   }
 
   return matter.stringify(parsed.content, frontmatter);
+}
+
+function parseNormalizedPostData(normalizedMarkdown: string, slug: string): NormalizedPostData {
+  const parsed = matter(normalizedMarkdown);
+  const frontmatter = parsed.data as Record<string, unknown>;
+  const title = toNonEmptyString(frontmatter.title) ?? slug;
+  const description = toNonEmptyString(frontmatter.description) ?? "暂无描述";
+  const date = toNonEmptyString(frontmatter.date) ?? getTodayDateString();
+
+  if (!isValidDateString(date)) {
+    throw new Error("date 格式错误，需为 YYYY-MM-DD");
+  }
+
+  const updated = toNonEmptyString(frontmatter.updated);
+  if (updated && !isValidDateString(updated)) {
+    throw new Error("updated 格式错误，需为 YYYY-MM-DD");
+  }
+
+  const tags = normalizeTags(frontmatter.tags) ?? [];
+  const draft = frontmatter.draft === true;
+
+  return {
+    title,
+    description,
+    date,
+    updated,
+    tags,
+    draft,
+    readingTime: readingTime(parsed.content).text,
+    markdownBody: parsed.content,
+  };
 }
 
 function getApiKeyFromForm(formData: FormData) {
@@ -265,7 +330,6 @@ export async function POST(request: Request) {
     }
 
     const markdownSource = await markdownFile.text();
-
     const customSlug = formData.get("slug");
     const rawSlug =
       (typeof customSlug === "string" && customSlug.trim()) ||
@@ -279,7 +343,16 @@ export async function POST(request: Request) {
       date: publishDate,
     };
 
-    let coverPath: string | undefined;
+    const existingPost = await prisma.post.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        coverUrl: true,
+        publishedAt: true,
+      },
+    });
+
+    let coverUrl = existingPost?.coverUrl ?? undefined;
     const coverFile = formData.get("coverFile");
     if (coverFile instanceof File && coverFile.size > 0) {
       const coverExt = getExtension(coverFile.name);
@@ -290,36 +363,97 @@ export async function POST(request: Request) {
         );
       }
 
-      coverPath = `/images/covers/${slug}-${Date.now()}.${coverExt}`;
-      const coverRepoPath = `public${coverPath}`;
-      const coverBuffer = Buffer.from(await coverFile.arrayBuffer());
-
-      await upsertRepoFile({
-        path: coverRepoPath,
-        content: coverBuffer,
-        message: `chore(content): upload cover for ${slug}`,
+      const coverUpload = await uploadToOss({
+        objectKey: `covers/${slug}-${Date.now()}.${coverExt}`,
+        content: Buffer.from(await coverFile.arrayBuffer()),
+        contentType: getImageContentType(coverExt),
       });
+      coverUrl = coverUpload.url;
     }
 
     const normalizedMarkdown = normalizePostContent(
       markdownSource,
       slug,
       supplement,
-      coverPath,
+      coverUrl,
     );
-    const markdownRepoPath = `content/posts/${slug}.${markdownExt}`;
+    const normalized = parseNormalizedPostData(normalizedMarkdown, slug);
 
-    await upsertRepoFile({
-      path: markdownRepoPath,
+    const sourceUpload = await uploadToOss({
+      objectKey: `posts/${slug}-${Date.now()}.${markdownExt}`,
       content: Buffer.from(normalizedMarkdown, "utf8"),
-      message: `feat(content): publish post ${slug}`,
+      contentType: "text/markdown; charset=utf-8",
+    });
+
+    const post = await prisma.$transaction(async (tx) => {
+      const now = new Date();
+      const upserted = await tx.post.upsert({
+        where: { slug },
+        create: {
+          slug,
+          title: normalized.title,
+          description: normalized.description,
+          date: new Date(normalized.date),
+          updated: normalized.updated ? new Date(normalized.updated) : null,
+          tags: normalized.tags,
+          coverUrl: coverUrl ?? null,
+          sourceUrl: sourceUpload.url,
+          readingTime: normalized.readingTime,
+          draft: normalized.draft,
+          authorId: session.user.id,
+          publishedAt: normalized.draft ? null : now,
+        },
+        update: {
+          title: normalized.title,
+          description: normalized.description,
+          date: new Date(normalized.date),
+          updated: normalized.updated ? new Date(normalized.updated) : null,
+          tags: normalized.tags,
+          coverUrl: coverUrl ?? null,
+          sourceUrl: sourceUpload.url,
+          readingTime: normalized.readingTime,
+          draft: normalized.draft,
+          authorId: session.user.id,
+          publishedAt: normalized.draft
+            ? null
+            : (existingPost?.publishedAt ?? now),
+        },
+        select: {
+          id: true,
+          slug: true,
+          coverUrl: true,
+          sourceUrl: true,
+          draft: true,
+          updatedAt: true,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: createAuditLogInput({
+          actorUserId: session.user.id,
+          action: existingPost ? "post.update" : "post.create",
+          targetType: "post",
+          targetId: upserted.id,
+          meta: {
+            slug: upserted.slug,
+            draft: upserted.draft,
+            sourceUrl: upserted.sourceUrl,
+            coverUrl: upserted.coverUrl,
+            markdownSize: normalized.markdownBody.length,
+          },
+        }),
+      });
+
+      return upserted;
     });
 
     return Response.json({
       success: true,
+      mode: existingPost ? "updated" : "created",
       slug,
-      postPath: markdownRepoPath,
-      coverPath: coverPath ?? null,
+      postId: post.id,
+      sourceUrl: post.sourceUrl,
+      coverUrl: post.coverUrl ?? null,
       postUrl: `/posts/${slug}`,
     });
   } catch (error) {
