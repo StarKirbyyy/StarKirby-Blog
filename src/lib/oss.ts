@@ -186,7 +186,10 @@ export function tryGetOssObjectKeyFromUrl(rawUrl: string) {
   }
 }
 
-export async function downloadTextFromOss(input: { objectKey: string }) {
+export async function downloadTextFromOss(input: {
+  objectKey: string;
+  revalidate?: number;
+}) {
   const config = getOssConfig();
   const objectKey = normalizeObjectKey(input.objectKey);
   if (!objectKey) {
@@ -214,7 +217,8 @@ export async function downloadTextFromOss(input: { objectKey: string }) {
         ? { "x-oss-security-token": config.securityToken }
         : {}),
     },
-    cache: "no-store",
+    cache: "force-cache",
+    next: { revalidate: input.revalidate ?? 3600 },
   });
 
   if (!response.ok) {
