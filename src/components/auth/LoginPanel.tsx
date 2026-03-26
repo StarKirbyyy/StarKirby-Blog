@@ -71,6 +71,14 @@ function LoginPanelInner() {
             >
               进入资料设置
             </Link>
+            {user?.role === "admin" ? (
+              <Link
+                href="/admin/publish"
+                className="ml-2 inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80"
+              >
+                进入发布后台
+              </Link>
+            ) : null}
           </div>
         ) : (
           <button

@@ -49,6 +49,7 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your-random-secret
 GITHUB_ID=your-github-oauth-app-client-id
 GITHUB_SECRET=your-github-oauth-app-client-secret
+ADMIN_EMAILS=admin1@example.com,admin2@example.com
 ```
 
 Compatibility aliases (also supported):
@@ -57,6 +58,7 @@ Compatibility aliases (also supported):
 AUTH_SECRET=your-random-secret
 AUTH_GITHUB_ID=your-github-oauth-app-client-id
 AUTH_GITHUB_SECRET=your-github-oauth-app-client-secret
+AUTH_ADMIN_EMAILS=admin1@example.com,admin2@example.com
 ```
 
 Prisma migration on Neon needs both:

@@ -1,4 +1,6 @@
 import matter from "gray-matter";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { upsertRepoFile } from "@/lib/github";
 
 export const runtime = "nodejs";
@@ -216,6 +218,17 @@ function getApiKeyFromForm(formData: FormData) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.status === "disabled") {
+      return Response.json({ error: "账号已禁用" }, { status: 403 });
+    }
+    if (session.user.role !== "admin") {
+      return Response.json({ error: "Forbidden: admin only" }, { status: 403 });
+    }
+
     const expectedApiKey = process.env.PUBLISH_API_KEY?.trim();
     if (!expectedApiKey) {
       return Response.json(
