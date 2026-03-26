@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 
 function LoginPanelInner() {
@@ -64,6 +65,12 @@ function LoginPanelInner() {
             >
               退出登录
             </button>
+            <Link
+              href="/settings/profile"
+              className="ml-2 inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+            >
+              进入资料设置
+            </Link>
           </div>
         ) : (
           <button
