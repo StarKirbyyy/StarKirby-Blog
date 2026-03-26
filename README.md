@@ -25,6 +25,49 @@ Notes:
 - Frontmatter auto-fill for incomplete files: `date` uses form value or current system date (`YYYY-MM-DD`).
 - Frontmatter auto-fill for incomplete files: `tags` uses form value (comma-separated) when missing in file.
 
+## Optional Features (Stage 8)
+
+- Comments use Giscus on post detail pages.
+- Math formulas are supported in MDX via KaTeX (`$...$` and `$$...$$`).
+- Images in MDX support click-to-zoom lightbox preview.
+
+If you want to enable Giscus comments, configure:
+
+```bash
+NEXT_PUBLIC_GISCUS_REPO=owner/repo
+NEXT_PUBLIC_GISCUS_REPO_ID=R_xxx
+NEXT_PUBLIC_GISCUS_CATEGORY=Announcements
+NEXT_PUBLIC_GISCUS_CATEGORY_ID=DIC_xxx
+```
+
+## User System M1 (Auth + Prisma)
+
+Required env vars for GitHub OAuth login:
+
+```bash
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=your-random-secret
+GITHUB_ID=your-github-oauth-app-client-id
+GITHUB_SECRET=your-github-oauth-app-client-secret
+```
+
+Compatibility aliases (also supported):
+
+```bash
+AUTH_SECRET=your-random-secret
+AUTH_GITHUB_ID=your-github-oauth-app-client-id
+AUTH_GITHUB_SECRET=your-github-oauth-app-client-secret
+```
+
+Prisma migration on Neon needs both:
+
+```bash
+DATABASE_URL=... # pooler url
+DATABASE_URL_UNPOOLED=... # direct url for migrate
+```
+
+Prisma CLI reads `.env` by default. If you only keep variables in `.env.local`, export them when running migrate/generate.
+
 ## Getting Started
 
 First, run the development server:

@@ -58,6 +58,13 @@ export function Header() {
 
         {/* 右侧操作区 */}
         <div className="flex items-center gap-1">
+          <Link
+            href="/login"
+            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
+          >
+            登录
+          </Link>
+
           {/* GitHub 链接 */}
           <a
             href={siteConfig.author.social.github}

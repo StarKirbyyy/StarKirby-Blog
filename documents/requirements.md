@@ -345,3 +345,10 @@ export const siteConfig = {
 - 阅读量统计（Vercel Analytics / Umami）
 - 多作者支持
 - 管理后台（CMS）
+
+---
+
+## 十三、用户系统（阶段八新增）
+
+评论系统上线后，项目新增“站内用户系统”需求，用于统一身份、权限与后续互动能力扩展。  
+详细规格见：[用户系统需求文档 user-system-requirements.md](./user-system-requirements.md)
