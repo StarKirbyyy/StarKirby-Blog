@@ -54,6 +54,14 @@ function encodeObjectKey(value: string) {
     .join("/");
 }
 
+function decodeObjectKeyFromPath(pathname: string) {
+  return pathname
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => decodeURIComponent(segment))
+    .join("/");
+}
+
 export function getOssConfig(): OssConfig {
   const bucket = mustEnv("ALIYUN_OSS_BUCKET", ["OSS_BUCKET"]);
   const endpointRaw =
@@ -89,7 +97,7 @@ export function getOssConfig(): OssConfig {
 
 function createAuthorization(input: {
   config: OssConfig;
-  method: "PUT";
+  method: "PUT" | "GET";
   contentType: string;
   date: string;
   resourcePath: string;
@@ -166,4 +174,53 @@ export async function uploadToOss(input: UploadToOssInput) {
     objectKey,
     url: publicUrl,
   };
+}
+
+export function tryGetOssObjectKeyFromUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+    const objectKey = decodeObjectKeyFromPath(url.pathname);
+    return objectKey || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function downloadTextFromOss(input: { objectKey: string }) {
+  const config = getOssConfig();
+  const objectKey = normalizeObjectKey(input.objectKey);
+  if (!objectKey) {
+    throw new Error("Invalid OSS object key");
+  }
+
+  const encodedObjectKey = encodeObjectKey(objectKey);
+  const resourcePath = `/${config.bucket}/${objectKey}`;
+  const requestUrl = `https://${config.bucket}.${config.endpoint}/${encodedObjectKey}`;
+  const date = new Date().toUTCString();
+  const authorization = createAuthorization({
+    config,
+    method: "GET",
+    contentType: "",
+    date,
+    resourcePath,
+  });
+
+  const response = await fetch(requestUrl, {
+    method: "GET",
+    headers: {
+      Date: date,
+      Authorization: authorization,
+      ...(config.securityToken
+        ? { "x-oss-security-token": config.securityToken }
+        : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`OSS download failed (${response.status}): ${text}`);
+  }
+
+  return response.text();
 }
