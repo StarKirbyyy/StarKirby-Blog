@@ -62,7 +62,8 @@ export const siteConfig = {
   ],
 
   comments: {
-    provider: "giscus",
+    provider:
+      process.env.NEXT_PUBLIC_COMMENT_PROVIDER === "local" ? "local" : "giscus",
     giscus: {
       repo: process.env.NEXT_PUBLIC_GISCUS_REPO ?? "",
       repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID ?? "",

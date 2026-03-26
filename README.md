@@ -30,6 +30,12 @@ Notes:
 - Comments use Giscus on post detail pages.
 - Math formulas are supported in MDX via KaTeX (`$...$` and `$$...$$`).
 - Images in MDX support click-to-zoom lightbox preview.
+- Local comments API is available (database-backed):
+  - `GET/POST /api/comments`
+  - `PATCH/DELETE /api/comments/:id` (owner/admin)
+  - `GET /api/admin/comments` (admin list)
+  - `PATCH/DELETE /api/admin/comments/:id` (admin moderation)
+- Admin moderation UI is available at `/admin/comments`.
 
 If you want to enable Giscus comments, configure:
 
@@ -38,6 +44,18 @@ NEXT_PUBLIC_GISCUS_REPO=owner/repo
 NEXT_PUBLIC_GISCUS_REPO_ID=R_xxx
 NEXT_PUBLIC_GISCUS_CATEGORY=Announcements
 NEXT_PUBLIC_GISCUS_CATEGORY_ID=DIC_xxx
+```
+
+Switch comment provider:
+
+```bash
+NEXT_PUBLIC_COMMENT_PROVIDER=giscus # or local
+```
+
+Optional local-comment rate limit:
+
+```bash
+COMMENT_POST_LIMIT_PER_MINUTE=5
 ```
 
 ## User System M1 (Auth + Prisma)

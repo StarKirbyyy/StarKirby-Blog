@@ -159,7 +159,7 @@
 - [x] 用户系统 M1：认证骨架（Auth.js + Prisma + PostgreSQL）与 GitHub OAuth 登录闭环
 - [x] 用户系统 M2：用户资料页与资料接口
 - [x] 用户系统 M3：RBAC 与后台路由/API 权限保护
-- [x] 评论系统：Giscus（基于 GitHub Discussions）
+- [x] 评论系统：Giscus / Local（可切换，含管理员审核/删除）
 - [ ] 全文搜索：Pagefind（纯静态，零成本）
 - [ ] 文章点赞/阅读量：Vercel KV
 - [x] 数学公式：KaTeX + rehype-katex

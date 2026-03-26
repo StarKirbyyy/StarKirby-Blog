@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
         <section className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h1 className="text-lg font-semibold text-foreground">权限不足</h1>
           <p className="mt-2 text-sm text-muted-fg">
-            你的账号角色不是 `admin`，无法访问后台发布页面。
+            你的账号角色不是 `admin`，无法访问后台页面。
           </p>
           <div className="mt-4 flex gap-3">
             <Link
@@ -52,5 +52,25 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <div className="border-b border-border bg-background/50">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-3 sm:px-6">
+          <Link
+            href="/admin/publish"
+            className="rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80"
+          >
+            发布文章
+          </Link>
+          <Link
+            href="/admin/comments"
+            className="rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80"
+          >
+            评论管理
+          </Link>
+        </div>
+      </div>
+      {children}
+    </>
+  );
 }

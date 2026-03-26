@@ -18,6 +18,11 @@ enum UserStatus {
   disabled
 }
 
+enum CommentStatus {
+  visible
+  hidden
+}
+
 model User {
   id            String      @id @default(cuid())
   name          String?
@@ -30,6 +35,8 @@ model User {
   status        UserStatus  @default(active)
   accounts      Account[]
   sessions      Session[]
+  comments      Comment[]
+  auditLogsAsActor AuditLog[] @relation("AuditActor")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -66,4 +73,35 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  postSlug  String
+  content   String        @db.Text
+  status    CommentStatus @default(visible)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([postSlug, createdAt])
+  @@index([postSlug, status, createdAt])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorUser   User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  action      String
+  targetType  String
+  targetId    String
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([actorUserId, createdAt])
 }
