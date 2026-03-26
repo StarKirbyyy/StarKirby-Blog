@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getPostBySlug } from "@/lib/posts";
+import { hasPostBySlug } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 import {
   COMMENT_MAX_LENGTH,
@@ -65,8 +65,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const post = await getPostBySlug(postSlug);
-  if (!post) {
+  const postExists = await hasPostBySlug(postSlug);
+  if (!postExists) {
     return Response.json({ error: "文章不存在" }, { status: 404 });
   }
 

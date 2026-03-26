@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
+import { prisma } from "@/lib/prisma";
 
 const POSTS_DIRECTORY = path.join(process.cwd(), "content", "posts");
 const SUPPORTED_EXTENSIONS = new Set([".mdx", ".md"]);
@@ -35,8 +36,24 @@ function isProduction() {
   return process.env.NODE_ENV === "production";
 }
 
+function isDatabaseContentSource() {
+  return (process.env.CONTENT_SOURCE ?? "").trim().toLowerCase() === "database";
+}
+
+function allowFileFallback() {
+  return (process.env.CONTENT_SOURCE_FALLBACK ?? "true").trim() !== "false";
+}
+
 function normalizeSlug(slug: string) {
   return slug.trim().replace(/^\/+|\/+$/g, "");
+}
+
+function normalizeDateString(input: Date | string) {
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString().slice(0, 10);
+  }
+  return date.toISOString().slice(0, 10);
 }
 
 function parseRequiredString(
@@ -100,7 +117,7 @@ function parseFrontmatter(
   };
 }
 
-function shouldIncludePost(post: PostFrontmatter) {
+function shouldIncludePost(post: Pick<PostFrontmatter, "draft">) {
   if (!isProduction()) return true;
   return post.draft !== true;
 }
@@ -152,7 +169,7 @@ function warnInvalidPostFile(fileName: string, error: unknown) {
   console.warn(`[posts] skip invalid post "${fileName}": ${message}`);
 }
 
-export async function getAllPosts() {
+async function getAllPostsFromFileSystem() {
   const fileNames = await getPostFileNames();
   const posts = await Promise.all(
     fileNames.map(async (fileName) => {
@@ -173,7 +190,7 @@ export async function getAllPosts() {
   return sortByDateDesc(filtered);
 }
 
-export async function getPostBySlug(slug: string) {
+async function getPostBySlugFromFileSystem(slug: string) {
   const targetSlug = normalizeSlug(slug);
   const fileNames = await getPostFileNames();
 
@@ -195,6 +212,165 @@ export async function getPostBySlug(slug: string) {
   }
 
   return null;
+}
+
+async function readPostSourceContent(sourceUrl: string) {
+  if (!/^https?:\/\//i.test(sourceUrl)) {
+    throw new Error(`Invalid sourceUrl: "${sourceUrl}"`);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const response = await fetch(sourceUrl, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch source: ${response.status}`);
+    }
+
+    return await response.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function getAllPostsFromDatabase() {
+  const dbPosts = await prisma.post.findMany({
+    where: isProduction() ? { draft: false } : undefined,
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: {
+      slug: true,
+      title: true,
+      description: true,
+      date: true,
+      updated: true,
+      tags: true,
+      coverUrl: true,
+      draft: true,
+      readingTime: true,
+    },
+  });
+
+  return dbPosts
+    .map((post) => {
+      const tags = post.tags.filter((tag) => typeof tag === "string" && tag.trim());
+      return {
+        slug: normalizeSlug(post.slug),
+        title: post.title,
+        description: post.description,
+        date: normalizeDateString(post.date),
+        updated: post.updated ? normalizeDateString(post.updated) : undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        cover: post.coverUrl ?? undefined,
+        draft: post.draft,
+        readingTime: post.readingTime,
+      } satisfies PostMeta;
+    })
+    .filter((post) => shouldIncludePost(post));
+}
+
+async function getPostBySlugFromDatabase(slug: string) {
+  const targetSlug = normalizeSlug(slug);
+  if (!targetSlug) return null;
+
+  const dbPost = await prisma.post.findUnique({
+    where: { slug: targetSlug },
+    select: {
+      slug: true,
+      title: true,
+      description: true,
+      date: true,
+      updated: true,
+      tags: true,
+      coverUrl: true,
+      draft: true,
+      sourceUrl: true,
+      readingTime: true,
+    },
+  });
+  if (!dbPost) return null;
+  if (!shouldIncludePost(dbPost)) return null;
+
+  const rawSource = await readPostSourceContent(dbPost.sourceUrl);
+  const parsed = matter(rawSource);
+  const tags = dbPost.tags.filter((tag) => typeof tag === "string" && tag.trim());
+
+  return {
+    slug: normalizeSlug(dbPost.slug),
+    title: dbPost.title,
+    description: dbPost.description,
+    date: normalizeDateString(dbPost.date),
+    updated: dbPost.updated ? normalizeDateString(dbPost.updated) : undefined,
+    tags: tags.length > 0 ? tags : undefined,
+    cover: dbPost.coverUrl ?? undefined,
+    draft: dbPost.draft,
+    readingTime: dbPost.readingTime,
+    content: parsed.content,
+  } satisfies Post;
+}
+
+async function hasPostBySlugFromDatabase(slug: string) {
+  const targetSlug = normalizeSlug(slug);
+  if (!targetSlug) return false;
+
+  const post = await prisma.post.findUnique({
+    where: { slug: targetSlug },
+    select: {
+      draft: true,
+    },
+  });
+  if (!post) return false;
+  return shouldIncludePost(post);
+}
+
+async function hasPostBySlugFromFileSystem(slug: string) {
+  const post = await getPostBySlugFromFileSystem(slug);
+  return Boolean(post);
+}
+
+export async function getAllPosts() {
+  if (!isDatabaseContentSource()) {
+    return getAllPostsFromFileSystem();
+  }
+
+  try {
+    const posts = await getAllPostsFromDatabase();
+    if (posts.length > 0 || !allowFileFallback()) {
+      return sortByDateDesc(posts);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[posts] database source failed, fallback to files: ${message}`);
+    if (!allowFileFallback()) {
+      throw error;
+    }
+  }
+
+  return getAllPostsFromFileSystem();
+}
+
+export async function getPostBySlug(slug: string) {
+  if (!isDatabaseContentSource()) {
+    return getPostBySlugFromFileSystem(slug);
+  }
+
+  try {
+    const post = await getPostBySlugFromDatabase(slug);
+    if (post || !allowFileFallback()) {
+      return post;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[posts] database post fetch failed, fallback to files: ${message}`);
+    if (!allowFileFallback()) {
+      throw error;
+    }
+  }
+
+  return getPostBySlugFromFileSystem(slug);
 }
 
 export async function getAllTags() {
@@ -220,4 +396,25 @@ export async function getPostsByTag(tag: string) {
   return posts.filter((post) =>
     (post.tags ?? []).some((item) => item.toLowerCase() === target),
   );
+}
+
+export async function hasPostBySlug(slug: string) {
+  if (!isDatabaseContentSource()) {
+    return hasPostBySlugFromFileSystem(slug);
+  }
+
+  try {
+    const exists = await hasPostBySlugFromDatabase(slug);
+    if (exists || !allowFileFallback()) {
+      return exists;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[posts] database post existence check failed, fallback to files: ${message}`);
+    if (!allowFileFallback()) {
+      throw error;
+    }
+  }
+
+  return hasPostBySlugFromFileSystem(slug);
 }
