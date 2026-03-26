@@ -30,16 +30,28 @@ type EditResult = {
 };
 
 type RenderedLine =
-  | { type: "blank"; raw: string; text: string }
-  | { type: "heading"; raw: string; text: string; level: 1 | 2 | 3 | 4 | 5 | 6 }
-  | { type: "quote"; raw: string; text: string }
-  | { type: "ul"; raw: string; text: string }
-  | { type: "ol"; raw: string; text: string; order: number }
-  | { type: "task"; raw: string; text: string; checked: boolean }
-  | { type: "hr"; raw: string; text: string }
-  | { type: "codeFence"; raw: string; text: string }
-  | { type: "codeLine"; raw: string; text: string }
-  | { type: "paragraph"; raw: string; text: string };
+  | { type: "blank"; sourceIndex: number; raw: string; text: string }
+  | {
+      type: "heading";
+      sourceIndex: number;
+      raw: string;
+      text: string;
+      level: 1 | 2 | 3 | 4 | 5 | 6;
+    }
+  | { type: "quote"; sourceIndex: number; raw: string; text: string }
+  | { type: "ul"; sourceIndex: number; raw: string; text: string }
+  | { type: "ol"; sourceIndex: number; raw: string; text: string; order: number }
+  | {
+      type: "task";
+      sourceIndex: number;
+      raw: string;
+      text: string;
+      checked: boolean;
+    }
+  | { type: "hr"; sourceIndex: number; raw: string; text: string }
+  | { type: "codeFence"; sourceIndex: number; raw: string; text: string }
+  | { type: "codeLine"; sourceIndex: number; raw: string; text: string }
+  | { type: "paragraph"; sourceIndex: number; raw: string; text: string };
 
 function stripFrontmatter(source: string) {
   const normalized = source.replace(/\r\n/g, "\n");
@@ -139,13 +151,33 @@ function classifyMarkdownLines(source: string) {
   const lines = source.split("\n");
   const output: RenderedLine[] = [];
   let inCodeFence = false;
+  let startIndex = 0;
 
-  for (const rawLine of lines) {
+  // Typora 模式不显示 frontmatter，仅显示正文内容。
+  // 兼容场景：文件开头存在 BOM 或空行。
+  const firstNonEmptyIndex = lines.findIndex(
+    (line) => line.replace(/^\uFEFF/, "").trim() !== "",
+  );
+  if (firstNonEmptyIndex >= 0) {
+    const firstMeaningful = lines[firstNonEmptyIndex]?.replace(/^\uFEFF/, "").trim();
+    if (firstMeaningful === "---") {
+      const endIndex = lines.findIndex(
+        (line, index) => index > firstNonEmptyIndex && line.trim() === "---",
+      );
+      if (endIndex !== -1) {
+        startIndex = endIndex + 1;
+      }
+    }
+  }
+
+  for (let sourceIndex = startIndex; sourceIndex < lines.length; sourceIndex += 1) {
+    const rawLine = lines[sourceIndex] ?? "";
     const trimmed = rawLine.trim();
 
     if (trimmed.startsWith("```")) {
       output.push({
         type: "codeFence",
+        sourceIndex,
         raw: rawLine,
         text: rawLine,
       });
@@ -156,6 +188,7 @@ function classifyMarkdownLines(source: string) {
     if (inCodeFence) {
       output.push({
         type: "codeLine",
+        sourceIndex,
         raw: rawLine,
         text: rawLine,
       });
@@ -165,6 +198,7 @@ function classifyMarkdownLines(source: string) {
     if (!trimmed) {
       output.push({
         type: "blank",
+        sourceIndex,
         raw: rawLine,
         text: rawLine,
       });
@@ -175,6 +209,7 @@ function classifyMarkdownLines(source: string) {
     if (heading) {
       output.push({
         type: "heading",
+        sourceIndex,
         raw: rawLine,
         level: heading[1].length as 1 | 2 | 3 | 4 | 5 | 6,
         text: heading[2],
@@ -186,6 +221,7 @@ function classifyMarkdownLines(source: string) {
     if (quote) {
       output.push({
         type: "quote",
+        sourceIndex,
         raw: rawLine,
         text: quote[1],
       });
@@ -196,6 +232,7 @@ function classifyMarkdownLines(source: string) {
     if (task) {
       output.push({
         type: "task",
+        sourceIndex,
         raw: rawLine,
         checked: task[1].toLowerCase() === "x",
         text: task[2],
@@ -207,6 +244,7 @@ function classifyMarkdownLines(source: string) {
     if (ul) {
       output.push({
         type: "ul",
+        sourceIndex,
         raw: rawLine,
         text: ul[1],
       });
@@ -217,6 +255,7 @@ function classifyMarkdownLines(source: string) {
     if (ol) {
       output.push({
         type: "ol",
+        sourceIndex,
         raw: rawLine,
         order: Number(ol[1]),
         text: ol[2],
@@ -227,6 +266,7 @@ function classifyMarkdownLines(source: string) {
     if (/^\s*([-*_])\1{2,}\s*$/.test(rawLine)) {
       output.push({
         type: "hr",
+        sourceIndex,
         raw: rawLine,
         text: rawLine,
       });
@@ -235,6 +275,7 @@ function classifyMarkdownLines(source: string) {
 
     output.push({
       type: "paragraph",
+      sourceIndex,
       raw: rawLine,
       text: rawLine,
     });
@@ -269,26 +310,26 @@ function TyporaLikeEditor({
   disabled: boolean;
 }) {
   const lines = useMemo(() => classifyMarkdownLines(value), [value]);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeSourceIndex, setActiveSourceIndex] = useState<number | null>(null);
   const [activeSource, setActiveSource] = useState("");
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const skipBlurCommitRef = useRef(false);
 
   useEffect(() => {
-    if (activeIndex === null) return;
+    if (activeSourceIndex === null) return;
     inputRef.current?.focus();
     const size = activeSource.length;
     inputRef.current?.setSelectionRange(size, size);
-  }, [activeIndex, activeSource.length]);
+  }, [activeSourceIndex, activeSource.length]);
 
   const commit = () => {
     if (skipBlurCommitRef.current) {
       skipBlurCommitRef.current = false;
       return;
     }
-    if (activeIndex === null) return;
-    onChange(updateLineAt(value, activeIndex, activeSource));
-    setActiveIndex(null);
+    if (activeSourceIndex === null) return;
+    onChange(updateLineAt(value, activeSourceIndex, activeSource));
+    setActiveSourceIndex(null);
   };
 
   const renderDisplayLine = (line: RenderedLine) => {
@@ -340,8 +381,8 @@ function TyporaLikeEditor({
     <div className="h-[560px] overflow-y-auto rounded-md border border-border bg-background p-3">
       <div className="space-y-1">
         {lines.map((line, index) => (
-          <div key={`${index}-${line.raw}`}>
-            {activeIndex === index ? (
+          <div key={`${line.sourceIndex}-${index}-${line.raw}`}>
+            {activeSourceIndex === line.sourceIndex ? (
               <textarea
                 ref={inputRef}
                 value={activeSource}
@@ -351,35 +392,35 @@ function TyporaLikeEditor({
                   if (event.key === "Escape") {
                     event.preventDefault();
                     skipBlurCommitRef.current = true;
-                    setActiveIndex(null);
+                    setActiveSourceIndex(null);
                     return;
                   }
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     skipBlurCommitRef.current = true;
-                    const nextText = updateLineAt(value, index, activeSource);
-                    const withNewLine = insertLineAfter(nextText, index, "");
+                    const nextText = updateLineAt(value, line.sourceIndex, activeSource);
+                    const withNewLine = insertLineAfter(nextText, line.sourceIndex, "");
                     onChange(withNewLine);
-                    setActiveIndex(index + 1);
+                    setActiveSourceIndex(line.sourceIndex + 1);
                     setActiveSource("");
                     return;
                   }
                 }}
                 disabled={disabled}
                 rows={1}
-                className="w-full rounded border border-accent/40 bg-card px-2 py-1 font-mono text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2 disabled:opacity-60"
+                className="w-full rounded border border-border bg-card px-2 py-1 font-mono text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2 disabled:opacity-60"
               />
             ) : (
               <button
                 type="button"
                 onClick={() => {
                   if (disabled) return;
-                  setActiveIndex(index);
-                  setActiveSource(value.split("\n")[index] ?? "");
+                  setActiveSourceIndex(line.sourceIndex);
+                  setActiveSource(value.split("\n")[line.sourceIndex] ?? "");
                 }}
-                className="block w-full text-left"
+                className="block w-full text-left focus:outline-none"
               >
-                <div className="cursor-text rounded px-2 py-1 transition-colors hover:bg-muted/40">
+                <div className="cursor-text px-2 py-1">
                   {renderDisplayLine(line)}
                 </div>
               </button>
