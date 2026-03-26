@@ -167,7 +167,7 @@ export function PostManagementPanel() {
           文章管理
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
-          查看云端文章，支持筛选与删除。删除会同步移除该文章关联评论，并记录审计日志。
+          查看云端文章，支持筛选、编辑与删除。删除会同步移除该文章关联评论，并记录审计日志。
         </p>
       </header>
 
@@ -252,6 +252,12 @@ export function PostManagementPanel() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Link
+                    href={`/admin/posts/${post.id}/edit`}
+                    className="rounded-md bg-accent/15 px-2 py-1 text-xs text-accent transition-colors hover:bg-accent/25"
+                  >
+                    编辑
+                  </Link>
                   <Link
                     href={`/posts/${post.slug}`}
                     target="_blank"
