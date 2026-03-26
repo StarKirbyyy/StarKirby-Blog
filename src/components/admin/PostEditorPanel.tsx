@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MarkdownLiveEditor } from "@/components/admin/MarkdownLiveEditor";
 
 type EditorPost = {
   id: string;
@@ -189,7 +190,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           编辑文章
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
-          M1 版本支持编辑元数据与 Markdown 正文，并保存到 OSS + 数据库。
+          M2 版本支持工具栏、快捷键与实时预览，可直接在线编辑并保存到 OSS + 数据库。
         </p>
         <p className="mt-2 text-xs text-muted-fg">
           创建时间：{formatDateTime(post.createdAt)} · 最近更新：{formatDateTime(post.updatedAt)}
@@ -289,14 +290,10 @@ export function PostEditorPanel({ postId }: { postId: string }) {
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-foreground">Markdown 正文</span>
-          <textarea
-            value={markdown}
-            onChange={(event) => setMarkdown(event.target.value)}
-            rows={22}
-            required
-            className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
-          />
+          <span className="text-sm font-medium text-foreground">
+            Markdown 正文（Typora 风格增强）
+          </span>
+          <MarkdownLiveEditor value={markdown} onChange={setMarkdown} disabled={saving} />
         </label>
 
         {message ? (
