@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 const POSTS_DIRECTORY = path.join(process.cwd(), "content", "posts");
 const SUPPORTED_EXTENSIONS = new Set([".mdx", ".md"]);
+const POST_CONTENT_REVALIDATE_SECONDS = 3600;
 
 export interface PostFrontmatter {
   title: string;
@@ -248,7 +249,8 @@ async function readPostSourceContent(sourceUrl: string) {
 
   try {
     const response = await fetch(sourceUrl, {
-      cache: "no-store",
+      cache: "force-cache",
+      next: { revalidate: POST_CONTENT_REVALIDATE_SECONDS },
       signal: controller.signal,
     });
     if (response.ok) {
@@ -266,7 +268,10 @@ async function readPostSourceContent(sourceUrl: string) {
 
   if (objectKey) {
     try {
-      return await downloadTextFromOss({ objectKey });
+      return await downloadTextFromOss({
+        objectKey,
+        revalidate: POST_CONTENT_REVALIDATE_SECONDS,
+      });
     } catch (fallbackError) {
       const fallbackMessage =
         fallbackError instanceof Error
