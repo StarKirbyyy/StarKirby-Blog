@@ -35,6 +35,7 @@ model User {
   status        UserStatus  @default(active)
   accounts      Account[]
   sessions      Session[]
+  posts         Post[]
   comments      Comment[]
   auditLogsAsActor AuditLog[] @relation("AuditActor")
   createdAt     DateTime    @default(now())
@@ -104,4 +105,27 @@ model AuditLog {
   @@index([action, createdAt])
   @@index([targetType, targetId, createdAt])
   @@index([actorUserId, createdAt])
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  date        DateTime
+  updated     DateTime?
+  tags        String[] @default([])
+  coverUrl    String?
+  sourceUrl   String
+  readingTime String
+  draft       Boolean  @default(false)
+  authorId    String?
+  author      User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date, createdAt])
+  @@index([draft, date])
+  @@index([authorId, createdAt])
 }

@@ -58,6 +58,25 @@ Optional local-comment rate limit:
 COMMENT_POST_LIMIT_PER_MINUTE=5
 ```
 
+## Cloud Content Source (M1)
+
+Use database posts as the primary source (with filesystem fallback enabled by default):
+
+```bash
+CONTENT_SOURCE=database
+CONTENT_SOURCE_FALLBACK=true
+```
+
+When `Post.coverUrl` uses Alibaba Cloud OSS or custom CDN, configure image host allowlist:
+
+```bash
+NEXT_PUBLIC_OSS_PUBLIC_HOST=your-bucket.oss-cn-hangzhou.aliyuncs.com
+```
+
+Notes:
+- `Post.sourceUrl` should be a public HTTPS URL to the markdown body stored in OSS.
+- `next/image` already allows `*.aliyuncs.com`.
+
 ## User System M1 (Auth + Prisma)
 
 Required env vars for GitHub OAuth login:
