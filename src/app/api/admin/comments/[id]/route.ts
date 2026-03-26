@@ -9,7 +9,7 @@ import {
 import { prisma } from "@/lib/prisma";
 
 type RouteContext = {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 };
 
 function getAdminUserOrError(session: Session | null) {
@@ -28,7 +28,7 @@ function getAdminUserOrError(session: Session | null) {
 }
 
 async function resolveCommentId(context: RouteContext) {
-  const params = await Promise.resolve(context.params);
+  const params = await context.params;
   return typeof params.id === "string" ? params.id.trim() : "";
 }
 

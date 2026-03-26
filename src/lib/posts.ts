@@ -45,6 +45,27 @@ function allowFileFallback() {
   return (process.env.CONTENT_SOURCE_FALLBACK ?? "true").trim() !== "false";
 }
 
+function isRetryablePrismaClosedConnectionError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    /Error in PostgreSQL connection/i.test(message) ||
+    /kind:\s*Closed/i.test(message) ||
+    /Can't reach database server/i.test(message) ||
+    /Connection terminated/i.test(message)
+  );
+}
+
+async function withPrismaReadRetry<T>(query: () => Promise<T>) {
+  try {
+    return await query();
+  } catch (error) {
+    if (!isRetryablePrismaClosedConnectionError(error)) {
+      throw error;
+    }
+    return query();
+  }
+}
+
 function normalizeSlug(slug: string) {
   return slug.trim().replace(/^\/+|\/+$/g, "");
 }
@@ -256,21 +277,23 @@ async function readPostSourceContent(sourceUrl: string) {
 }
 
 async function getAllPostsFromDatabase() {
-  const dbPosts = await prisma.post.findMany({
-    where: isProduction() ? { draft: false } : undefined,
-    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-    select: {
-      slug: true,
-      title: true,
-      description: true,
-      date: true,
-      updated: true,
-      tags: true,
-      coverUrl: true,
-      draft: true,
-      readingTime: true,
-    },
-  });
+  const dbPosts = await withPrismaReadRetry(() =>
+    prisma.post.findMany({
+      where: isProduction() ? { draft: false } : undefined,
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      select: {
+        slug: true,
+        title: true,
+        description: true,
+        date: true,
+        updated: true,
+        tags: true,
+        coverUrl: true,
+        draft: true,
+        readingTime: true,
+      },
+    }),
+  );
 
   return dbPosts
     .map((post) => {
@@ -294,21 +317,23 @@ async function getPostBySlugFromDatabase(slug: string) {
   const targetSlug = normalizeSlug(slug);
   if (!targetSlug) return null;
 
-  const dbPost = await prisma.post.findUnique({
-    where: { slug: targetSlug },
-    select: {
-      slug: true,
-      title: true,
-      description: true,
-      date: true,
-      updated: true,
-      tags: true,
-      coverUrl: true,
-      draft: true,
-      sourceUrl: true,
-      readingTime: true,
-    },
-  });
+  const dbPost = await withPrismaReadRetry(() =>
+    prisma.post.findUnique({
+      where: { slug: targetSlug },
+      select: {
+        slug: true,
+        title: true,
+        description: true,
+        date: true,
+        updated: true,
+        tags: true,
+        coverUrl: true,
+        draft: true,
+        sourceUrl: true,
+        readingTime: true,
+      },
+    }),
+  );
   if (!dbPost) return null;
   if (!shouldIncludePost(dbPost)) return null;
 
@@ -334,12 +359,14 @@ async function hasPostBySlugFromDatabase(slug: string) {
   const targetSlug = normalizeSlug(slug);
   if (!targetSlug) return false;
 
-  const post = await prisma.post.findUnique({
-    where: { slug: targetSlug },
-    select: {
-      draft: true,
-    },
-  });
+  const post = await withPrismaReadRetry(() =>
+    prisma.post.findUnique({
+      where: { slug: targetSlug },
+      select: {
+        draft: true,
+      },
+    }),
+  );
   if (!post) return false;
   return shouldIncludePost(post);
 }

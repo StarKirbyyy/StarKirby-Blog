@@ -6,7 +6,7 @@ import { createAuditLogInput } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 
 type RouteContext = {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ function getAdminUserOrError(session: Session | null) {
 }
 
 async function resolvePostId(context: RouteContext) {
-  const params = await Promise.resolve(context.params);
+  const params = await context.params;
   return typeof params.id === "string" ? params.id.trim() : "";
 }
 
