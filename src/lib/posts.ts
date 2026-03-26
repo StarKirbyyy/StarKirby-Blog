@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
+import { downloadTextFromOss, tryGetOssObjectKeyFromUrl } from "@/lib/oss";
 import { prisma } from "@/lib/prisma";
 
 const POSTS_DIRECTORY = path.join(process.cwd(), "content", "posts");
@@ -228,6 +229,23 @@ async function readPostSourceContent(sourceUrl: string) {
       signal: controller.signal,
     });
     if (!response.ok) {
+      const shouldTryOssFallback = response.status === 401 || response.status === 403;
+      if (shouldTryOssFallback) {
+        const objectKey = tryGetOssObjectKeyFromUrl(sourceUrl);
+        if (objectKey) {
+          try {
+            return await downloadTextFromOss({ objectKey });
+          } catch (fallbackError) {
+            const message =
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : String(fallbackError);
+            throw new Error(
+              `Failed to fetch source (${response.status}) and OSS fallback failed: ${message}`,
+            );
+          }
+        }
+      }
       throw new Error(`Failed to fetch source: ${response.status}`);
     }
 
