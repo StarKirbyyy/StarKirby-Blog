@@ -1,15 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 
 function LoginPanelInner() {
   const { data: session, status } = useSession();
   const user = session?.user;
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
+  const avatarSrc = user?.image ?? "";
 
   const isLoading = status === "loading";
   const isLoggedIn = Boolean(user);
+  const canShowAvatar = avatarSrc.length > 0 && avatarSrc !== failedImageSrc;
 
   return (
     <section className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 sm:p-7">
@@ -26,12 +29,16 @@ function LoginPanelInner() {
         ) : isLoggedIn ? (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              {user?.image ? (
-                <Image
-                  src={user.image}
-                  alt={user.name ?? "用户头像"}
+              {canShowAvatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarSrc}
+                  alt={user?.name ?? "用户头像"}
                   width={44}
                   height={44}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={() => setFailedImageSrc(avatarSrc)}
                   className="rounded-full border border-border"
                 />
               ) : (
