@@ -10,31 +10,28 @@ export function Header() {
   const pathname = usePathname() ?? "/";
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
+    <header className="sticky top-0 z-30 w-full px-3 pt-3 sm:px-5">
+      <div className="glass-panel mx-auto flex h-16 w-full max-w-6xl items-center justify-between rounded-2xl px-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-foreground hover:text-accent transition-colors"
+          className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface-soft px-3 py-1.5 font-semibold text-foreground transition-colors hover:text-accent"
           aria-label="返回首页"
         >
-          {/* 星星图标 */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="22"
             height="22"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="text-accent"
+            className="text-accent transition-transform duration-200 group-hover:rotate-12"
             aria-hidden="true"
           >
             <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
           </svg>
-          <span className="text-lg tracking-tight">{siteConfig.name}</span>
+          <span className="text-sm tracking-tight sm:text-base">{siteConfig.name}</span>
         </Link>
 
-        {/* 桌面端导航 */}
-        <nav aria-label="主导航" className="hidden md:flex items-center gap-1">
+        <nav aria-label="主导航" className="hidden md:flex items-center gap-1.5">
           {siteConfig.nav.map((item) => {
             const isActive =
               item.href === "/"
@@ -44,10 +41,10 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`nav-pill px-3.5 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "text-accent"
-                    : "text-foreground/70 hover:text-foreground hover:bg-muted"
+                    ? "nav-pill-active"
+                    : "text-muted-fg hover:bg-surface-soft hover:text-foreground"
                 }`}
               >
                 {item.title}
@@ -56,22 +53,20 @@ export function Header() {
           })}
         </nav>
 
-        {/* 右侧操作区 */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <Link
             href="/login"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
+            className="hidden rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm font-medium text-muted-fg transition-colors hover:text-foreground sm:inline-flex"
           >
             登录
           </Link>
 
-          {/* GitHub 链接 */}
           <a
             href={siteConfig.author.social.github}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub 主页"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-muted-fg transition-colors hover:text-foreground"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -85,10 +80,7 @@ export function Header() {
             </svg>
           </a>
 
-          {/* 主题切换 */}
           <ThemeToggle />
-
-          {/* 移动端汉堡菜单 */}
           <MobileMenu currentPath={pathname} />
         </div>
       </div>

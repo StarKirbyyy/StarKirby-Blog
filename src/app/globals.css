@@ -20,15 +20,22 @@
   /* 语义色：映射 CSS 变量 */
   --color-background:    var(--background);
   --color-foreground:    var(--foreground);
+  --color-surface:       var(--surface);
+  --color-surface-soft:  var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
   --color-muted:         var(--muted);
   --color-muted-fg:      var(--muted-fg);
   --color-accent:        var(--accent);
   --color-accent-hover:  var(--accent-hover);
   --color-accent-fg:     var(--accent-fg);
+  --color-ring:          var(--ring);
   --color-border:        var(--border);
   --color-card:          var(--card);
   --color-card-fg:       var(--card-fg);
   --color-code-bg:       var(--code-bg);
+  --color-hero-a:        var(--hero-a);
+  --color-hero-b:        var(--hero-b);
+  --color-hero-c:        var(--hero-c);
 
   /* 圆角 */
   --radius-sm: 0.375rem;
@@ -39,59 +46,76 @@
 
 /* =========================================================
    亮色主题（默认）
-   主色调：白色底 + 天蓝色强调
+   方向：雾面背景 + 玻璃层 + 暖冷对比强调
    ========================================================= */
 :root {
   color-scheme: light;
 
-  /* 背景 / 文字 */
-  --background:   #ffffff;
-  --foreground:   #111827;      /* gray-900 */
+  --background:   #f5f8ff;
+  --foreground:   #1f2a37;
 
-  /* 次要色 */
-  --muted:        #f3f4f6;      /* gray-100 */
-  --muted-fg:     #6b7280;      /* gray-500 */
+  --surface:      rgba(255, 255, 255, 0.72);
+  --surface-soft: rgba(255, 255, 255, 0.54);
+  --surface-strong: #ffffff;
 
-  /* 天蓝色强调色 */
-  --accent:       #38bdf8;      /* sky-400 */
-  --accent-hover: #0ea5e9;      /* sky-500 */
+  --muted:        #e9edf6;
+  --muted-fg:     #60708a;
+
+  --accent:       #ff7f5f;
+  --accent-hover: #ef6b46;
   --accent-fg:    #ffffff;
+  --ring:         #ff8e71;
 
-  /* 边框 */
-  --border:       #e5e7eb;      /* gray-200 */
+  --border:       rgba(129, 150, 181, 0.28);
 
-  /* 卡片 */
-  --card:         #ffffff;
-  --card-fg:      #111827;
+  --card:         rgba(255, 255, 255, 0.82);
+  --card-fg:      #1f2a37;
 
-  /* 代码块 */
-  --code-bg:      #f3f4f6;
+  --code-bg:      #eef2ff;
+
+  --hero-a:       #d6e8ff;
+  --hero-b:       #ffcdbd;
+  --hero-c:       #d7f4e8;
+  --grid-dot:     rgba(142, 160, 190, 0.28);
+  --shadow-soft:  0 18px 44px -30px rgba(38, 67, 111, 0.36);
+  --shadow-float: 0 28px 70px -34px rgba(33, 60, 110, 0.34);
 }
 
 /* =========================================================
    暗色主题
-   主色调：黑色底 + 天蓝色强调
+   方向：冷色深空 + 柔和暖橙强调
    ========================================================= */
 .dark {
   color-scheme: dark;
 
-  --background:   #0a0a0a;
-  --foreground:   #f9fafb;      /* gray-50 */
+  --background:   #090f19;
+  --foreground:   #ecf3ff;
 
-  --muted:        #1c1c1e;
-  --muted-fg:     #9ca3af;      /* gray-400 */
+  --surface:      rgba(14, 24, 38, 0.7);
+  --surface-soft: rgba(16, 27, 43, 0.52);
+  --surface-strong: #101a2a;
 
-  /* 天蓝色在暗色下稍亮，保持对比度 */
-  --accent:       #38bdf8;      /* sky-400（与亮色相同，已足够亮） */
-  --accent-hover: #7dd3fc;      /* sky-300 */
-  --accent-fg:    #0a0a0a;
+  --muted:        #111d2f;
+  --muted-fg:     #8ea2c2;
 
-  --border:       #27272a;      /* zinc-800 */
+  --accent:       #ff9a7b;
+  --accent-hover: #ffad93;
+  --accent-fg:    #1a0f0b;
+  --ring:         #ff9f83;
 
-  --card:         #111114;
-  --card-fg:      #f9fafb;
+  --border:       rgba(106, 132, 168, 0.3);
 
-  --code-bg:      #1e1e2e;      /* Catppuccin Mocha base */
+  --card:         rgba(14, 24, 38, 0.76);
+  --card-fg:      #ecf3ff;
+
+  --code-bg:      #131f34;
+
+  --hero-a:       #1a3058;
+  --hero-b:       #5a2f37;
+  --hero-c:       #13473e;
+  --grid-dot:     rgba(77, 103, 143, 0.28);
+  --shadow-soft:  0 20px 44px -30px rgba(2, 8, 22, 0.88);
+  --shadow-float: 0 30px 74px -34px rgba(0, 0, 0, 0.85);
 }
 
 /* =========================================================
@@ -105,6 +129,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.site-shell {
+  background-color: transparent;
+}
+
 /* 主题切换过渡 */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;
@@ -114,7 +142,7 @@ body {
 
 /* 焦点可见性（键盘导航） */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 3px;
 }
@@ -225,12 +253,32 @@ body {
     transform 220ms ease,
     box-shadow 220ms ease,
     border-color 220ms ease;
+  box-shadow: var(--shadow-soft);
 }
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 36px -24px rgba(15, 23, 42, 0.35);
+  box-shadow: var(--shadow-float);
   border-color: color-mix(in oklab, var(--accent) 26%, var(--border));
+}
+
+.glass-panel {
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+}
+
+.nav-pill {
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+
+.nav-pill-active {
+  border-color: color-mix(in oklab, var(--accent) 32%, var(--border));
+  background: color-mix(in oklab, var(--accent) 14%, var(--surface-strong));
+  color: var(--accent);
 }
 
 /* 代码复制成功动画 */

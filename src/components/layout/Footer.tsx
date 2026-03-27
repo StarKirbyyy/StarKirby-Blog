@@ -5,14 +5,13 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-border bg-background">
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <footer className="mt-10 px-3 pb-6 sm:px-5 sm:pb-8">
+      <div className="glass-panel mx-auto w-full max-w-6xl rounded-3xl px-5 py-8 sm:px-8">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-          {/* 左侧：Logo + 版权 */}
           <div className="flex flex-col items-center gap-1 sm:items-start">
             <Link
               href="/"
-              className="flex items-center gap-1.5 font-bold text-foreground hover:text-accent transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 font-semibold text-foreground transition-colors hover:text-accent"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -25,35 +24,32 @@ export function Footer() {
               >
                 <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
               </svg>
-              <span className="text-sm">{siteConfig.name}</span>
+              <span className="text-sm tracking-tight">{siteConfig.name}</span>
             </Link>
             <p className="text-xs text-muted-fg">
               © {year} {siteConfig.author.name}. All rights reserved.
             </p>
           </div>
 
-          {/* 中间：快速链接 */}
-          <nav aria-label="Footer 导航" className="flex gap-4">
+          <nav aria-label="Footer 导航" className="flex flex-wrap items-center justify-center gap-2">
             {siteConfig.nav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm text-muted-fg hover:text-foreground transition-colors"
+                className="nav-pill rounded-full border border-border/65 bg-surface-soft px-3 py-1.5 text-sm text-muted-fg transition-colors hover:text-foreground"
               >
                 {item.title}
               </Link>
             ))}
           </nav>
 
-          {/* 右侧：社交链接 */}
-          <div className="flex items-center gap-3">
-            {/* GitHub */}
+          <div className="flex items-center gap-2">
             <a
               href={siteConfig.author.social.github}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"
-              className="text-muted-fg hover:text-foreground transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-muted-fg transition-colors hover:text-foreground"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -67,11 +63,10 @@ export function Footer() {
               </svg>
             </a>
 
-            {/* RSS */}
             <a
               href="/rss.xml"
               aria-label="RSS 订阅"
-              className="text-muted-fg hover:text-accent transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-muted-fg transition-colors hover:text-accent"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -87,8 +82,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* 底部一行小字 */}
-        <p className="mt-8 text-center text-xs text-muted-fg/60">
+        <p className="mt-8 text-center text-xs text-muted-fg/80">
           Built with{" "}
           <a
             href="https://nextjs.org"
