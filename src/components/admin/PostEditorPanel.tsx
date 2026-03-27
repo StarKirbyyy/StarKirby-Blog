@@ -165,6 +165,34 @@ export function PostEditorPanel({ postId }: { postId: string }) {
     }
   };
 
+  const onUploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`/api/admin/posts/${encodeURIComponent(postId)}/assets`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const json = (await response.json()) as {
+      success?: boolean;
+      url?: string;
+      markdown?: string;
+      alt?: string;
+      error?: string;
+    };
+
+    if (!response.ok || !json.success || !json.url) {
+      throw new Error(json.error || "图片上传失败");
+    }
+
+    return {
+      url: json.url,
+      markdown: json.markdown,
+      alt: json.alt,
+    };
+  };
+
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
@@ -293,7 +321,12 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           <span className="text-sm font-medium text-foreground">
             Markdown 正文（Typora 风格增强）
           </span>
-          <MarkdownLiveEditor value={markdown} onChange={setMarkdown} disabled={saving} />
+          <MarkdownLiveEditor
+            value={markdown}
+            onChange={setMarkdown}
+            onUploadImage={onUploadImage}
+            disabled={saving}
+          />
         </div>
 
         {message ? (

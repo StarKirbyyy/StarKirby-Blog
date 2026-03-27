@@ -20,6 +20,7 @@ type ViewMode = "typora" | "edit" | "split" | "preview";
 interface MarkdownLiveEditorProps {
   value: string;
   onChange: (next: string) => void;
+  onUploadImage?: (file: File) => Promise<{ url: string; markdown?: string; alt?: string }>;
   disabled?: boolean;
 }
 
@@ -511,15 +512,19 @@ function TyporaLikeEditor({
 export function MarkdownLiveEditor({
   value,
   onChange,
+  onUploadImage,
   disabled = false,
 }: MarkdownLiveEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const deferredValue = useDeferredValue(value);
   const [viewMode, setViewMode] = useState<ViewMode>("typora");
   const [previewComponent, setPreviewComponent] = useState<MDXContentComponent | null>(
     null,
   );
   const [previewError, setPreviewError] = useState("");
+  const [assetStatus, setAssetStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [assetMessage, setAssetMessage] = useState("");
 
   const stats = useMemo(() => {
     const lines = value ? value.split("\n").length : 0;
@@ -622,15 +627,113 @@ export function MarkdownLiveEditor({
         );
         return;
       case "image":
-        apply((source, start, end) =>
-          wrapSelection(source, start, end, "![", "](https://example.com/image.png)", "图片描述"),
-        );
+        imageInputRef.current?.click();
         return;
       case "code-block":
         apply((source, start, end) => insertCodeBlock(source, start, end));
         return;
       default:
     }
+  };
+
+  const insertSnippet = (snippet: string) => {
+    if (!snippet.trim()) return;
+
+    if (viewMode === "typora") {
+      // Typora 行编辑中，插入到该行当前光标位置。
+      const lineInput = document.activeElement as HTMLInputElement | null;
+      if (lineInput && lineInput.tagName === "INPUT") {
+        const start = lineInput.selectionStart ?? lineInput.value.length;
+        const end = lineInput.selectionEnd ?? lineInput.value.length;
+        const nextValue =
+          lineInput.value.slice(0, start) + snippet + lineInput.value.slice(end);
+        lineInput.value = nextValue;
+        lineInput.dispatchEvent(new Event("input", { bubbles: true }));
+        requestAnimationFrame(() => {
+          lineInput.setSelectionRange(start + snippet.length, start + snippet.length);
+        });
+        return;
+      }
+
+      // 未激活具体行时，追加到末尾。
+      const prefix = value.endsWith("\n") || value.length === 0 ? "" : "\n";
+      onChange(`${value}${prefix}${snippet}\n`);
+      return;
+    }
+
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      const prefix = value.endsWith("\n") || value.length === 0 ? "" : "\n";
+      onChange(`${value}${prefix}${snippet}\n`);
+      return;
+    }
+
+    const { selectionStart, selectionEnd } = textarea;
+    const nextValue =
+      value.slice(0, selectionStart) + snippet + value.slice(selectionEnd);
+    onChange(nextValue);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const nextPos = selectionStart + snippet.length;
+      textarea.setSelectionRange(nextPos, nextPos);
+    });
+  };
+
+  const handleUploadImage = async (file: File) => {
+    if (!onUploadImage) {
+      setAssetStatus("error");
+      setAssetMessage("未配置图片上传能力");
+      return;
+    }
+
+    setAssetStatus("uploading");
+    setAssetMessage("图片上传中...");
+
+    try {
+      const result = await onUploadImage(file);
+      const alt = result.alt?.trim() || file.name.replace(/\.[^.]+$/, "") || "image";
+      const markdown = result.markdown ?? `![${alt}](${result.url})`;
+      insertSnippet(markdown);
+      setAssetStatus("idle");
+      setAssetMessage("");
+    } catch (error) {
+      setAssetStatus("error");
+      setAssetMessage(error instanceof Error ? error.message : "图片上传失败");
+    }
+  };
+
+  const onImageInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    await handleUploadImage(file);
+  };
+
+  const getImageFromFileList = (files: FileList | null) => {
+    if (!files) return null;
+    return Array.from(files).find((file) => file.type.startsWith("image/")) ?? null;
+  };
+
+  const onEditorPaste = async (event: React.ClipboardEvent<HTMLElement>) => {
+    const file = getImageFromFileList(event.clipboardData.files);
+    if (!file) return;
+    event.preventDefault();
+    await handleUploadImage(file);
+  };
+
+  const onEditorDragOver = (event: React.DragEvent<HTMLElement>) => {
+    if (getImageFromFileList(event.dataTransfer.files)) {
+      event.preventDefault();
+    }
+  };
+
+  const onEditorDrop = async (event: React.DragEvent<HTMLElement>) => {
+    const file = getImageFromFileList(event.dataTransfer.files);
+    if (!file) return;
+    event.preventDefault();
+    await handleUploadImage(file);
   };
 
   const onEditorKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -667,7 +770,19 @@ export function MarkdownLiveEditor({
   };
 
   return (
-    <section className="space-y-3">
+    <section
+      className="space-y-3"
+      onPaste={onEditorPaste}
+      onDragOver={onEditorDragOver}
+      onDrop={onEditorDrop}
+    >
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/avif,image/gif,image/svg+xml"
+        className="hidden"
+        onChange={onImageInputChange}
+      />
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -810,6 +925,13 @@ export function MarkdownLiveEditor({
           </button>
         </div>
       </div>
+
+      {assetStatus === "uploading" ? (
+        <p className="text-xs text-muted-fg">图片上传中，请稍候...</p>
+      ) : null}
+      {assetStatus === "error" ? (
+        <p className="text-xs text-red-700 dark:text-red-300">{assetMessage}</p>
+      ) : null}
 
       <div
         className={`grid gap-4 ${
