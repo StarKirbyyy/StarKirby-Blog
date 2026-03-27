@@ -18,10 +18,7 @@ export default function ProjectsPage() {
       <header className="glass-panel rounded-[10px] p-6 sm:p-7">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-fg">Portfolio</p>
         <h1
-          className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
-          style={{
-            ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
-          }}
+          className="sakurairo-page-title mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl"
         >
           项目
         </h1>

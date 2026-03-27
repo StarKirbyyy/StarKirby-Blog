@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/site";
+import { readEffectiveSakurairoPreferencesFromRoot } from "@/lib/sakurairo-preferences";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 
@@ -11,12 +12,29 @@ export function Header() {
   const pathname = usePathname() ?? "/";
   const [isHovered, setIsHovered] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [whiteCatText, setWhiteCatText] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 0);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const sync = () => {
+      const preferences = readEffectiveSakurairoPreferencesFromRoot();
+      setLogoUrl(preferences.preliminaryNavLogoUrl);
+      setWhiteCatText(preferences.preliminaryWhiteCatText);
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("sakurairo:preferences-change", sync as EventListener);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("sakurairo:preferences-change", sync as EventListener);
+    };
   }, []);
 
   return (
@@ -35,18 +53,32 @@ export function Header() {
           }`}
           aria-label="返回首页"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="text-accent transition-transform duration-200 group-hover:rotate-12"
-            aria-hidden="true"
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt="导航 Logo"
+              className="h-6 w-6 rounded-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-accent transition-transform duration-200 group-hover:rotate-12"
+              aria-hidden="true"
+            >
+              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+            </svg>
+          )}
+          <span
+            className={`text-sm tracking-[0.04em] sm:text-base ${whiteCatText ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]" : ""}`}
           >
-            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
-          </svg>
-          <span className="text-sm tracking-[0.04em] sm:text-base">{siteConfig.name}</span>
+            {siteConfig.name}
+          </span>
         </Link>
 
         <nav

@@ -37,31 +37,13 @@ export function SakurairoCustomizer() {
         const remote = mergeSakurairoPreferences(defaults, json.settings);
         setGlobalDefaults(remote);
 
-        const merged: SakurairoPreferences = {
-          ...local,
-          layoutMode: hasLocalOverride("layoutMode") ? local.layoutMode : remote.layoutMode,
-          bgStyle: hasLocalOverride("bgStyle") ? local.bgStyle : remote.bgStyle,
-          motion: hasLocalOverride("motion") ? local.motion : remote.motion,
-          titleAnim: hasLocalOverride("titleAnim") ? local.titleAnim : remote.titleAnim,
-          commentStyle: hasLocalOverride("commentStyle")
-            ? local.commentStyle
-            : remote.commentStyle,
-          postTitleFontSizePx: hasLocalOverride("postTitleFontSizePx")
-            ? local.postTitleFontSizePx
-            : remote.postTitleFontSizePx,
-          copyAttributionEnabled: hasLocalOverride("copyAttributionEnabled")
-            ? local.copyAttributionEnabled
-            : remote.copyAttributionEnabled,
-          copyAttributionMinLength: hasLocalOverride("copyAttributionMinLength")
-            ? local.copyAttributionMinLength
-            : remote.copyAttributionMinLength,
-          commentPlaceholder: hasLocalOverride("commentPlaceholder")
-            ? local.commentPlaceholder
-            : remote.commentPlaceholder,
-          commentSubmitText: hasLocalOverride("commentSubmitText")
-            ? local.commentSubmitText
-            : remote.commentSubmitText,
-        };
+        const localOverrides: Partial<SakurairoPreferences> = {};
+        (Object.keys(remote) as (keyof SakurairoPreferences)[]).forEach((key) => {
+          if (hasLocalOverride(key)) {
+            (localOverrides as Record<string, unknown>)[key] = local[key];
+          }
+        });
+        const merged = mergeSakurairoPreferences(remote, localOverrides);
 
         setPreferences(merged);
       } finally {

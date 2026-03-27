@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { SakurairoSiteAvatar } from "@/components/layout/SakurairoSiteAvatar";
 import { mdxComponents } from "@/components/mdx/components";
 import { siteConfig } from "@/config/site";
 import { getMDXContent } from "@/lib/mdx";
@@ -32,22 +32,17 @@ export default async function AboutPage() {
     <div className="content-shell space-y-6 pb-10 pt-5 sm:pt-7">
       <header className="glass-panel rounded-[10px] p-6 sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <Image
-            src={siteConfig.author.avatar}
+          <SakurairoSiteAvatar
+            fallbackSrc={siteConfig.author.avatar}
             alt={`${siteConfig.author.name} 头像`}
             width={120}
             height={120}
-            sizes="120px"
-            className="h-24 w-24 rounded-3xl border border-border sm:h-[7.5rem] sm:w-[7.5rem]"
-            priority
+            className="h-24 w-24 rounded-3xl border border-border object-cover sm:h-[7.5rem] sm:w-[7.5rem]"
           />
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-fg">About Me</p>
             <h1
-              className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
-              style={{
-                ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
-              }}
+              className="sakurairo-page-title mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl"
             >
               {siteConfig.author.name}
             </h1>
@@ -98,7 +93,7 @@ export default async function AboutPage() {
       <section className="glass-panel rounded-[10px] p-5 sm:p-6">
         <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-muted-fg">详细介绍</h2>
         {MDXContent ? (
-          <div className={`markdown-content prose prose-slate mt-4 max-w-none dark:prose-invert ${siteConfig.sakurairo.pageLayoutStyle === "github" ? "markdown-github" : ""}`}>
+          <div className="markdown-content prose prose-slate mt-4 max-w-none dark:prose-invert">
             <MDXContent components={mdxComponents} />
           </div>
         ) : (

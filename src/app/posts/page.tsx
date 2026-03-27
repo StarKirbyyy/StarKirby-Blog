@@ -49,10 +49,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
               Archive
             </p>
             <h1
-              className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
-              style={{
-                ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
-              }}
+              className="sakurairo-page-title mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl"
             >
               全部文章
             </h1>

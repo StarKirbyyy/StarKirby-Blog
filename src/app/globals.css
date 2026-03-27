@@ -160,11 +160,22 @@ a {
 }
 
 .glass-panel {
-  background-color: var(--surface);
+  background-color: rgba(255, 255, 255, var(--homepage_widget_transparency));
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
   backdrop-filter: saturate(180%) blur(10px);
   -webkit-backdrop-filter: saturate(180%) blur(10px);
+}
+
+.dark .glass-panel {
+  background-color: rgba(28, 36, 51, var(--homepage_widget_transparency));
+}
+
+.glass-panel,
+.post-list-thumb,
+.post-title-float,
+.comments-shell {
+  border-radius: var(--style_menu_radius);
 }
 
 .card-hover {
@@ -332,7 +343,7 @@ a {
   opacity: 1;
 }
 
-.markdown-github :where(blockquote) {
+.layout-github .markdown-content :where(blockquote) {
   border-left: 4px solid color-mix(in oklab, var(--theme-skin-matching) 65%, transparent);
   background: color-mix(in oklab, var(--surface-soft) 80%, transparent);
   border-radius: 8px;
@@ -388,6 +399,22 @@ a {
   animation-duration: var(--sakurairo-title-duration, 1.2s);
   animation-timing-function: ease;
   animation-fill-mode: both;
+}
+
+[data-page-post-title-underline="false"] .sakurairo-post-title-underline::after {
+  display: none !important;
+}
+
+[data-page-show-toc="false"] .sakurairo-post-toc {
+  display: none !important;
+}
+
+[data-page-show-post-tags="false"] .sakurairo-post-tags {
+  display: none !important;
+}
+
+[data-page-show-post-navigation="false"] .sakurairo-post-navigation {
+  display: none !important;
 }
 
 @media (max-width: 860px) {
