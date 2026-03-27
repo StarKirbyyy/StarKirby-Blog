@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
       <LoginPanel />
     </div>
   );

@@ -161,9 +161,9 @@ export function PostManagementPanel() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <header className="border-b border-border pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           文章管理
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -171,7 +171,7 @@ export function PostManagementPanel() {
         </p>
       </header>
 
-      <section className="mt-6 rounded-xl border border-border bg-card p-4 sm:p-5">
+      <section className="glass-panel mt-6 rounded-[10px] p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-[220px_1fr_auto]">
           <select
             value={statusFilter}
@@ -179,7 +179,7 @@ export function PostManagementPanel() {
               setStatusFilter(event.target.value as "all" | "published" | "draft");
               setPage(1);
             }}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           >
             <option value="all">全部状态</option>
             <option value="published">仅已发布</option>
@@ -189,14 +189,14 @@ export function PostManagementPanel() {
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             placeholder="搜索标题/slug/描述"
           />
 
           <button
             type="button"
             onClick={onApplySearch}
-            className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
           >
             应用过滤
           </button>
@@ -221,7 +221,7 @@ export function PostManagementPanel() {
           <p className="text-sm text-muted-fg">当前筛选条件下暂无文章。</p>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="rounded-xl border border-border bg-card p-4">
+            <article key={post.id} className="glass-panel rounded-2xl p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-base font-semibold text-foreground">
@@ -243,7 +243,7 @@ export function PostManagementPanel() {
                   {post.tags.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {post.tags.map((tag) => (
-                        <span key={`${post.id}-${tag}`} className="rounded bg-muted px-2 py-1 text-xs text-foreground">
+                        <span key={`${post.id}-${tag}`} className="rounded-full border border-border/70 bg-surface-soft px-2 py-1 text-xs text-foreground">
                           #{tag}
                         </span>
                       ))}
@@ -254,14 +254,14 @@ export function PostManagementPanel() {
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/admin/posts/${post.id}/edit`}
-                    className="rounded-md bg-accent/15 px-2 py-1 text-xs text-accent transition-colors hover:bg-accent/25"
+                    className="rounded-full border border-accent/35 bg-accent/15 px-2.5 py-1 text-xs text-accent transition-colors hover:bg-accent/25"
                   >
                     编辑
                   </Link>
                   <Link
                     href={`/posts/${post.slug}`}
                     target="_blank"
-                    className="rounded-md bg-muted px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted/80"
+                    className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-muted-fg transition-colors hover:text-foreground"
                   >
                     查看
                   </Link>
@@ -269,7 +269,7 @@ export function PostManagementPanel() {
                     type="button"
                     onClick={() => onDelete(post)}
                     disabled={deletingPostId === post.id}
-                    className="rounded-md bg-red-500/15 px-2 py-1 text-xs text-red-700 transition-colors hover:bg-red-500/25 dark:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full border border-red-500/30 bg-red-500/15 px-2.5 py-1 text-xs text-red-700 transition-colors hover:bg-red-500/25 dark:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {deletingPostId === post.id ? "删除中..." : "删除"}
                   </button>
@@ -285,7 +285,7 @@ export function PostManagementPanel() {
           type="button"
           onClick={() => setPage((previous) => Math.max(1, previous - 1))}
           disabled={page <= 1 || loading}
-          className="inline-flex rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-sm text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           上一页
         </button>
@@ -293,7 +293,7 @@ export function PostManagementPanel() {
           type="button"
           onClick={() => setPage((previous) => Math.min(pagination.totalPages, previous + 1))}
           disabled={page >= pagination.totalPages || loading}
-          className="inline-flex rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-sm text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           下一页
         </button>

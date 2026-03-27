@@ -30,7 +30,7 @@ export function MobileMenu({ currentPath }: MobileMenuProps) {
         onClick={() => setOpen(!open)}
         aria-label={open ? "关闭导航菜单" : "打开导航菜单"}
         aria-expanded={open}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-muted-fg transition-colors hover:text-foreground md:hidden"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-surface-soft hover:text-foreground md:hidden"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

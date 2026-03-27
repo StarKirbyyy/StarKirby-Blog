@@ -49,14 +49,14 @@ export function GiscusComments() {
   }, []);
 
   return (
-    <section className="mt-10 border-t border-border pt-6">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        评论
+    <section className="comments-shell glass-panel mt-6 rounded-[10px] p-5 sm:p-6">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+        评论区
       </h2>
       {isGiscusConfigured() ? (
-        <div ref={containerRef} className="mt-4" />
+        <div ref={containerRef} className="mt-4 rounded-[10px] border border-border/60 bg-surface-soft p-3 sm:p-4" />
       ) : (
-        <p className="mt-3 text-sm text-muted-fg">
+        <p className="mt-3 text-sm leading-6 text-muted-fg">
           已预留评论区，配置 Giscus 环境变量后会自动启用。
         </p>
       )}

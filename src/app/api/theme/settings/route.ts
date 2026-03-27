@@ -1,0 +1,10 @@
+import { getGlobalSakurairoPatch } from "@/lib/sakurairo-global-settings";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const settings = await getGlobalSakurairoPatch();
+  return Response.json({
+    settings: settings ?? null,
+  });
+}

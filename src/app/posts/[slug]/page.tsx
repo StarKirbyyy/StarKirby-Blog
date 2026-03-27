@@ -91,10 +91,7 @@ export default async function PostDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [allPosts, MDXContent] = await Promise.all([
-    getAllPosts(),
-    getMDXContent(post.content),
-  ]);
+  const [allPosts, MDXContent] = await Promise.all([getAllPosts(), getMDXContent(post.content)]);
 
   const toc = extractTableOfContents(post.content);
   const currentIndex = allPosts.findIndex((item) => item.slug === post.slug);
@@ -127,75 +124,115 @@ export default async function PostDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Link
-        href="/posts"
-        className="text-sm text-muted-fg transition-colors hover:text-accent"
-      >
-        ← 返回文章列表
-      </Link>
-
-      <header className="mt-5 border-b border-border pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          {post.title}
-        </h1>
-        <p className="mt-3 text-base text-muted-fg">{post.description}</p>
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-fg">
-          <span>发布于 {formatDate(post.date)}</span>
-          {post.updated ? <span>更新于 {formatDate(post.updated)}</span> : null}
-          <span>{post.readingTime}</span>
-          {post.tags?.length ? (
-            <div className="flex flex-wrap items-center gap-2">
-              {post.tags.map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/tags/${encodeURIComponent(tag)}`}
-                  className="rounded-md bg-muted px-2 py-1 text-xs text-muted-fg transition-colors hover:text-accent"
-                >
-                  #{tag}
-                </Link>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </header>
 
       {post.cover ? (
-        <div className="mt-8 overflow-hidden rounded-xl border border-border">
+        <header className="relative h-[320px] overflow-hidden rounded-[10px] border border-border shadow-[var(--shadow-soft)] sm:h-[380px]">
           <Image
             src={post.cover}
             alt={`${post.title} 封面图`}
-            width={1200}
-            height={630}
-            sizes="(min-width: 1024px) 960px, 100vw"
-            className="h-auto w-full"
+            fill
+            sizes="(max-width: 860px) 100vw, 860px"
+            className="object-cover"
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/20 to-black/58" />
+          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+            <Link
+              href="/posts"
+              className="inline-flex rounded-full border border-white/35 bg-white/16 px-3 py-1.5 text-sm text-white transition-colors hover:bg-white/24"
+            >
+              ← 返回文章列表
+            </Link>
+            <h1
+              className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}${siteConfig.sakurairo.postTitleUnderlineAnimation ? " after:absolute after:bottom-[-2px] after:left-0 after:h-[0.4em] after:w-[68%] after:rounded-full after:bg-white/35 after:content-['']" : ""}relative mt-4 font-medium tracking-tight text-white`}
+              style={{
+                fontSize: "clamp(2rem,4vw,var(--sakurairo-post-title-size,34px))",
+                ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
+              }}
+            >
+              {post.title}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-white/92 sm:text-base">
+              {post.description}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/90 sm:text-sm">
+              <span className="post-meta-chip">发布于 {formatDate(post.date)}</span>
+              {post.updated ? (
+                <span className="post-meta-chip">更新于 {formatDate(post.updated)}</span>
+              ) : null}
+              <span className="post-meta-chip">{post.readingTime}</span>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <header className="glass-panel overflow-hidden rounded-[10px] p-6 sm:p-7">
+          <Link
+            href="/posts"
+            className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm text-muted-fg transition-colors hover:text-foreground"
+          >
+            ← 返回文章列表
+          </Link>
+          <h1
+            className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}${siteConfig.sakurairo.postTitleUnderlineAnimation ? " after:absolute after:bottom-[-4px] after:left-[8%] after:h-[0.5em] after:w-[72%] after:rounded-full after:bg-accent/35 after:content-['']" : ""}relative mt-4 font-semibold tracking-tight text-foreground`}
+            style={{
+              fontSize: "clamp(2rem,4vw,var(--sakurairo-post-title-size,34px))",
+              ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
+            }}
+          >
+            {post.title}
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-fg sm:text-base">
+            {post.description}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2.5 text-xs text-muted-fg sm:text-sm">
+            <span className="rounded-full border border-border/70 bg-surface-soft px-3 py-1.5">
+              发布于 {formatDate(post.date)}
+            </span>
+            {post.updated ? (
+              <span className="rounded-full border border-border/70 bg-surface-soft px-3 py-1.5">
+                更新于 {formatDate(post.updated)}
+              </span>
+            ) : null}
+            <span className="rounded-full border border-border/70 bg-surface-soft px-3 py-1.5">
+              {post.readingTime}
+            </span>
+          </div>
+        </header>
+      )}
+
+      {post.tags?.length ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {post.tags.map((tag) => (
+            <Link
+              key={tag}
+              href={`/tags/${encodeURIComponent(tag)}`}
+              className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-muted-fg transition-colors hover:text-accent"
+            >
+              #{tag}
+            </Link>
+          ))}
         </div>
       ) : null}
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-12">
-        <article className="min-w-0">
-          <div className="prose prose-slate max-w-none dark:prose-invert">
-            <MDXContent components={mdxComponents} />
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <article className="min-w-0 space-y-6">
+          <div className="glass-panel rounded-[10px] p-5 sm:p-7">
+            <div className={`markdown-content prose prose-slate max-w-none dark:prose-invert ${siteConfig.sakurairo.pageLayoutStyle === "github" ? "markdown-github" : ""}`}>
+              <MDXContent components={mdxComponents} />
+            </div>
           </div>
 
-          <nav
-            aria-label="文章导航"
-            className="mt-10 grid gap-4 border-t border-border pt-6 sm:grid-cols-2"
-          >
-            <div className="card-hover min-h-20 rounded-lg border border-border p-4">
+          <nav aria-label="文章导航" className="grid gap-3 sm:grid-cols-2">
+            <div className="glass-panel card-hover min-h-24 rounded-[10px] p-4">
               {olderPost ? (
-                <Link
-                  href={`/posts/${olderPost.slug}`}
-                  className="text-sm text-muted-fg transition-colors hover:text-accent"
-                >
-                  ← 上一篇
-                  <p className="mt-1 text-base font-medium text-foreground">
+                <Link href={`/posts/${olderPost.slug}`} className="block">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted-fg">上一篇</p>
+                  <p className="mt-2 text-base font-medium text-foreground transition-colors hover:text-accent">
                     {olderPost.title}
                   </p>
                 </Link>
@@ -203,14 +240,11 @@ export default async function PostDetailPage({ params }: PageProps) {
                 <p className="text-sm text-muted-fg">没有更早的文章了</p>
               )}
             </div>
-            <div className="card-hover min-h-20 rounded-lg border border-border p-4 text-right">
+            <div className="glass-panel card-hover min-h-24 rounded-[10px] p-4 text-right">
               {newerPost ? (
-                <Link
-                  href={`/posts/${newerPost.slug}`}
-                  className="text-sm text-muted-fg transition-colors hover:text-accent"
-                >
-                  下一篇 →
-                  <p className="mt-1 text-base font-medium text-foreground">
+                <Link href={`/posts/${newerPost.slug}`} className="block">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted-fg">下一篇</p>
+                  <p className="mt-2 text-base font-medium text-foreground transition-colors hover:text-accent">
                     {newerPost.title}
                   </p>
                 </Link>

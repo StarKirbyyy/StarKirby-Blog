@@ -29,68 +29,76 @@ export default async function AboutPage() {
   const contacts = getContactLinks();
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-      <header className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+    <div className="content-shell space-y-6 pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <Image
             src={siteConfig.author.avatar}
             alt={`${siteConfig.author.name} 头像`}
-            width={104}
-            height={104}
-            sizes="104px"
-            className="h-24 w-24 rounded-2xl border border-border"
+            width={120}
+            height={120}
+            sizes="120px"
+            className="h-24 w-24 rounded-3xl border border-border sm:h-[7.5rem] sm:w-[7.5rem]"
             priority
           />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-fg">About Me</p>
+            <h1
+              className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
+              style={{
+                ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
+              }}
+            >
               {siteConfig.author.name}
             </h1>
-            <p className="mt-3 text-base leading-7 text-muted-fg">
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-fg sm:text-base">
               {siteConfig.author.bio}
             </p>
           </div>
         </div>
       </header>
 
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-foreground">技能栈</h2>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {siteConfig.author.skills.map((skill) => (
-            <span
-              key={skill}
-              className="rounded-md bg-muted px-3 py-1.5 text-sm text-muted-fg"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
+      <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+        <article className="glass-panel rounded-[10px] p-5 sm:p-6">
+          <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-muted-fg">技能栈</h2>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {siteConfig.author.skills.map((skill) => (
+              <span
+                key={skill}
+                className="rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm text-foreground"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </article>
+
+        <article className="glass-panel rounded-[10px] p-5 sm:p-6">
+          <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-muted-fg">联系方式</h2>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {contacts.map((contact) => {
+              const isMail = contact.href.startsWith("mailto:");
+              return (
+                <li key={contact.label}>
+                  <Link
+                    href={contact.href}
+                    target={isMail ? undefined : "_blank"}
+                    rel={isMail ? undefined : "noopener noreferrer"}
+                    className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm text-muted-fg transition-colors hover:text-foreground"
+                  >
+                    {contact.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </article>
       </section>
 
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-foreground">联系方式</h2>
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {contacts.map((contact) => {
-            const isMail = contact.href.startsWith("mailto:");
-            return (
-              <li key={contact.label}>
-                <Link
-                  href={contact.href}
-                  target={isMail ? undefined : "_blank"}
-                  rel={isMail ? undefined : "noopener noreferrer"}
-                  className="inline-flex rounded-md border border-border px-3 py-2 text-sm text-muted-fg transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {contact.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-foreground">详细介绍</h2>
+      <section className="glass-panel rounded-[10px] p-5 sm:p-6">
+        <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-muted-fg">详细介绍</h2>
         {MDXContent ? (
-          <div className="prose prose-slate mt-4 max-w-none dark:prose-invert">
+          <div className={`markdown-content prose prose-slate mt-4 max-w-none dark:prose-invert ${siteConfig.sakurairo.pageLayoutStyle === "github" ? "markdown-github" : ""}`}>
             <MDXContent components={mdxComponents} />
           </div>
         ) : (

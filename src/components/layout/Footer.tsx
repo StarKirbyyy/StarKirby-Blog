@@ -1,17 +1,40 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const noScrollableArea =
+        document.documentElement.scrollHeight <= window.innerHeight + 80;
+      setVisible(noScrollableArea || window.scrollY > 180);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
 
   return (
-    <footer className="mt-10 px-3 pb-6 sm:px-5 sm:pb-8">
-      <div className="glass-panel mx-auto w-full max-w-6xl rounded-3xl px-5 py-8 sm:px-8">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+    <footer
+      className={`pointer-events-none fixed inset-x-0 bottom-3 z-30 mx-auto w-[92%] max-w-[820px] transition-all duration-700 ${
+        visible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
+      }`}
+    >
+      <div className="glass-panel pointer-events-auto rounded-[10px] px-5 py-4 sm:px-6">
+        <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-between sm:gap-4">
           <div className="flex flex-col items-center gap-1 sm:items-start">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 font-semibold text-foreground transition-colors hover:text-accent"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 font-medium text-foreground transition-colors hover:text-accent"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -31,7 +54,7 @@ export function Footer() {
             </p>
           </div>
 
-          <nav aria-label="Footer 导航" className="flex flex-wrap items-center justify-center gap-2">
+          <nav aria-label="Footer 导航" className="flex flex-wrap items-center justify-center gap-1.5">
             {siteConfig.nav.map((item) => (
               <Link
                 key={item.href}
@@ -82,7 +105,7 @@ export function Footer() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-muted-fg/80">
+        <p className="mt-4 text-center text-xs text-muted-fg/80">
           Built with{" "}
           <a
             href="https://nextjs.org"

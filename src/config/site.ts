@@ -78,6 +78,18 @@ export const siteConfig = {
     },
   },
 
+  sakurairo: {
+    pageLayoutStyle: "default" as "default" | "github",
+    pageTitleAnimation: true,
+    pageTitleAnimationDuration: 1.2,
+    addAttributionOnCopy: true,
+    copyAttributionMinLength: 30,
+    postTitleFontSizePx: 34,
+    postTitleUnderlineAnimation: true,
+    commentPlaceholder: "写下你的评论（支持基本 Markdown，最多 1000 字）",
+    commentSubmitText: "发送评论",
+  },
+
   // RSS
   rss: {
     title: "StarKirby Blog",

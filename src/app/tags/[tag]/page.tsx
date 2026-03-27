@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PostListCard } from "@/components/posts/PostListCard";
+import { siteConfig } from "@/config/site";
 import { getAllTags, getPostsByTag } from "@/lib/posts";
 
 interface TagPageProps {
@@ -12,14 +13,6 @@ interface TagPageProps {
 
 export const dynamicParams = true;
 export const revalidate = 3600;
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(date));
-}
 
 function decodeTag(tag: string) {
   try {
@@ -56,10 +49,7 @@ export default async function TagDetailPage({ params }: TagPageProps) {
   const { tag } = await params;
   const decodedTag = decodeTag(tag);
 
-  const [posts, allTags] = await Promise.all([
-    getPostsByTag(decodedTag),
-    getAllTags(),
-  ]);
+  const [posts, allTags] = await Promise.all([getPostsByTag(decodedTag), getAllTags()]);
 
   if (posts.length === 0) {
     notFound();
@@ -70,83 +60,29 @@ export default async function TagDetailPage({ params }: TagPageProps) {
     decodedTag;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-      <header className="border-b border-border pb-6">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
         <Link
           href="/tags"
-          className="text-sm text-muted-fg transition-colors hover:text-accent"
+          className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm text-muted-fg transition-colors hover:text-foreground"
         >
           ← 返回标签页
         </Link>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          标签：#{matchedTag}
+        <h1
+          className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
+          style={{
+            ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
+          }}
+        >
+          #{matchedTag}
         </h1>
-        <p className="mt-3 text-base text-muted-fg">
-          共 {posts.length} 篇文章
-        </p>
+        <p className="mt-4 text-sm leading-7 text-muted-fg">共 {posts.length} 篇文章。</p>
       </header>
 
-      <ul className="mt-8 space-y-5">
+      <ul className="mt-8 space-y-4">
         {posts.map((post) => (
           <li key={post.slug}>
-            <article className="card-hover overflow-hidden rounded-xl border border-border bg-card">
-              <div className="grid gap-4 p-5 sm:p-6 md:grid-cols-[1fr_180px] md:items-start">
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground">
-                    <Link
-                      href={`/posts/${post.slug}`}
-                      className="transition-colors hover:text-accent"
-                    >
-                      {post.title}
-                    </Link>
-                  </h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-fg">
-                    <span>{formatDate(post.date)}</span>
-                    <span>{post.readingTime}</span>
-                  </div>
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-fg">
-                    {post.description}
-                  </p>
-                  {post.tags?.length ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {post.tags.map((postTag) => {
-                        const href = `/tags/${encodeURIComponent(postTag)}`;
-                        const isCurrent = postTag.toLowerCase() === matchedTag.toLowerCase();
-                        return (
-                          <Link
-                            key={`${post.slug}-${postTag}`}
-                            href={href}
-                            className={`rounded-md px-2 py-1 text-xs transition-colors ${
-                              isCurrent
-                                ? "bg-accent/10 text-accent"
-                                : "bg-muted text-muted-fg hover:text-accent"
-                            }`}
-                          >
-                            #{postTag}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-
-                {post.cover ? (
-                  <Link
-                    href={`/posts/${post.slug}`}
-                    className="block overflow-hidden rounded-lg border border-border"
-                  >
-                    <Image
-                      src={post.cover}
-                      alt={`${post.title} 封面图`}
-                      width={360}
-                      height={200}
-                      sizes="(min-width: 768px) 180px, 100vw"
-                      className="h-auto w-full"
-                    />
-                  </Link>
-                ) : null}
-              </div>
-            </article>
+            <PostListCard post={post} />
           </li>
         ))}
       </ul>

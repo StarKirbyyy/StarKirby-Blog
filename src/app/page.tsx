@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { HomeHero } from "@/components/home/HomeHero";
+import { PostListCard } from "@/components/posts/PostListCard";
 import { siteConfig } from "@/config/site";
 import { getAllPosts } from "@/lib/posts";
 
@@ -18,14 +20,6 @@ type SocialItem = {
   label: string;
   href: string;
 };
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(date));
-}
 
 function getSocialItems(): SocialItem[] {
   const items: SocialItem[] = [];
@@ -94,92 +88,107 @@ export default async function HomePage() {
   const socialItems = getSocialItems();
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-      <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-          <Image
-            src={siteConfig.author.avatar}
-            alt={`${siteConfig.author.name} 头像`}
-            width={96}
-            height={96}
-            sizes="96px"
-            className="h-24 w-24 rounded-2xl border border-border"
-            priority
-          />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              {siteConfig.author.name}
-            </h1>
-            <p className="mt-3 text-base leading-7 text-muted-fg">
-              {siteConfig.author.bio}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {socialItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target={item.href.startsWith("mailto:") ? undefined : "_blank"}
-                  rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-                  className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-muted-fg transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <SocialIcon label={item.label} />
-                  <span>{item.label}</span>
-                </a>
-              ))}
+    <div className="content-shell space-y-8 pb-10 pt-5 sm:pt-7">
+      <HomeHero
+        title={siteConfig.title}
+        subtitle={siteConfig.description}
+        postsCount={allPosts.length}
+      />
+
+      <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+        <article className="glass-panel rounded-[10px] p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <Image
+              src={siteConfig.author.avatar}
+              alt={`${siteConfig.author.name} 头像`}
+              width={108}
+              height={108}
+              sizes="108px"
+              className="h-24 w-24 rounded-3xl border border-border sm:h-28 sm:w-28"
+              priority
+            />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                {siteConfig.author.name}
+              </h2>
+              <p className="mt-2 text-sm leading-7 text-muted-fg sm:text-base">
+                {siteConfig.author.bio}
+              </p>
             </div>
           </div>
-        </div>
+
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            {socialItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                target={item.href.startsWith("mailto:") ? undefined : "_blank"}
+                rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm text-muted-fg transition-colors hover:text-foreground"
+              >
+                <SocialIcon label={item.label} />
+                <span>{item.label}</span>
+              </a>
+            ))}
+          </div>
+        </article>
+
+        <article className="glass-panel rounded-[10px] p-5 sm:p-6">
+          <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-muted-fg">
+            Skill Stack
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-fg">
+            近期主要聚焦在前端工程化、内容平台构建与 AI 辅助开发流程。
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {siteConfig.author.skills.map((skill) => (
+              <span
+                key={skill}
+                className="rounded-full border border-border/70 bg-surface-soft px-3 py-1 text-xs text-foreground"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <Link
+              href="/about"
+              className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+            >
+              了解更多
+            </Link>
+            <Link
+              href="/projects"
+              className="inline-flex rounded-full border border-border/70 bg-surface-soft px-4 py-2 text-sm font-medium text-muted-fg transition-colors hover:text-foreground"
+            >
+              查看项目
+            </Link>
+          </div>
+        </article>
       </section>
 
-      <section className="mt-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-foreground">最新文章</h2>
+      <section id="home-latest" className="scroll-mt-28">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            最新文章
+          </h2>
           <Link
             href="/posts"
-            className="text-sm font-medium text-accent transition-colors hover:text-accent-hover"
+            className="inline-flex items-center rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm font-medium text-muted-fg transition-colors hover:text-foreground"
           >
-            查看全部文章 →
+            查看全部文章
           </Link>
         </div>
 
         {latestPosts.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="glass-panel rounded-[10px] p-7 text-center">
             <p className="text-sm text-muted-fg">还没有发布文章，稍后再来看看。</p>
           </div>
         ) : (
           <ul className="space-y-4">
             {latestPosts.map((post) => (
               <li key={post.slug}>
-                <article className="card-hover rounded-xl border border-border bg-card p-5">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    <Link
-                      href={`/posts/${post.slug}`}
-                      className="transition-colors hover:text-accent"
-                    >
-                      {post.title}
-                    </Link>
-                  </h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-fg">
-                    <span>{formatDate(post.date)}</span>
-                    <span>{post.readingTime}</span>
-                  </div>
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-fg">
-                    {post.description}
-                  </p>
-                  {post.tags?.length ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <Link
-                          key={`${post.slug}-${tag}`}
-                          href={`/tags/${encodeURIComponent(tag)}`}
-                          className="rounded-md bg-muted px-2 py-1 text-xs text-muted-fg transition-colors hover:text-accent"
-                        >
-                          #{tag}
-                        </Link>
-                      ))}
-                    </div>
-                  ) : null}
-                </article>
+                <PostListCard post={post} />
               </li>
             ))}
           </ul>

@@ -2,19 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/site";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 
 export function Header() {
   const pathname = usePathname() ?? "/";
+  const [isHovered, setIsHovered] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-30 w-full px-3 pt-3 sm:px-5">
-      <div className="glass-panel mx-auto flex h-16 w-full max-w-6xl items-center justify-between rounded-2xl px-4 sm:px-6">
+    <header className="fixed left-0 top-0 z-40 w-full px-3 pt-2.5 sm:px-5 sm:pt-3">
+      <div
+        className={`mx-auto flex h-[64px] w-full max-w-[1120px] items-center gap-2 transition-all duration-500 sm:h-[70px] ${
+          isHovered || isScrolled ? "" : "md:gap-3"
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <Link
           href="/"
-          className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface-soft px-3 py-1.5 font-semibold text-foreground transition-colors hover:text-accent"
+          className={`group inline-flex h-[42px] items-center gap-2 rounded-full px-3.5 py-1.5 font-medium text-foreground transition-all duration-500 sm:h-[45px] ${
+            isHovered || isScrolled ? "glass-panel" : "md:bg-transparent md:shadow-none md:backdrop-blur-none"
+          }`}
           aria-label="返回首页"
         >
           <svg
@@ -28,10 +46,15 @@ export function Header() {
           >
             <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
           </svg>
-          <span className="text-sm tracking-tight sm:text-base">{siteConfig.name}</span>
+          <span className="text-sm tracking-[0.04em] sm:text-base">{siteConfig.name}</span>
         </Link>
 
-        <nav aria-label="主导航" className="hidden md:flex items-center gap-1.5">
+        <nav
+          aria-label="主导航"
+          className={`hidden h-[45px] min-w-0 flex-1 items-center rounded-full px-1.5 transition-all duration-500 md:flex ${
+            isHovered || isScrolled ? "glass-panel" : "md:bg-transparent md:shadow-none md:backdrop-blur-none"
+          }`}
+        >
           {siteConfig.nav.map((item) => {
             const isActive =
               item.href === "/"
@@ -41,22 +64,31 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`nav-pill px-3.5 py-2 text-sm font-medium transition-colors ${
+                className={`nav-pill group relative px-3.5 py-2 text-sm font-normal transition-colors ${
                   isActive
                     ? "nav-pill-active"
                     : "text-muted-fg hover:bg-surface-soft hover:text-foreground"
                 }`}
               >
                 {item.title}
+                <span
+                  className={`absolute bottom-[5px] left-1/2 h-[1.5px] -translate-x-1/2 rounded-full bg-accent transition-all duration-300 ${
+                    isActive ? "w-8 opacity-100" : "w-0 opacity-0 group-hover:w-7 group-hover:opacity-100"
+                  }`}
+                />
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-1.5">
+        <div
+          className={`flex h-[42px] items-center gap-1 rounded-full px-1.5 transition-all duration-500 sm:h-[45px] ${
+            isHovered || isScrolled ? "glass-panel" : "md:bg-transparent md:shadow-none md:backdrop-blur-none"
+          }`}
+        >
           <Link
             href="/login"
-            className="hidden rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm font-medium text-muted-fg transition-colors hover:text-foreground sm:inline-flex"
+            className="hidden rounded-full px-3 py-1.5 text-sm text-muted-fg transition-colors hover:bg-surface-soft hover:text-foreground sm:inline-flex"
           >
             登录
           </Link>
@@ -66,7 +98,7 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub 主页"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-muted-fg transition-colors hover:text-foreground"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-surface-soft hover:text-foreground"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

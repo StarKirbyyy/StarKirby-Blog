@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
+import {
+  getDefaultSakurairoPreferences,
+  readSakurairoPreferencesFromRoot,
+} from "@/lib/sakurairo-preferences";
 
 type CommentItem = {
   id: string;
@@ -41,6 +45,12 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [commentPlaceholder, setCommentPlaceholder] = useState(
+    getDefaultSakurairoPreferences().commentPlaceholder,
+  );
+  const [commentSubmitText, setCommentSubmitText] = useState(
+    getDefaultSakurairoPreferences().commentSubmitText,
+  );
 
   useEffect(() => {
     const loadComments = async () => {
@@ -70,6 +80,28 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
 
     void loadComments();
   }, [postSlug]);
+
+  useEffect(() => {
+    const defaults = getDefaultSakurairoPreferences();
+    const sync = () => {
+      const preferences = readSakurairoPreferencesFromRoot();
+      const placeholder = preferences.commentPlaceholder?.trim()
+        ? preferences.commentPlaceholder
+        : defaults.commentPlaceholder;
+      const submitText = preferences.commentSubmitText?.trim()
+        ? preferences.commentSubmitText
+        : defaults.commentSubmitText;
+      setCommentPlaceholder(placeholder);
+      setCommentSubmitText(submitText);
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("sakurairo:preferences-change", sync as EventListener);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("sakurairo:preferences-change", sync as EventListener);
+    };
+  }, []);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -138,12 +170,12 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
   const isDisabled = session?.user?.status === "disabled";
 
   return (
-    <section className="mt-10 border-t border-border pt-6">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        评论
+    <section className="comments-shell glass-panel mt-6 rounded-[10px] p-5 sm:p-6">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+        评论区
       </h2>
 
-      <div className="mt-4 rounded-xl border border-border bg-card p-4">
+      <div className="mt-4 rounded-[10px] border border-border/70 bg-surface-soft p-4">
         {status === "loading" ? (
           <p className="text-sm text-muted-fg">正在检查登录状态...</p>
         ) : !isSignedIn ? (
@@ -152,7 +184,7 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
             <button
               type="button"
               onClick={() => signIn("github", { callbackUrl: `/posts/${postSlug}` })}
-              className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+              className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
             >
               使用 GitHub 登录后评论
             </button>
@@ -166,18 +198,18 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
             <textarea
               value={content}
               onChange={(event) => setContent(event.target.value)}
-              placeholder="写下你的评论（最多 1000 字）"
+              placeholder={commentPlaceholder}
               rows={4}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
               required
               maxLength={COMMENT_MAX_LENGTH}
             />
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? "发布中..." : "发布评论"}
+              {submitting ? "发布中..." : commentSubmitText}
             </button>
           </form>
         )}
@@ -207,7 +239,7 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
             return (
               <article
                 key={comment.id}
-                className="rounded-xl border border-border bg-card p-4"
+                className="rounded-[10px] border border-border/70 bg-surface-soft p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -218,12 +250,12 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
                         alt={comment.user.name ?? "用户头像"}
                         width={36}
                         height={36}
-                        className="rounded-full border border-border"
+                        className="rounded-full border border-border/70"
                         loading="lazy"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted text-xs font-medium text-foreground">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-muted text-xs font-medium text-foreground">
                         {(comment.user.name ?? "U").slice(0, 1).toUpperCase()}
                       </div>
                     )}
@@ -241,7 +273,7 @@ function LocalCommentsInner({ postSlug }: LocalCommentsProps) {
                       type="button"
                       onClick={() => onDeleteComment(comment.id)}
                       disabled={deletingCommentId === comment.id}
-                      className="rounded-md px-2 py-1 text-xs text-muted-fg transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-border/70 bg-background px-2.5 py-1 text-xs text-muted-fg transition-colors hover:border-red-500/40 hover:text-red-700 dark:hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {deletingCommentId === comment.id ? "删除中..." : "删除"}
                     </button>

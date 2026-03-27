@@ -184,9 +184,9 @@ export function CommentModerationPanel() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <header className="border-b border-border pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           评论管理
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -194,7 +194,7 @@ export function CommentModerationPanel() {
         </p>
       </header>
 
-      <section className="mt-6 rounded-xl border border-border bg-card p-4 sm:p-5">
+      <section className="glass-panel mt-6 rounded-[10px] p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-[220px_1fr_auto]">
           <select
             value={statusFilter}
@@ -202,7 +202,7 @@ export function CommentModerationPanel() {
               setStatusFilter(event.target.value as "all" | "visible" | "hidden");
               setPage(1);
             }}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           >
             <option value="all">全部状态</option>
             <option value="visible">仅显示中</option>
@@ -212,14 +212,14 @@ export function CommentModerationPanel() {
           <input
             value={postSlugInput}
             onChange={(event) => setPostSlugInput(event.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             placeholder="按 postSlug 过滤，例如 hello-starkirby-blog"
           />
 
           <button
             type="button"
             onClick={onApplyPostSlugFilter}
-            className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
           >
             应用过滤
           </button>
@@ -249,7 +249,7 @@ export function CommentModerationPanel() {
             return (
               <article
                 key={comment.id}
-                className="rounded-xl border border-border bg-card p-4"
+                className="glass-panel rounded-2xl p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
@@ -261,7 +261,7 @@ export function CommentModerationPanel() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-muted px-2 py-1 text-xs text-foreground">
+                    <span className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-foreground">
                       {comment.status}
                     </span>
                     <button
@@ -273,7 +273,7 @@ export function CommentModerationPanel() {
                           comment.status === "visible" ? "hidden" : "visible",
                         )
                       }
-                      className="rounded-md bg-muted px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isStatusUpdating
                         ? "处理中..."
@@ -285,7 +285,7 @@ export function CommentModerationPanel() {
                       type="button"
                       disabled={isStatusUpdating || isDeleting}
                       onClick={() => onDelete(comment.id)}
-                      className="rounded-md bg-red-500/15 px-2 py-1 text-xs text-red-700 transition-colors hover:bg-red-500/25 dark:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-red-500/30 bg-red-500/15 px-2.5 py-1 text-xs text-red-700 transition-colors hover:bg-red-500/25 dark:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isDeleting ? "删除中..." : "删除"}
                     </button>
@@ -305,7 +305,7 @@ export function CommentModerationPanel() {
           type="button"
           onClick={() => setPage((previous) => Math.max(1, previous - 1))}
           disabled={page <= 1 || loading}
-          className="inline-flex rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-sm text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           上一页
         </button>
@@ -313,7 +313,7 @@ export function CommentModerationPanel() {
           type="button"
           onClick={() => setPage((previous) => Math.min(pagination.totalPages, previous + 1))}
           disabled={page >= pagination.totalPages || loading}
-          className="inline-flex rounded-md bg-muted px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-sm text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           下一页
         </button>

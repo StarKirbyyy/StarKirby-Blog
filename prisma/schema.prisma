@@ -154,3 +154,9 @@ model PostRevision {
   @@index([postId, createdAt])
   @@index([editorUserId, createdAt])
 }
+
+model GlobalSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
