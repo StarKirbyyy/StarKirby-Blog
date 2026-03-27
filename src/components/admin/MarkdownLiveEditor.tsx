@@ -65,6 +65,28 @@ function stripFrontmatter(source: string) {
   return normalized.slice(end + 5);
 }
 
+async function evaluatePreviewComponent(source: string) {
+  const evaluated = await evaluate(source, {
+    ...jsxRuntime,
+    remarkPlugins: [remarkGfm, remarkMath],
+    rehypePlugins: [
+      rehypeSlug,
+      [
+        rehypeAutolinkHeadings,
+        {
+          behavior: "append",
+          properties: {
+            className: ["heading-anchor"],
+            ariaLabel: "标题锚点",
+          },
+        },
+      ],
+      rehypeKatex,
+    ],
+  });
+  return evaluated.default as MDXContentComponent;
+}
+
 function wrapSelection(
   source: string,
   selectionStart: number,
@@ -312,6 +334,7 @@ function TyporaLikeEditor({
   const lines = useMemo(() => classifyMarkdownLines(value), [value]);
   const [activeSourceIndex, setActiveSourceIndex] = useState<number | null>(null);
   const [activeSource, setActiveSource] = useState("");
+  const [linePreviewMap, setLinePreviewMap] = useState<Record<number, MDXContentComponent>>({});
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const skipBlurCommitRef = useRef(false);
 
@@ -321,6 +344,55 @@ function TyporaLikeEditor({
     const size = activeSource.length;
     inputRef.current?.setSelectionRange(size, size);
   }, [activeSourceIndex, activeSource.length]);
+
+  useEffect(() => {
+    let active = true;
+    const previewable = lines.filter(
+      (line) =>
+        line.type !== "blank" &&
+        line.type !== "hr" &&
+        line.type !== "codeFence" &&
+        line.type !== "codeLine",
+    );
+    if (previewable.length === 0) {
+      queueMicrotask(() => {
+        if (!active) return;
+        startTransition(() => {
+          setLinePreviewMap({});
+        });
+      });
+      return () => {
+        active = false;
+      };
+    }
+
+    void (async () => {
+      const entries = await Promise.all(
+        previewable.map(async (line) => {
+          try {
+            const component = await evaluatePreviewComponent(line.raw);
+            return [line.sourceIndex, component] as const;
+          } catch {
+            return [line.sourceIndex, null] as const;
+          }
+        }),
+      );
+      if (!active) return;
+      startTransition(() => {
+        const next: Record<number, MDXContentComponent> = {};
+        for (const [sourceIndex, component] of entries) {
+          if (component) {
+            next[sourceIndex] = component;
+          }
+        }
+        setLinePreviewMap(next);
+      });
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [lines]);
 
   const commit = () => {
     if (skipBlurCommitRef.current) {
@@ -336,33 +408,6 @@ function TyporaLikeEditor({
     switch (line.type) {
       case "blank":
         return <div className="h-6" />;
-      case "heading":
-        if (line.level === 1) {
-          return <h1 className="text-3xl font-bold tracking-tight text-foreground">{line.text}</h1>;
-        }
-        if (line.level === 2) {
-          return <h2 className="text-2xl font-semibold tracking-tight text-foreground">{line.text}</h2>;
-        }
-        if (line.level === 3) {
-          return <h3 className="text-xl font-semibold text-foreground">{line.text}</h3>;
-        }
-        return <p className="text-base font-semibold text-foreground">{line.text}</p>;
-      case "quote":
-        return (
-          <blockquote className="border-l-2 border-border pl-3 text-muted-fg">
-            {line.text}
-          </blockquote>
-        );
-      case "ul":
-        return <p className="text-sm text-foreground">• {line.text}</p>;
-      case "ol":
-        return <p className="text-sm text-foreground">{line.order}. {line.text}</p>;
-      case "task":
-        return (
-          <p className="text-sm text-foreground">
-            {line.checked ? "☑" : "☐"} {line.text}
-          </p>
-        );
       case "hr":
         return <hr className="border-border" />;
       case "codeFence":
@@ -372,7 +417,20 @@ function TyporaLikeEditor({
             {line.raw}
           </pre>
         );
+      case "heading":
+      case "quote":
+      case "ul":
+      case "ol":
+      case "task":
       case "paragraph":
+        if (linePreviewMap[line.sourceIndex]) {
+          const Content = linePreviewMap[line.sourceIndex];
+          return (
+            <article className="prose prose-slate max-w-none dark:prose-invert [&>*]:my-0 [&>*]:leading-7">
+              <Content components={mdxComponents} />
+            </article>
+          );
+        }
         return <p className="text-sm leading-7 text-foreground">{line.text}</p>;
     }
   };
@@ -408,7 +466,7 @@ function TyporaLikeEditor({
                 }}
                 disabled={disabled}
                 rows={1}
-                className="w-full rounded border border-border bg-card px-2 py-1 font-mono text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2 disabled:opacity-60"
+                className="w-full resize-none border-0 bg-transparent px-2 py-1 font-mono text-sm text-foreground outline-none ring-0 transition disabled:opacity-60"
               />
             ) : (
               <button
@@ -418,7 +476,7 @@ function TyporaLikeEditor({
                   setActiveSourceIndex(line.sourceIndex);
                   setActiveSource(value.split("\n")[line.sourceIndex] ?? "");
                 }}
-                className="block w-full text-left focus:outline-none"
+                className="block w-full bg-transparent p-0 text-left focus:outline-none"
               >
                 <div className="cursor-text px-2 py-1">
                   {renderDisplayLine(line)}
@@ -469,27 +527,10 @@ export function MarkdownLiveEditor({
 
     void (async () => {
       try {
-        const evaluated = await evaluate(sourceForPreview, {
-          ...jsxRuntime,
-          remarkPlugins: [remarkGfm, remarkMath],
-          rehypePlugins: [
-            rehypeSlug,
-            [
-              rehypeAutolinkHeadings,
-              {
-                behavior: "append",
-                properties: {
-                  className: ["heading-anchor"],
-                  ariaLabel: "标题锚点",
-                },
-              },
-            ],
-            rehypeKatex,
-          ],
-        });
+        const evaluated = await evaluatePreviewComponent(sourceForPreview);
         if (!active) return;
         startTransition(() => {
-          setPreviewComponent(() => evaluated.default as MDXContentComponent);
+          setPreviewComponent(() => evaluated);
           setPreviewError("");
         });
       } catch (error) {
