@@ -149,10 +149,9 @@ export default async function PostDetailPage({ params }: PageProps) {
               ← 返回文章列表
             </Link>
             <h1
-              className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}${siteConfig.sakurairo.postTitleUnderlineAnimation ? " after:absolute after:bottom-[-2px] after:left-0 after:h-[0.4em] after:w-[68%] after:rounded-full after:bg-white/35 after:content-['']" : ""}relative mt-4 font-medium tracking-tight text-white`}
+              className="sakurairo-page-title sakurairo-post-title-underline relative mt-4 font-medium tracking-tight text-white after:absolute after:bottom-[-2px] after:left-0 after:h-[0.4em] after:w-[68%] after:rounded-full after:bg-white/35 after:content-['']"
               style={{
                 fontSize: "clamp(2rem,4vw,var(--sakurairo-post-title-size,34px))",
-                ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
               }}
             >
               {post.title}
@@ -178,10 +177,9 @@ export default async function PostDetailPage({ params }: PageProps) {
             ← 返回文章列表
           </Link>
           <h1
-            className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}${siteConfig.sakurairo.postTitleUnderlineAnimation ? " after:absolute after:bottom-[-4px] after:left-[8%] after:h-[0.5em] after:w-[72%] after:rounded-full after:bg-accent/35 after:content-['']" : ""}relative mt-4 font-semibold tracking-tight text-foreground`}
+            className="sakurairo-page-title sakurairo-post-title-underline relative mt-4 font-semibold tracking-tight text-foreground after:absolute after:bottom-[-4px] after:left-[8%] after:h-[0.5em] after:w-[72%] after:rounded-full after:bg-accent/35 after:content-['']"
             style={{
               fontSize: "clamp(2rem,4vw,var(--sakurairo-post-title-size,34px))",
-              ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
             }}
           >
             {post.title}
@@ -206,7 +204,7 @@ export default async function PostDetailPage({ params }: PageProps) {
       )}
 
       {post.tags?.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="sakurairo-post-tags mt-4 flex flex-wrap gap-2">
           {post.tags.map((tag) => (
             <Link
               key={tag}
@@ -222,12 +220,12 @@ export default async function PostDetailPage({ params }: PageProps) {
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
         <article className="min-w-0 space-y-6">
           <div className="glass-panel rounded-[10px] p-5 sm:p-7">
-            <div className={`markdown-content prose prose-slate max-w-none dark:prose-invert ${siteConfig.sakurairo.pageLayoutStyle === "github" ? "markdown-github" : ""}`}>
+            <div className="markdown-content prose prose-slate max-w-none dark:prose-invert">
               <MDXContent components={mdxComponents} />
             </div>
           </div>
 
-          <nav aria-label="文章导航" className="grid gap-3 sm:grid-cols-2">
+          <nav aria-label="文章导航" className="sakurairo-post-navigation grid gap-3 sm:grid-cols-2">
             <div className="glass-panel card-hover min-h-24 rounded-[10px] p-4">
               {olderPost ? (
                 <Link href={`/posts/${olderPost.slug}`} className="block">
@@ -257,7 +255,7 @@ export default async function PostDetailPage({ params }: PageProps) {
           <CommentsSection postSlug={post.slug} />
         </article>
 
-        <aside className="hidden lg:block">
+        <aside className="sakurairo-post-toc hidden lg:block">
           <TableOfContents items={toc} />
         </aside>
       </div>

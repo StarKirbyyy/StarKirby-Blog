@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { HomeHero } from "@/components/home/HomeHero";
+import { SakurairoSiteAvatar } from "@/components/layout/SakurairoSiteAvatar";
 import { PostListCard } from "@/components/posts/PostListCard";
 import { siteConfig } from "@/config/site";
 import { getAllPosts } from "@/lib/posts";
@@ -98,14 +98,12 @@ export default async function HomePage() {
       <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <article className="glass-panel rounded-[10px] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Image
-              src={siteConfig.author.avatar}
+            <SakurairoSiteAvatar
+              fallbackSrc={siteConfig.author.avatar}
               alt={`${siteConfig.author.name} 头像`}
               width={108}
               height={108}
-              sizes="108px"
-              className="h-24 w-24 rounded-3xl border border-border sm:h-28 sm:w-28"
-              priority
+              className="h-24 w-24 rounded-3xl border border-border object-cover sm:h-28 sm:w-28"
             />
             <div className="min-w-0 flex-1">
               <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">

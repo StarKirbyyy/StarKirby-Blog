@@ -42,10 +42,7 @@ export default async function ProfileSettingsPage() {
           ← 返回首页
         </Link>
         <h1
-          className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
-          style={{
-            ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
-          }}
+          className="sakurairo-page-title mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl"
         >
           个人资料设置
         </h1>

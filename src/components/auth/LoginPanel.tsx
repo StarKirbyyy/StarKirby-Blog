@@ -1,28 +1,67 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 import { siteConfig } from "@/config/site";
+import { readEffectiveSakurairoPreferencesFromRoot } from "@/lib/sakurairo-preferences";
 
 function LoginPanelInner() {
   const { data: session, status } = useSession();
   const user = session?.user;
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
+  const [loginStyle, setLoginStyle] = useState<"default" | "sakurairo">("default");
+  const [loginLogoUrl, setLoginLogoUrl] = useState("");
+  const [redirectToAdmin, setRedirectToAdmin] = useState(false);
+  const [titleDurationSec, setTitleDurationSec] = useState<number>(
+    siteConfig.sakurairo.pageTitleAnimationDuration,
+  );
   const avatarSrc = user?.image ?? "";
 
   const isLoading = status === "loading";
   const isLoggedIn = Boolean(user);
   const canShowAvatar = avatarSrc.length > 0 && avatarSrc !== failedImageSrc;
+  const loginCallback = redirectToAdmin ? "/admin/posts" : "/";
+
+  useEffect(() => {
+    const sync = () => {
+      const preferences = readEffectiveSakurairoPreferencesFromRoot();
+      setLoginStyle(preferences.othersLoginStyle);
+      setLoginLogoUrl(preferences.othersLoginLogoUrl);
+      setRedirectToAdmin(preferences.othersLoginRedirectToAdmin);
+      setTitleDurationSec(preferences.pageTitleDurationSec);
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("sakurairo:preferences-change", sync as EventListener);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("sakurairo:preferences-change", sync as EventListener);
+    };
+  }, []);
 
   return (
     <section className="mx-auto w-full max-w-3xl space-y-5">
-      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
+      <header
+        className={`glass-panel rounded-[10px] p-6 sm:p-7 ${loginStyle === "sakurairo" ? "border-white/50 bg-white/55 dark:bg-surface/75" : ""}`}
+      >
+        {loginLogoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={loginLogoUrl}
+            alt="登录页 Logo"
+            width={56}
+            height={56}
+            className="mb-3 h-14 w-14 rounded-full border border-border/70 object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        ) : null}
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-fg">Account</p>
         <h1
-          className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
+          className="sakurairo-page-title mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl"
           style={{
-            ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
+            ["--sakurairo-title-duration" as string]: `${titleDurationSec}s`,
           }}
         >
           账号登录
@@ -113,7 +152,7 @@ function LoginPanelInner() {
         ) : (
           <button
             type="button"
-            onClick={() => signIn("github", { callbackUrl: "/" })}
+            onClick={() => signIn("github", { callbackUrl: loginCallback })}
             className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
           >
             使用 GitHub 登录

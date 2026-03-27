@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { readEffectiveSakurairoPreferencesFromRoot } from "@/lib/sakurairo-preferences";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function UtilityButtons() {
   const [showToTop, setShowToTop] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const onScroll = () => setShowToTop(window.scrollY > 120);
@@ -12,6 +14,22 @@ export function UtilityButtons() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const sync = () => {
+      const preferences = readEffectiveSakurairoPreferencesFromRoot();
+      setVisible(preferences.globalShowUtilityButtons);
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("sakurairo:preferences-change", sync as EventListener);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("sakurairo:preferences-change", sync as EventListener);
+    };
+  }, []);
+
+  if (!visible) return null;
 
   return (
     <div className="pointer-events-none fixed bottom-[5.5rem] right-3 z-30 flex flex-col items-end gap-2 sm:bottom-24 sm:right-5">

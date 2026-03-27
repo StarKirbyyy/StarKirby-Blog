@@ -79,15 +79,52 @@ export const siteConfig = {
   },
 
   sakurairo: {
+    // 初步设置
+    preliminaryAvatarUrl: "/images/avatar.svg",
+    preliminaryWhiteCatText: false,
+    preliminaryNavLogoUrl: "",
+    preliminarySiteIconUrl: "",
+    preliminarySeoKeywords: "",
+    preliminarySeoDescription: "",
+
+    // 全局设置
+    globalThemeSkin: "#505050",
+    globalThemeSkinMatching: "#a4cdf6",
+    globalFontWeight: 300,
+    globalMenuRadiusPx: 10,
+    globalWidgetTransparency: 0.7,
+    globalFrontTransparency: 0.7,
+    globalFooterMode: "auto" as "auto" | "float" | "static",
+    globalShowUtilityButtons: true,
+
+    // 主页设置
+    homepageHeroOverlayOpacity: 0.56,
+    homepageHeroInfoCardOpacity: 0.18,
+    homepageHeroTypingEffect: true,
+    homepageHeroAutoBackgroundSec: 0,
+    homepageHeroShowSocial: true,
+    homepageHeroShowStats: true,
+    homepageHeroShowScrollHint: true,
+    homepageHeroSignature: "愿我们都能写下值得回看的代码与故事。",
+
+    // 页面设置
     pageLayoutStyle: "default" as "default" | "github",
     pageTitleAnimation: true,
     pageTitleAnimationDuration: 1.2,
+    pageShowToc: true,
+    pageShowPostTags: true,
+    pageShowPostNavigation: true,
+    postTitleUnderlineAnimation: true,
     addAttributionOnCopy: true,
     copyAttributionMinLength: 30,
     postTitleFontSizePx: 34,
-    postTitleUnderlineAnimation: true,
     commentPlaceholder: "写下你的评论（支持基本 Markdown，最多 1000 字）",
     commentSubmitText: "发送评论",
+
+    // 其他设置
+    othersLoginStyle: "default" as "default" | "sakurairo",
+    othersLoginLogoUrl: "",
+    othersLoginRedirectToAdmin: false,
   },
 
   // RSS
