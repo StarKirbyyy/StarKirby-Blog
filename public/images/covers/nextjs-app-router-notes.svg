@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
-  <rect width="1200" height="630" fill="#111827" />
-  <rect x="72" y="72" width="1056" height="486" rx="24" fill="#1F2937" />
-  <text x="120" y="250" fill="#F9FAFB" font-size="64" font-family="sans-serif" font-weight="700">Next.js App Router</text>
-  <text x="120" y="325" fill="#9CA3AF" font-size="34" font-family="sans-serif">Development Notes</text>
-  <rect x="120" y="380" width="220" height="56" rx="28" fill="#38BDF8" />
-  <text x="165" y="417" fill="#0F172A" font-size="28" font-family="sans-serif" font-weight="700">TypeScript</text>
-</svg>

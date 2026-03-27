@@ -11,29 +11,11 @@ type HomeHeroProps = {
   postsCount: number;
 };
 
-type HeroBackground = {
-  id: string;
+type SocialItem = {
   label: string;
-  image: string;
+  href: string;
+  icon: string;
 };
-
-const HERO_BACKGROUNDS: HeroBackground[] = [
-  {
-    id: "hello-cover",
-    label: "Hello Starkirby",
-    image: "/images/covers/hello-starkirby-blog.svg",
-  },
-  {
-    id: "next-cover",
-    label: "App Router Notes",
-    image: "/images/covers/nextjs-app-router-notes.svg",
-  },
-  {
-    id: "theme-cover",
-    label: "Theme Playground",
-    image: "/images/covers/experimental-theme-playground.svg",
-  },
-];
 
 const HERO_BG_STORAGE_KEY = "home-hero-bg-index";
 
@@ -47,7 +29,7 @@ function pickRandomIndex(current: number, size: number) {
 }
 
 function getSocialItems() {
-  const items = [];
+  const items: SocialItem[] = [];
   const { github, twitter, email } = siteConfig.author.social;
   if (github) items.push({ label: "GitHub", href: github, icon: "G" });
   if (twitter) items.push({ label: "Twitter/X", href: twitter, icon: "X" });
@@ -68,17 +50,44 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
     () => (siteConfig.author.skills.length > 0 ? siteConfig.author.skills : ["Next.js"]),
     [],
   );
+  const heroBackgrounds = useMemo(() => {
+    const raw = [
+      heroSettings.homepageHeroBackgroundUrl1,
+      heroSettings.homepageHeroBackgroundUrl2,
+      heroSettings.homepageHeroBackgroundUrl3,
+    ];
+    return raw
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((image, index) => ({
+        id: `custom-bg-${index + 1}`,
+        label: `背景 ${index + 1}`,
+        image,
+      }));
+  }, [
+    heroSettings.homepageHeroBackgroundUrl1,
+    heroSettings.homepageHeroBackgroundUrl2,
+    heroSettings.homepageHeroBackgroundUrl3,
+  ]);
   const socialItems = getSocialItems();
-  const activeBackground = HERO_BACKGROUNDS[activeBackgroundIndex];
+  const activeBackground =
+    heroBackgrounds.length > 0
+      ? heroBackgrounds[activeBackgroundIndex % heroBackgrounds.length]
+      : null;
   const avatarSrc = heroSettings.preliminaryAvatarUrl || siteConfig.author.avatar;
   const quoteText = heroSettings.homepageHeroSignature || subtitle;
 
   useEffect(() => {
+    if (heroBackgrounds.length === 0) {
+      setActiveBackgroundIndex(0);
+      setReady(true);
+      return;
+    }
     try {
       const stored = window.localStorage.getItem(HERO_BG_STORAGE_KEY);
       if (stored) {
         const index = Number.parseInt(stored, 10);
-        if (!Number.isNaN(index) && index >= 0 && index < HERO_BACKGROUNDS.length) {
+        if (!Number.isNaN(index) && index >= 0 && index < heroBackgrounds.length) {
           setActiveBackgroundIndex(index);
         }
       }
@@ -87,16 +96,21 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
     } finally {
       setReady(true);
     }
-  }, []);
+  }, [heroBackgrounds.length]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || heroBackgrounds.length === 0) return;
     try {
       window.localStorage.setItem(HERO_BG_STORAGE_KEY, String(activeBackgroundIndex));
     } catch {
       // ignore storage errors
     }
-  }, [activeBackgroundIndex, ready]);
+  }, [activeBackgroundIndex, heroBackgrounds.length, ready]);
+
+  useEffect(() => {
+    if (heroBackgrounds.length === 0) return;
+    setActiveBackgroundIndex((current) => current % heroBackgrounds.length);
+  }, [heroBackgrounds.length]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -117,12 +131,12 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
 
   useEffect(() => {
     const intervalSec = heroSettings.homepageHeroAutoBackgroundSec;
-    if (intervalSec <= 0) return;
+    if (intervalSec <= 0 || heroBackgrounds.length <= 1) return;
     const timer = window.setInterval(() => {
-      setActiveBackgroundIndex((current) => (current + 1) % HERO_BACKGROUNDS.length);
+      setActiveBackgroundIndex((current) => (current + 1) % heroBackgrounds.length);
     }, intervalSec * 1000);
     return () => window.clearInterval(timer);
-  }, [heroSettings.homepageHeroAutoBackgroundSec]);
+  }, [heroBackgrounds.length, heroSettings.homepageHeroAutoBackgroundSec]);
 
   useEffect(() => {
     const sync = () => setHeroSettings(readEffectiveSakurairoPreferencesFromRoot());
@@ -136,21 +150,27 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
   }, []);
 
   return (
-    <section className="headertop filter-dot">
+    <section className={`headertop filter-dot${activeBackground ? "" : " is-plain"}`}>
       <div id="banner_wave_1" />
       <div id="banner_wave_2" />
 
       <figure
         id="centerbg"
         className="centerbg"
-        style={{ backgroundImage: `url("${activeBackground.image}")` }}
+        style={
+          activeBackground
+            ? { backgroundImage: `url("${activeBackground.image}")` }
+            : { backgroundImage: "none", backgroundColor: "transparent" }
+        }
       >
-        <div
-          className="hero-overlay"
-          style={{
-            opacity: heroSettings.homepageHeroOverlayOpacity,
-          }}
-        />
+        {activeBackground ? (
+          <div
+            className="hero-overlay"
+            style={{
+              opacity: heroSettings.homepageHeroOverlayOpacity,
+            }}
+          />
+        ) : null}
 
         <div className="focusinfo">
           <div className="header-tou">
@@ -167,7 +187,7 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
           </div>
 
           <div
-            className="header-info"
+            className={`header-info${activeBackground ? "" : " header-info-plain"}`}
             style={{
               backgroundColor: `rgba(255,255,255,${heroSettings.homepageHeroInfoCardOpacity})`,
             }}
@@ -200,9 +220,10 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
             <button
               type="button"
               className="bg-switch"
+              disabled={heroBackgrounds.length <= 1}
               onClick={() => {
                 setActiveBackgroundIndex((current) =>
-                  pickRandomIndex(current, HERO_BACKGROUNDS.length),
+                  pickRandomIndex(current, heroBackgrounds.length),
                 );
               }}
             >
@@ -211,7 +232,7 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
             {heroSettings.homepageHeroShowStats ? (
               <span className="hero-count">已发布 {postsCount} 篇文章</span>
             ) : null}
-            {heroSettings.homepageHeroShowStats ? (
+            {heroSettings.homepageHeroShowStats && activeBackground ? (
               <span className="hero-count">当前背景：{activeBackground.label}</span>
             ) : null}
           </div>

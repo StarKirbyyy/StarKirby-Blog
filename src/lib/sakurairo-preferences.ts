@@ -38,6 +38,9 @@ export type SakurairoPreferences = {
   homepageHeroShowStats: boolean;
   homepageHeroShowScrollHint: boolean;
   homepageHeroSignature: string;
+  homepageHeroBackgroundUrl1: string;
+  homepageHeroBackgroundUrl2: string;
+  homepageHeroBackgroundUrl3: string;
 
   // 页面设置
   titleAnim: boolean;
@@ -87,6 +90,9 @@ export const SAKURAIRO_STORAGE_KEYS: Record<keyof SakurairoPreferences, string> 
   homepageHeroShowStats: "sakurairo:homepage-hero-show-stats",
   homepageHeroShowScrollHint: "sakurairo:homepage-hero-show-scroll-hint",
   homepageHeroSignature: "sakurairo:homepage-hero-signature",
+  homepageHeroBackgroundUrl1: "sakurairo:homepage-hero-bg-url-1",
+  homepageHeroBackgroundUrl2: "sakurairo:homepage-hero-bg-url-2",
+  homepageHeroBackgroundUrl3: "sakurairo:homepage-hero-bg-url-3",
 
   titleAnim: "sakurairo:title-anim",
   pageTitleDurationSec: "sakurairo:page-title-duration-sec",
@@ -168,6 +174,9 @@ export function getDefaultSakurairoPreferences(): SakurairoPreferences {
     homepageHeroShowStats: siteConfig.sakurairo.homepageHeroShowStats,
     homepageHeroShowScrollHint: siteConfig.sakurairo.homepageHeroShowScrollHint,
     homepageHeroSignature: siteConfig.sakurairo.homepageHeroSignature,
+    homepageHeroBackgroundUrl1: siteConfig.sakurairo.homepageHeroBackgroundUrl1,
+    homepageHeroBackgroundUrl2: siteConfig.sakurairo.homepageHeroBackgroundUrl2,
+    homepageHeroBackgroundUrl3: siteConfig.sakurairo.homepageHeroBackgroundUrl3,
 
     titleAnim: siteConfig.sakurairo.pageTitleAnimation,
     pageTitleDurationSec: siteConfig.sakurairo.pageTitleAnimationDuration,
@@ -289,6 +298,12 @@ export function readSakurairoPreferencesFromStorage(): SakurairoPreferences {
       defaults.homepageHeroShowScrollHint,
     ),
     homepageHeroSignature: get("homepageHeroSignature")?.trim() || defaults.homepageHeroSignature,
+    homepageHeroBackgroundUrl1:
+      get("homepageHeroBackgroundUrl1")?.trim() || defaults.homepageHeroBackgroundUrl1,
+    homepageHeroBackgroundUrl2:
+      get("homepageHeroBackgroundUrl2")?.trim() || defaults.homepageHeroBackgroundUrl2,
+    homepageHeroBackgroundUrl3:
+      get("homepageHeroBackgroundUrl3")?.trim() || defaults.homepageHeroBackgroundUrl3,
 
     titleAnim: parseBoolean(get("titleAnim"), defaults.titleAnim),
     pageTitleDurationSec: parseFloatInRange(
@@ -455,6 +470,9 @@ export function readSakurairoPreferencesFromRoot(): Partial<SakurairoPreferences
     homepageHeroShowStats: parseOptionalDatasetBoolean(root.dataset.homepageHeroShowStats),
     homepageHeroShowScrollHint: parseOptionalDatasetBoolean(root.dataset.homepageHeroShowScrollHint),
     homepageHeroSignature: root.dataset.homepageHeroSignature || undefined,
+    homepageHeroBackgroundUrl1: root.dataset.homepageHeroBackgroundUrl1 || undefined,
+    homepageHeroBackgroundUrl2: root.dataset.homepageHeroBackgroundUrl2 || undefined,
+    homepageHeroBackgroundUrl3: root.dataset.homepageHeroBackgroundUrl3 || undefined,
 
     titleAnim: !root.classList.contains("title-anim-off"),
     pageTitleDurationSec: parseOptionalCssVarNumber(titleDurationRaw, 1.2, 0.3, 5),
@@ -519,6 +537,9 @@ export function applySakurairoPreferencesToRoot(preferences: SakurairoPreference
   root.dataset.homepageHeroShowStats = String(preferences.homepageHeroShowStats);
   root.dataset.homepageHeroShowScrollHint = String(preferences.homepageHeroShowScrollHint);
   root.dataset.homepageHeroSignature = preferences.homepageHeroSignature;
+  root.dataset.homepageHeroBackgroundUrl1 = preferences.homepageHeroBackgroundUrl1;
+  root.dataset.homepageHeroBackgroundUrl2 = preferences.homepageHeroBackgroundUrl2;
+  root.dataset.homepageHeroBackgroundUrl3 = preferences.homepageHeroBackgroundUrl3;
 
   root.dataset.pagePostTitleUnderline = String(preferences.pagePostTitleUnderline);
   root.dataset.pageShowToc = String(preferences.pageShowToc);

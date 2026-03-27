@@ -298,6 +298,15 @@ a {
   color: rgba(255, 255, 255, 0.82);
 }
 
+.header-info.header-info-plain {
+  color: var(--theme-skin);
+}
+
+.header-info.header-info-plain p,
+.header-info.header-info-plain .hero-subtitle {
+  color: color-mix(in oklab, var(--theme-skin) 88%, transparent);
+}
+
 .top-social {
   margin: 0;
   padding: 0;
@@ -345,6 +354,30 @@ a {
 .bg-switch {
   cursor: pointer;
   font-size: 0.73rem;
+}
+
+.bg-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.headertop.is-plain .top-social li a {
+  border-color: color-mix(in oklab, var(--theme-skin) 20%, transparent);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--theme-skin);
+}
+
+.headertop.is-plain .bg-switch,
+.headertop.is-plain .hero-count {
+  border-color: color-mix(in oklab, var(--theme-skin) 16%, transparent);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--theme-skin);
+}
+
+.headertop.is-plain .headertop-down span {
+  border-color: color-mix(in oklab, var(--theme-skin) 16%, transparent);
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--theme-skin);
 }
 
 .headertop-down {
