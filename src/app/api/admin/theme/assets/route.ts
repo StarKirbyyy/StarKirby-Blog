@@ -7,7 +7,7 @@ import { uploadToOss } from "@/lib/oss";
 import { prisma } from "@/lib/prisma";
 
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "avif", "gif", "svg"]);
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     if (imageFile.size > MAX_IMAGE_SIZE) {
       return Response.json(
         { error: `图片大小不能超过 ${Math.floor(MAX_IMAGE_SIZE / 1024 / 1024)}MB` },
-        { status: 400 },
+        { status: 413 },
       );
     }
 

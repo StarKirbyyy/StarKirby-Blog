@@ -31,6 +31,8 @@ type ImageFieldKey =
 
 const DEFAULT_SETTINGS = getDefaultSakurairoPreferences();
 const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/avif,image/gif,image/svg+xml";
+const MAX_UPLOAD_SIZE_MB = 3;
+const MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 function normalizeUrlValue(value: string) {
   const trimmed = value.trim();
@@ -105,6 +107,10 @@ export function ThemeSettingsPanel() {
     setError("");
     setMessage("");
     try {
+      if (file.size > MAX_UPLOAD_SIZE) {
+        throw new Error(`图片大小不能超过 ${MAX_UPLOAD_SIZE_MB}MB，请压缩后再上传。`);
+      }
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -112,9 +118,12 @@ export function ThemeSettingsPanel() {
         method: "POST",
         body: formData,
       });
-      const json = (await response.json()) as ThemeAssetUploadResponse;
-      if (!response.ok || !json.success || !json.url) {
-        throw new Error(json.error || "图片上传失败");
+      if (response.status === 413) {
+        throw new Error(`图片过大（413），请压缩到 ${MAX_UPLOAD_SIZE_MB}MB 以内后重试。`);
+      }
+      const json = (await response.json().catch(() => null)) as ThemeAssetUploadResponse | null;
+      if (!response.ok || !json?.success || !json?.url) {
+        throw new Error(json?.error || "图片上传失败");
       }
 
       updateImageUrlSetting(field, json.url);
