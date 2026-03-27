@@ -119,6 +119,11 @@ body {
   border-radius: 3px;
 }
 
+.no-focus-ring:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
 /* 滚动条定制（Chromium） */
 ::-webkit-scrollbar {
   width: 6px;

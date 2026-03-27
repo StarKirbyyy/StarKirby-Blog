@@ -335,7 +335,7 @@ function TyporaLikeEditor({
   const [activeSourceIndex, setActiveSourceIndex] = useState<number | null>(null);
   const [activeSource, setActiveSource] = useState("");
   const [linePreviewMap, setLinePreviewMap] = useState<Record<number, MDXContentComponent>>({});
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const skipBlurCommitRef = useRef(false);
 
   const focusEditorToEnd = (size: number) => {
@@ -443,10 +443,13 @@ function TyporaLikeEditor({
         {lines.map((line, index) => (
           <div key={`${line.sourceIndex}-${index}-${line.raw}`}>
             {activeSourceIndex === line.sourceIndex ? (
-              <textarea
+              <input
+                type="text"
                 ref={inputRef}
                 value={activeSource}
-                onChange={(event) => setActiveSource(event.target.value)}
+                onChange={(event) =>
+                  setActiveSource(event.target.value.replace(/\r?\n/g, ""))
+                }
                 onBlur={commit}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
@@ -468,8 +471,7 @@ function TyporaLikeEditor({
                   }
                 }}
                 disabled={disabled}
-                rows={1}
-                className="w-full resize-none border-0 border-transparent bg-transparent px-2 py-1 font-mono text-sm text-foreground shadow-none outline-none ring-0 transition-none focus:border-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 disabled:opacity-60"
+                className="no-focus-ring w-full appearance-none border-0 border-transparent bg-transparent px-2 py-1 font-mono text-sm text-foreground shadow-none outline-none ring-0 transition-none focus:border-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 disabled:opacity-60"
               />
             ) : (
               <div
@@ -492,7 +494,7 @@ function TyporaLikeEditor({
                     focusEditorToEnd(nextSource.length);
                   }
                 }}
-                className="block w-full cursor-text bg-transparent p-0 text-left outline-none"
+                className="no-focus-ring block w-full cursor-text bg-transparent p-0 text-left outline-none focus:outline-none focus-visible:outline-none"
               >
                 <div className="cursor-text px-2 py-1">
                   {renderDisplayLine(line)}
