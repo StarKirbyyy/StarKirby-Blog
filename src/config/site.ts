@@ -106,6 +106,9 @@ export const siteConfig = {
     homepageHeroShowStats: true,
     homepageHeroShowScrollHint: true,
     homepageHeroSignature: "愿我们都能写下值得回看的代码与故事。",
+    homepageHeroBackgroundUrl1: "",
+    homepageHeroBackgroundUrl2: "",
+    homepageHeroBackgroundUrl3: "",
 
     // 页面设置
     pageLayoutStyle: "default" as "default" | "github",

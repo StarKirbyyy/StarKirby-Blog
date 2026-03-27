@@ -167,6 +167,27 @@ export function sanitizeSakurairoPatch(
   if (homepageHeroSignature !== undefined) {
     patch.homepageHeroSignature = homepageHeroSignature;
   }
+  const homepageHeroBackgroundUrl1 = sanitizeString(raw.homepageHeroBackgroundUrl1, {
+    allowEmpty: true,
+    maxLength: 512,
+  });
+  if (homepageHeroBackgroundUrl1 !== undefined) {
+    patch.homepageHeroBackgroundUrl1 = homepageHeroBackgroundUrl1;
+  }
+  const homepageHeroBackgroundUrl2 = sanitizeString(raw.homepageHeroBackgroundUrl2, {
+    allowEmpty: true,
+    maxLength: 512,
+  });
+  if (homepageHeroBackgroundUrl2 !== undefined) {
+    patch.homepageHeroBackgroundUrl2 = homepageHeroBackgroundUrl2;
+  }
+  const homepageHeroBackgroundUrl3 = sanitizeString(raw.homepageHeroBackgroundUrl3, {
+    allowEmpty: true,
+    maxLength: 512,
+  });
+  if (homepageHeroBackgroundUrl3 !== undefined) {
+    patch.homepageHeroBackgroundUrl3 = homepageHeroBackgroundUrl3;
+  }
 
   if (typeof raw.titleAnim === "boolean") {
     patch.titleAnim = raw.titleAnim;

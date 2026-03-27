@@ -24,6 +24,9 @@ type ImageFieldKey =
   | "preliminaryAvatarUrl"
   | "preliminaryNavLogoUrl"
   | "preliminarySiteIconUrl"
+  | "homepageHeroBackgroundUrl1"
+  | "homepageHeroBackgroundUrl2"
+  | "homepageHeroBackgroundUrl3"
   | "othersLoginLogoUrl";
 
 const DEFAULT_SETTINGS = getDefaultSakurairoPreferences();
@@ -505,6 +508,23 @@ export function ThemeSettingsPanel() {
                   className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
                 />
               </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {renderImageUrlField({
+                  label: "首页背景图 URL 1",
+                  field: "homepageHeroBackgroundUrl1",
+                  placeholder: "可留空；例如：https://example.com/hero-1.webp",
+                })}
+                {renderImageUrlField({
+                  label: "首页背景图 URL 2",
+                  field: "homepageHeroBackgroundUrl2",
+                  placeholder: "可留空；例如：https://example.com/hero-2.webp",
+                })}
+                {renderImageUrlField({
+                  label: "首页背景图 URL 3",
+                  field: "homepageHeroBackgroundUrl3",
+                  placeholder: "可留空；例如：https://example.com/hero-3.webp",
+                })}
+              </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="flex items-center gap-2 text-sm text-muted-fg">
                   <input

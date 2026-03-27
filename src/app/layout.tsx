@@ -76,6 +76,9 @@ const themeScript = `
       homepageHeroShowStats: ${siteConfig.sakurairo.homepageHeroShowStats ? "true" : "false"},
       homepageHeroShowScrollHint: ${siteConfig.sakurairo.homepageHeroShowScrollHint ? "true" : "false"},
       homepageHeroSignature: ${JSON.stringify(siteConfig.sakurairo.homepageHeroSignature)},
+      homepageHeroBackgroundUrl1: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrl1)},
+      homepageHeroBackgroundUrl2: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrl2)},
+      homepageHeroBackgroundUrl3: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrl3)},
       titleAnim: ${siteConfig.sakurairo.pageTitleAnimation ? "true" : "false"},
       pageTitleDurationSec: ${siteConfig.sakurairo.pageTitleAnimationDuration},
       commentStyle: "glass",
@@ -140,6 +143,9 @@ const themeScript = `
       homepageHeroShowStats: getBoolean("sakurairo:homepage-hero-show-stats", defaults.homepageHeroShowStats),
       homepageHeroShowScrollHint: getBoolean("sakurairo:homepage-hero-show-scroll-hint", defaults.homepageHeroShowScrollHint),
       homepageHeroSignature: getString("sakurairo:homepage-hero-signature", defaults.homepageHeroSignature),
+      homepageHeroBackgroundUrl1: getString("sakurairo:homepage-hero-bg-url-1", defaults.homepageHeroBackgroundUrl1),
+      homepageHeroBackgroundUrl2: getString("sakurairo:homepage-hero-bg-url-2", defaults.homepageHeroBackgroundUrl2),
+      homepageHeroBackgroundUrl3: getString("sakurairo:homepage-hero-bg-url-3", defaults.homepageHeroBackgroundUrl3),
       titleAnim: getBoolean("sakurairo:title-anim", defaults.titleAnim),
       pageTitleDurationSec: getNumber("sakurairo:page-title-duration-sec", defaults.pageTitleDurationSec),
       commentStyle: getString("sakurairo:comment-style", defaults.commentStyle),
@@ -182,6 +188,9 @@ const themeScript = `
     document.documentElement.dataset.homepageHeroShowStats = String(settings.homepageHeroShowStats);
     document.documentElement.dataset.homepageHeroShowScrollHint = String(settings.homepageHeroShowScrollHint);
     document.documentElement.dataset.homepageHeroSignature = settings.homepageHeroSignature;
+    document.documentElement.dataset.homepageHeroBackgroundUrl1 = settings.homepageHeroBackgroundUrl1;
+    document.documentElement.dataset.homepageHeroBackgroundUrl2 = settings.homepageHeroBackgroundUrl2;
+    document.documentElement.dataset.homepageHeroBackgroundUrl3 = settings.homepageHeroBackgroundUrl3;
 
     document.documentElement.dataset.pagePostTitleUnderline = String(settings.pagePostTitleUnderline);
     document.documentElement.dataset.pageShowToc = String(settings.pageShowToc);
