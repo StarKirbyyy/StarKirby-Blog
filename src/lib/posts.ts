@@ -8,6 +8,9 @@ import { prisma } from "@/lib/prisma";
 const POSTS_DIRECTORY = path.join(process.cwd(), "content", "posts");
 const SUPPORTED_EXTENSIONS = new Set([".mdx", ".md"]);
 const POST_CONTENT_REVALIDATE_SECONDS = 3600;
+const DATABASE_UNAVAILABLE_COOLDOWN_MS = 30_000;
+
+let skipDatabaseReadsUntil = 0;
 
 export interface PostFrontmatter {
   title: string;
@@ -58,13 +61,32 @@ function isRetryablePrismaClosedConnectionError(error: unknown) {
 
 async function withPrismaReadRetry<T>(query: () => Promise<T>) {
   try {
-    return await query();
+    const result = await query();
+    skipDatabaseReadsUntil = 0;
+    return result;
   } catch (error) {
     if (!isRetryablePrismaClosedConnectionError(error)) {
       throw error;
     }
-    return query();
+    skipDatabaseReadsUntil = Date.now() + DATABASE_UNAVAILABLE_COOLDOWN_MS;
+    try {
+      await prisma.$disconnect();
+    } catch {
+      // ignore disconnect errors
+    }
+    try {
+      const result = await query();
+      skipDatabaseReadsUntil = 0;
+      return result;
+    } catch (retryError) {
+      skipDatabaseReadsUntil = Date.now() + DATABASE_UNAVAILABLE_COOLDOWN_MS;
+      throw retryError;
+    }
   }
+}
+
+function shouldSkipDatabaseReadsTemporarily() {
+  return Date.now() < skipDatabaseReadsUntil;
 }
 
 function normalizeSlug(slug: string) {
@@ -389,6 +411,10 @@ export async function getAllPosts() {
     return getAllPostsFromFileSystem();
   }
 
+  if (allowFileFallback() && shouldSkipDatabaseReadsTemporarily()) {
+    return getAllPostsFromFileSystem();
+  }
+
   try {
     const posts = await getAllPostsFromDatabase();
     if (posts.length > 0 || !allowFileFallback()) {
@@ -407,6 +433,10 @@ export async function getAllPosts() {
 
 export async function getPostBySlug(slug: string) {
   if (!isDatabaseContentSource()) {
+    return getPostBySlugFromFileSystem(slug);
+  }
+
+  if (allowFileFallback() && shouldSkipDatabaseReadsTemporarily()) {
     return getPostBySlugFromFileSystem(slug);
   }
 
@@ -453,6 +483,10 @@ export async function getPostsByTag(tag: string) {
 
 export async function hasPostBySlug(slug: string) {
   if (!isDatabaseContentSource()) {
+    return hasPostBySlugFromFileSystem(slug);
+  }
+
+  if (allowFileFallback() && shouldSkipDatabaseReadsTemporarily()) {
     return hasPostBySlugFromFileSystem(slug);
   }
 

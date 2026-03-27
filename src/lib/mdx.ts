@@ -20,8 +20,15 @@ const prettyCodeOptions = {
   keepBackground: false,
 } as const;
 
+function stripScriptTagsFromMdx(source: string) {
+  return source
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<script\b[^>]*\/>/gi, "");
+}
+
 export async function getMDXContent(source: string) {
-  const evaluated = await evaluate(source, {
+  const sanitizedSource = stripScriptTagsFromMdx(source);
+  const evaluated = await evaluate(sanitizedSource, {
     ...jsxRuntime,
     remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
