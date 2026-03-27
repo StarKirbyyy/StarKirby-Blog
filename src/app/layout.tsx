@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/Footer";
 import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { UtilityButtons } from "@/components/layout/UtilityButtons";
 import { CopyAttribution } from "@/components/layout/CopyAttribution";
+import { SakurairoRuntimeSync } from "@/components/layout/SakurairoRuntimeSync";
 
 // Geist Mono 仅加载 latin 子集，控制字体体积
 const geistMono = Geist_Mono({
@@ -61,6 +62,7 @@ const themeScript = `
       motion: "normal",
       globalThemeSkin: ${JSON.stringify(siteConfig.sakurairo.globalThemeSkin)},
       globalThemeSkinMatching: ${JSON.stringify(siteConfig.sakurairo.globalThemeSkinMatching)},
+      globalBackgroundImageUrl: ${JSON.stringify(siteConfig.sakurairo.globalBackgroundImageUrl)},
       globalFontWeight: ${siteConfig.sakurairo.globalFontWeight},
       globalMenuRadiusPx: ${siteConfig.sakurairo.globalMenuRadiusPx},
       globalWidgetTransparency: ${siteConfig.sakurairo.globalWidgetTransparency},
@@ -128,6 +130,7 @@ const themeScript = `
       motion: getString("sakurairo:motion", defaults.motion),
       globalThemeSkin: getString("sakurairo:global-theme-skin", defaults.globalThemeSkin),
       globalThemeSkinMatching: getString("sakurairo:global-theme-skin-matching", defaults.globalThemeSkinMatching),
+      globalBackgroundImageUrl: getString("sakurairo:global-background-image-url", defaults.globalBackgroundImageUrl),
       globalFontWeight: getNumber("sakurairo:global-font-weight", defaults.globalFontWeight),
       globalMenuRadiusPx: getNumber("sakurairo:global-menu-radius", defaults.globalMenuRadiusPx),
       globalWidgetTransparency: getNumber("sakurairo:global-widget-transparency", defaults.globalWidgetTransparency),
@@ -173,6 +176,7 @@ const themeScript = `
     document.documentElement.dataset.bgStyle = settings.bgStyle;
     document.documentElement.dataset.footerMode = settings.globalFooterMode;
     document.documentElement.dataset.globalShowUtilityButtons = String(settings.globalShowUtilityButtons);
+    document.documentElement.dataset.globalBackgroundImageUrl = settings.globalBackgroundImageUrl;
 
     document.documentElement.dataset.preliminaryAvatarUrl = settings.preliminaryAvatarUrl;
     document.documentElement.dataset.preliminaryWhiteCatText = String(settings.preliminaryWhiteCatText);
@@ -264,6 +268,7 @@ export default function RootLayout({
         />
       </head>
       <body className="site-shell min-h-full bg-background text-foreground">
+        <SakurairoRuntimeSync />
         <GlobalBackground />
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />

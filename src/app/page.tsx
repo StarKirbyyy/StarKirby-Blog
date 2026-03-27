@@ -22,7 +22,6 @@ export default async function HomePage() {
       <HomeHero
         title={siteConfig.title}
         subtitle={siteConfig.description}
-        postsCount={posts.length}
       />
 
       <div id="page" className="site wrapper">

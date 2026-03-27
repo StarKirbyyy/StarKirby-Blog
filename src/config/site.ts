@@ -90,6 +90,7 @@ export const siteConfig = {
     // 全局设置
     globalThemeSkin: "#000000",
     globalThemeSkinMatching: "#a4cdf6",
+    globalBackgroundImageUrl: "",
     globalFontWeight: 300,
     globalMenuRadiusPx: 10,
     globalWidgetTransparency: 0.7,

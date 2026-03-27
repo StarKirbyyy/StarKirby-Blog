@@ -105,6 +105,13 @@ export function sanitizeSakurairoPatch(
   if (globalThemeSkinMatching !== undefined) {
     patch.globalThemeSkinMatching = globalThemeSkinMatching;
   }
+  const globalBackgroundImageUrl = sanitizeString(raw.globalBackgroundImageUrl, {
+    allowEmpty: true,
+    maxLength: 512,
+  });
+  if (globalBackgroundImageUrl !== undefined) {
+    patch.globalBackgroundImageUrl = globalBackgroundImageUrl;
+  }
   if (typeof raw.globalFontWeight === "number" && Number.isFinite(raw.globalFontWeight)) {
     patch.globalFontWeight = clampInt(raw.globalFontWeight, 200, 500);
   }

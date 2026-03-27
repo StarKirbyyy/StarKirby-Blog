@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { readEffectiveSakurairoPreferencesFromRoot } from "@/lib/sakurairo-preferences";
-import { ThemeToggle } from "./ThemeToggle";
 
 export function UtilityButtons() {
   const [showToTop, setShowToTop] = useState(false);
@@ -33,9 +32,6 @@ export function UtilityButtons() {
 
   return (
     <div className="pointer-events-none fixed bottom-[5.5rem] right-3 z-30 flex flex-col items-end gap-2 sm:bottom-24 sm:right-5">
-      <div className="pointer-events-auto rounded-md border border-border/70 bg-surface-soft p-1 shadow-[var(--shadow-soft)] backdrop-blur">
-        <ThemeToggle />
-      </div>
       <button
         type="button"
         aria-label="回到顶部"

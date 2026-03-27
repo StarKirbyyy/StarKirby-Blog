@@ -10,7 +10,7 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="切换主题"
-      className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-muted-fg transition-colors hover:text-foreground"
+      className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-strong text-muted-fg transition-colors hover:text-foreground sm:h-10 sm:w-10"
     >
       {/* 太阳图标（亮色模式显示） */}
       <svg

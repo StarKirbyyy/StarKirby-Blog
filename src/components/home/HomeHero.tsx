@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { siteConfig } from "@/config/site";
 import {
   getDefaultSakurairoPreferences,
@@ -11,7 +11,6 @@ import {
 type HomeHeroProps = {
   title: string;
   subtitle: string;
-  postsCount: number;
 };
 
 type SocialItem = {
@@ -22,15 +21,6 @@ type SocialItem = {
 
 const HERO_BG_STORAGE_KEY = "home-hero-bg-index";
 
-function pickRandomIndex(current: number, size: number) {
-  if (size <= 1) return current;
-  let next = current;
-  while (next === current) {
-    next = Math.floor(Math.random() * size);
-  }
-  return next;
-}
-
 function getSocialItems() {
   const items: SocialItem[] = [];
   const { github, twitter, email } = siteConfig.author.social;
@@ -40,12 +30,13 @@ function getSocialItems() {
   return items;
 }
 
-export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
+export function HomeHero({ title, subtitle }: HomeHeroProps) {
   const [activeBackgroundIndex, setActiveBackgroundIndex] = useState(0);
   const [typedWordIndex, setTypedWordIndex] = useState(0);
   const [heroSettings, setHeroSettings] = useState(() =>
     getDefaultSakurairoPreferences(),
   );
+  const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [ready, setReady] = useState(false);
   const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>(
@@ -54,6 +45,22 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
 
   const typingWords = useMemo(
     () => (siteConfig.author.skills.length > 0 ? siteConfig.author.skills : ["Next.js"]),
+    [],
+  );
+  const sakuraPetals = useMemo(
+    () =>
+      Array.from({ length: 34 }, (_, index) => ({
+        id: `petal-${index + 1}`,
+        left: -5 + ((index * 9) % 110),
+        size: 8 + (index % 6) * 2.2,
+        duration: 5.2 + (index % 6) * 0.75,
+        delay: -((index % 12) * 0.65),
+        startX: -8 + (index % 8) * 6,
+        slideMid: 18 + (index % 6) * 5,
+        slideX: 20 + (index % 6) * 5,
+        drift: -10 + (index % 8) * 3,
+        rotate: -35 + (index % 10) * 8,
+      })),
     [],
   );
   const heroBackgrounds = useMemo(() => {
@@ -123,6 +130,10 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
   }, [heroBackgrounds.length]);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => setReducedMotion(media.matches);
     apply();
@@ -163,6 +174,29 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
     <section className={`headertop filter-dot${activeBackground ? "" : " is-plain"}`}>
       <div id="banner_wave_1" />
       <div id="banner_wave_2" />
+      {mounted && !reducedMotion ? (
+        <div className="sakura-layer" aria-hidden="true">
+          {sakuraPetals.map((petal) => (
+            <span
+              key={petal.id}
+              className="sakura-petal"
+              style={
+                {
+                  "--petal-left": `${petal.left}%`,
+                  "--petal-size": `${petal.size}px`,
+                  "--petal-duration": `${petal.duration}s`,
+                  "--petal-delay": `${petal.delay}s`,
+                  "--petal-start-x": `${petal.startX}px`,
+                  "--petal-slide-mid": `${petal.slideMid}vw`,
+                  "--petal-slide-x": `${petal.slideX}vw`,
+                  "--petal-drift": `${petal.drift}px`,
+                  "--petal-rotate": `${petal.rotate}deg`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+      ) : null}
 
       <figure
         id="centerbg"
@@ -199,14 +233,7 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
             </Link>
           </div>
 
-          <div
-            className={`header-info${activeBackground ? "" : " header-info-plain"}`}
-            style={{
-              backgroundColor: activeBackground
-                ? `rgba(255,255,255,${heroSettings.homepageHeroInfoCardOpacity})`
-                : "transparent",
-            }}
-          >
+          <div className="header-info">
             <span className="element">{quoteText}</span>
             <p>
               {title} · {heroSettings.homepageHeroTypingEffect ? typingWords[typedWordIndex] : typingWords[0]}
@@ -231,26 +258,6 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
             </ul>
           ) : null}
 
-          <div className="hero-tools">
-            <button
-              type="button"
-              className="bg-switch"
-              disabled={heroBackgrounds.length <= 1}
-              onClick={() => {
-                setActiveBackgroundIndex((current) =>
-                  pickRandomIndex(current, heroBackgrounds.length),
-                );
-              }}
-            >
-              切换背景
-            </button>
-            {heroSettings.homepageHeroShowStats ? (
-              <span className="hero-count">已发布 {postsCount} 篇文章</span>
-            ) : null}
-            {heroSettings.homepageHeroShowStats && activeBackground ? (
-              <span className="hero-count">当前背景：{activeBackground.label}</span>
-            ) : null}
-          </div>
         </div>
       </figure>
 
@@ -263,7 +270,24 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
             target.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
         >
-          <span>⌄</span>
+          <span className="headertop-down-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 32 24"
+              width="42"
+              height="32"
+              className="headertop-down-svg"
+              focusable="false"
+            >
+              <path
+                d="M6 6L16 16L26 6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
         </div>
       ) : null}
     </section>

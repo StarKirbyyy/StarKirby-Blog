@@ -22,6 +22,7 @@ export type SakurairoPreferences = {
   motion: MotionLevel;
   globalThemeSkin: string;
   globalThemeSkinMatching: string;
+  globalBackgroundImageUrl: string;
   globalFontWeight: number;
   globalMenuRadiusPx: number;
   globalWidgetTransparency: number;
@@ -75,6 +76,7 @@ export const SAKURAIRO_STORAGE_KEYS: Record<keyof SakurairoPreferences, string> 
   motion: "sakurairo:motion",
   globalThemeSkin: "sakurairo:global-theme-skin",
   globalThemeSkinMatching: "sakurairo:global-theme-skin-matching",
+  globalBackgroundImageUrl: "sakurairo:global-background-image-url",
   globalFontWeight: "sakurairo:global-font-weight",
   globalMenuRadiusPx: "sakurairo:global-menu-radius",
   globalWidgetTransparency: "sakurairo:global-widget-transparency",
@@ -159,6 +161,7 @@ export function getDefaultSakurairoPreferences(): SakurairoPreferences {
     motion: "normal",
     globalThemeSkin: siteConfig.sakurairo.globalThemeSkin,
     globalThemeSkinMatching: siteConfig.sakurairo.globalThemeSkinMatching,
+    globalBackgroundImageUrl: siteConfig.sakurairo.globalBackgroundImageUrl,
     globalFontWeight: siteConfig.sakurairo.globalFontWeight,
     globalMenuRadiusPx: siteConfig.sakurairo.globalMenuRadiusPx,
     globalWidgetTransparency: siteConfig.sakurairo.globalWidgetTransparency,
@@ -240,6 +243,8 @@ export function readSakurairoPreferencesFromStorage(): SakurairoPreferences {
     globalThemeSkin: get("globalThemeSkin")?.trim() || defaults.globalThemeSkin,
     globalThemeSkinMatching:
       get("globalThemeSkinMatching")?.trim() || defaults.globalThemeSkinMatching,
+    globalBackgroundImageUrl:
+      get("globalBackgroundImageUrl")?.trim() || defaults.globalBackgroundImageUrl,
     globalFontWeight: parseIntInRange(get("globalFontWeight"), defaults.globalFontWeight, 200, 500),
     globalMenuRadiusPx: parseIntInRange(get("globalMenuRadiusPx"), defaults.globalMenuRadiusPx, 6, 24),
     globalWidgetTransparency: parseFloatInRange(
@@ -389,10 +394,15 @@ export function mergeSakurairoPreferences(
   patch?: Partial<SakurairoPreferences> | null,
 ) {
   if (!patch) return base;
-  return {
-    ...base,
-    ...patch,
-  };
+  const merged = { ...base } as SakurairoPreferences;
+  const mergedRecord = merged as Record<string, unknown>;
+  (Object.keys(patch) as (keyof SakurairoPreferences)[]).forEach((key) => {
+    const value = patch[key];
+    if (value !== undefined) {
+      mergedRecord[key] = value;
+    }
+  });
+  return merged;
 }
 
 export function readSakurairoPreferencesFromRoot(): Partial<SakurairoPreferences> {
@@ -427,6 +437,7 @@ export function readSakurairoPreferencesFromRoot(): Partial<SakurairoPreferences
     globalThemeSkin: root.style.getPropertyValue("--theme-skin").trim() || undefined,
     globalThemeSkinMatching:
       root.style.getPropertyValue("--theme-skin-matching").trim() || undefined,
+    globalBackgroundImageUrl: root.dataset.globalBackgroundImageUrl || undefined,
     globalFontWeight: parseOptionalCssVarNumber(
       root.style.getPropertyValue("--global-font-weight"),
       300,
@@ -523,6 +534,7 @@ export function applySakurairoPreferencesToRoot(preferences: SakurairoPreference
   root.dataset.bgStyle = preferences.bgStyle;
   root.dataset.footerMode = preferences.globalFooterMode;
   root.dataset.globalShowUtilityButtons = String(preferences.globalShowUtilityButtons);
+  root.dataset.globalBackgroundImageUrl = preferences.globalBackgroundImageUrl;
 
   root.dataset.preliminaryAvatarUrl = preferences.preliminaryAvatarUrl;
   root.dataset.preliminaryWhiteCatText = String(preferences.preliminaryWhiteCatText);
