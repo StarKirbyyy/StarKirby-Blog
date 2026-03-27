@@ -338,12 +338,14 @@ function TyporaLikeEditor({
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const skipBlurCommitRef = useRef(false);
 
-  useEffect(() => {
-    if (activeSourceIndex === null) return;
-    inputRef.current?.focus();
-    const size = activeSource.length;
-    inputRef.current?.setSelectionRange(size, size);
-  }, [activeSourceIndex, activeSource.length]);
+  const focusEditorToEnd = (size: number) => {
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(size, size);
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -461,27 +463,41 @@ function TyporaLikeEditor({
                     onChange(withNewLine);
                     setActiveSourceIndex(line.sourceIndex + 1);
                     setActiveSource("");
+                    focusEditorToEnd(0);
                     return;
                   }
                 }}
                 disabled={disabled}
                 rows={1}
-                className="w-full resize-none border-0 bg-transparent px-2 py-1 font-mono text-sm text-foreground outline-none ring-0 transition disabled:opacity-60"
+                className="w-full resize-none border-0 border-transparent bg-transparent px-2 py-1 font-mono text-sm text-foreground shadow-none outline-none ring-0 transition-none focus:border-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 disabled:opacity-60"
               />
             ) : (
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   if (disabled) return;
+                  const nextSource = value.split("\n")[line.sourceIndex] ?? "";
                   setActiveSourceIndex(line.sourceIndex);
-                  setActiveSource(value.split("\n")[line.sourceIndex] ?? "");
+                  setActiveSource(nextSource);
+                  focusEditorToEnd(nextSource.length);
                 }}
-                className="block w-full bg-transparent p-0 text-left focus:outline-none"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    if (disabled) return;
+                    const nextSource = value.split("\n")[line.sourceIndex] ?? "";
+                    setActiveSourceIndex(line.sourceIndex);
+                    setActiveSource(nextSource);
+                    focusEditorToEnd(nextSource.length);
+                  }
+                }}
+                className="block w-full cursor-text bg-transparent p-0 text-left outline-none"
               >
                 <div className="cursor-text px-2 py-1">
                   {renderDisplayLine(line)}
                 </div>
-              </button>
+              </div>
             )}
           </div>
         ))}
