@@ -42,6 +42,8 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>(
     siteConfig.author.avatar,
   );
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   const typingWords = useMemo(
     () => (siteConfig.author.skills.length > 0 ? siteConfig.author.skills : ["Next.js"]),
@@ -92,6 +94,8 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
 
   useEffect(() => {
     setResolvedAvatarSrc(avatarSrc);
+    setAvatarLoaded(false);
+    setAvatarFailed(false);
   }, [avatarSrc]);
 
   useEffect(() => {
@@ -219,17 +223,30 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
         <div className="focusinfo">
           <div className="header-tou">
             <Link href="/">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt="avatar"
-                src={resolvedAvatarSrc}
-                width={132}
-                height={132}
-                suppressHydrationWarning
-                onError={() => {
-                  setResolvedAvatarSrc(siteConfig.author.avatar);
-                }}
-              />
+              <div className="header-avatar-shell">
+                {!avatarLoaded || avatarFailed ? (
+                  <span
+                    className={`header-avatar-skeleton${avatarFailed ? " is-failed" : ""}`}
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {!avatarFailed ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="avatar"
+                    src={resolvedAvatarSrc}
+                    width={132}
+                    height={132}
+                    className={`header-avatar-image${avatarLoaded ? " is-ready" : ""}`}
+                    suppressHydrationWarning
+                    onLoad={() => setAvatarLoaded(true)}
+                    onError={() => {
+                      setAvatarFailed(true);
+                      setAvatarLoaded(true);
+                    }}
+                  />
+                ) : null}
+              </div>
             </Link>
           </div>
 

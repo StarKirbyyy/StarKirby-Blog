@@ -11,6 +11,7 @@ import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { UtilityButtons } from "@/components/layout/UtilityButtons";
 import { CopyAttribution } from "@/components/layout/CopyAttribution";
 import { SakurairoRuntimeSync } from "@/components/layout/SakurairoRuntimeSync";
+import { WheelInertia } from "@/components/layout/WheelInertia";
 
 // Geist Mono 仅加载 latin 子集，控制字体体积
 const geistMono = Geist_Mono({
@@ -111,6 +112,10 @@ const themeScript = `
       var value = localStorage.getItem(key);
       if (value === null) return fallback;
       return value === "true";
+    }
+    function toCssBgImage(value) {
+      if (!value) return "none";
+      return 'url("' + String(value).replace(/"/g, '\\"') + '")';
     }
 
     var theme = localStorage.getItem('theme');
@@ -219,6 +224,7 @@ const themeScript = `
     document.documentElement.style.setProperty('--sakurairo-title-duration', settings.pageTitleDurationSec + 's');
     document.documentElement.style.setProperty('--sakurairo-hero-overlay-opacity', String(settings.homepageHeroOverlayOpacity));
     document.documentElement.style.setProperty('--sakurairo-hero-info-opacity', String(settings.homepageHeroInfoCardOpacity));
+    document.documentElement.style.setProperty('--global-bg-image', toCssBgImage(settings.globalBackgroundImageUrl));
 
     if (settings.preliminarySiteIconUrl) {
       var icon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -258,7 +264,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Noto+Serif+SC|Noto+Sans+SC|Fira+Code&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@300;400;500;700&display=swap"
         />
         {/* 主题初始化：在页面渲染前读取用户主题偏好，避免闪白 */}
         <Script
@@ -269,6 +275,7 @@ export default function RootLayout({
       </head>
       <body className="site-shell min-h-full bg-background text-foreground">
         <SakurairoRuntimeSync />
+        <WheelInertia />
         <GlobalBackground />
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />

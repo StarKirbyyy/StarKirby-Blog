@@ -4,7 +4,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", var(--font-geist-sans), sans-serif;
+  --font-sans: "Songti SC", "STSong", "Noto Serif SC", "SimSun", "NSimSun", "PMingLiU", "PingFang SC", "Microsoft YaHei", var(--font-geist-sans), serif;
   --font-serif: "Noto Serif SC", "Songti SC", "STSong", serif;
   --font-mono: "Fira Code", var(--font-geist-mono), monospace;
 
@@ -31,10 +31,11 @@
   --theme-skin: #000000;
   --theme-skin-matching: #a4cdf6;
   --theme-skin-dark: #294aa4;
-  --global-font-weight: 300;
+  --global-font-weight: 400;
   --homepage_widget_transparency: 0.7;
   --front_background-transparency: 0.7;
   --style_menu_radius: 10px;
+  --site-font-sans: "Songti SC", "STSong", "Noto Serif SC", "SimSun", "NSimSun", "PMingLiU", "PingFang SC", "Microsoft YaHei", serif;
 
   --background: #ffffff;
   --foreground: #000000;
@@ -59,6 +60,7 @@
   --global-bg-base: none;
   --global-bg-overlay: none;
   --global-bg-dot-opacity: 0;
+  --global-bg-image: none;
 }
 
 .dark {
@@ -96,12 +98,19 @@ body {
   margin: 0;
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
-  font-weight: var(--global-font-weight);
+  font-family: var(--site-font-sans);
+  font-weight: clamp(200, calc(var(--global-font-weight) + 400), 700);
   line-height: 1.55;
   text-shadow: 0 0 1px rgba(0, 0, 0, 0.08);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--site-font-sans);
 }
 
 a {
@@ -302,13 +311,43 @@ a {
   padding: 7rem 1rem 5rem;
 }
 
-.header-tou img {
+.header-avatar-shell {
+  position: relative;
   width: 128px;
   height: 128px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.55);
-  object-fit: cover;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.header-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.header-avatar-image.is-ready {
+  opacity: 1;
+}
+
+.header-avatar-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.18) 20%,
+    rgba(255, 255, 255, 0.48) 38%,
+    rgba(255, 255, 255, 0.18) 56%
+  );
+  background-size: 220% 100%;
+  animation: avatar-skeleton 1.2s linear infinite;
+}
+
+.header-avatar-skeleton.is-failed {
+  background: color-mix(in oklab, var(--foreground) 16%, var(--surface-strong));
+  animation: none;
 }
 
 .header-info {
@@ -357,7 +396,7 @@ a {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.headertop.is-plain .header-tou img {
+.headertop.is-plain .header-avatar-shell {
   border-color: color-mix(in oklab, var(--foreground) 20%, transparent);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
@@ -609,7 +648,7 @@ a {
   padding: 5px 10px;
   border-radius: 6px;
   color: rgba(255, 255, 255, 0.9);
-  font-weight: var(--global-font-weight);
+  font-weight: clamp(200, calc(var(--global-font-weight) + 400), 700);
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -632,7 +671,7 @@ a {
   border-radius: 6px;
   max-width: 70%;
   color: rgba(255, 255, 255, 0.9);
-  font-weight: var(--global-font-weight);
+  font-weight: clamp(200, calc(var(--global-font-weight) + 400), 700);
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -970,6 +1009,15 @@ a {
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes avatar-skeleton {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
   }
 }
 
