@@ -102,8 +102,8 @@ export function SakurairoCustomizer() {
               value={preferences.layoutMode}
               onChange={(event) => updatePreference("layoutMode", event.target.value as SakurairoPreferences["layoutMode"])}
             >
-              <option value="default">Default</option>
-              <option value="github">GitHub</option>
+              <option value="default">默认</option>
+              <option value="github">GitHub 文档风格</option>
             </select>
           </label>
 
@@ -114,9 +114,9 @@ export function SakurairoCustomizer() {
               value={preferences.bgStyle}
               onChange={(event) => updatePreference("bgStyle", event.target.value as SakurairoPreferences["bgStyle"])}
             >
-              <option value="mist">Mist</option>
-              <option value="dream">Dream</option>
-              <option value="paper">Paper</option>
+              <option value="mist">薄雾</option>
+              <option value="dream">梦境</option>
+              <option value="paper">纸张</option>
             </select>
           </label>
 
@@ -127,9 +127,9 @@ export function SakurairoCustomizer() {
               value={preferences.motion}
               onChange={(event) => updatePreference("motion", event.target.value as SakurairoPreferences["motion"])}
             >
-              <option value="normal">Normal</option>
-              <option value="soft">Soft</option>
-              <option value="none">None</option>
+              <option value="normal">标准</option>
+              <option value="soft">柔和</option>
+              <option value="none">关闭</option>
             </select>
           </label>
 
@@ -140,8 +140,8 @@ export function SakurairoCustomizer() {
               value={preferences.commentStyle}
               onChange={(event) => updatePreference("commentStyle", event.target.value as SakurairoPreferences["commentStyle"])}
             >
-              <option value="glass">Glass</option>
-              <option value="plain">Plain</option>
+              <option value="glass">玻璃态</option>
+              <option value="plain">纯色</option>
             </select>
           </label>
 

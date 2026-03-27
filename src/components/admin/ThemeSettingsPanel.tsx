@@ -14,12 +14,40 @@ type ThemeSettingsResponse = {
   error?: string;
 };
 
+type ThemeAssetUploadResponse = {
+  success?: boolean;
+  url?: string;
+  error?: string;
+};
+
+type ImageFieldKey =
+  | "preliminaryAvatarUrl"
+  | "preliminaryNavLogoUrl"
+  | "preliminarySiteIconUrl"
+  | "othersLoginLogoUrl";
+
 const DEFAULT_SETTINGS = getDefaultSakurairoPreferences();
+const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/avif,image/gif,image/svg+xml";
+
+function normalizeUrlValue(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("/")) {
+    return encodeURI(trimmed);
+  }
+  try {
+    const url = new URL(trimmed);
+    return url.toString();
+  } catch {
+    return encodeURI(trimmed);
+  }
+}
 
 export function ThemeSettingsPanel() {
   const [settings, setSettings] = useState<SakurairoPreferences>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState<ImageFieldKey | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [warning, setWarning] = useState("");
@@ -65,6 +93,36 @@ export function ThemeSettingsPanel() {
     }));
   };
 
+  const updateImageUrlSetting = (key: ImageFieldKey, rawValue: string) => {
+    updateSetting(key, normalizeUrlValue(rawValue));
+  };
+
+  const uploadImageForField = async (field: ImageFieldKey, file: File) => {
+    setUploadingField(field);
+    setError("");
+    setMessage("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/admin/theme/assets", {
+        method: "POST",
+        body: formData,
+      });
+      const json = (await response.json()) as ThemeAssetUploadResponse;
+      if (!response.ok || !json.success || !json.url) {
+        throw new Error(json.error || "图片上传失败");
+      }
+
+      updateImageUrlSetting(field, json.url);
+      setMessage("图片上传成功，已自动填入 URL。");
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "图片上传失败");
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
   const onSave = async () => {
     setSaving(true);
     setError("");
@@ -100,6 +158,46 @@ export function ThemeSettingsPanel() {
     }
   };
 
+  const renderImageUrlField = (params: {
+    label: string;
+    field: ImageFieldKey;
+    placeholder?: string;
+  }) => {
+    const { label, field, placeholder } = params;
+    const isUploading = uploadingField === field;
+
+    return (
+      <label className="block text-xs text-muted-fg">
+        {label}
+        <div className="mt-1 flex gap-2">
+          <input
+            type="text"
+            value={settings[field]}
+            placeholder={placeholder}
+            onChange={(event) => updateImageUrlSetting(field, event.target.value)}
+            onBlur={(event) => updateImageUrlSetting(field, event.target.value)}
+            className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
+          />
+          <label className="inline-flex cursor-pointer items-center rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-xs text-muted-fg transition-colors hover:text-foreground">
+            {isUploading ? "上传中..." : "上传图片"}
+            <input
+              type="file"
+              accept={IMAGE_ACCEPT}
+              disabled={isUploading || saving}
+              className="hidden"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (!file) return;
+                void uploadImageForField(field, file);
+                event.currentTarget.value = "";
+              }}
+            />
+          </label>
+        </div>
+      </label>
+    );
+  };
+
   return (
     <div className="content-shell pb-10 pt-5 sm:pt-7">
       <header className="glass-panel rounded-[10px] p-6 sm:p-7">
@@ -107,7 +205,7 @@ export function ThemeSettingsPanel() {
           主题设置
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
-          全量配置 Sakurairo 五大类设置：初步设置、全局设置、主页设置、页面设置、其他设置。
+          可配置 Sakurairo 五大类设置：初步设置、全局设置、主页设置、页面设置、其他设置。
         </p>
       </header>
 
@@ -121,39 +219,21 @@ export function ThemeSettingsPanel() {
                 初步设置
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-xs text-muted-fg">
-                  站点头像 URL
-                  <input
-                    type="text"
-                    value={settings.preliminaryAvatarUrl}
-                    onChange={(event) =>
-                      updateSetting("preliminaryAvatarUrl", event.target.value)
-                    }
-                    className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
-                  />
-                </label>
-                <label className="block text-xs text-muted-fg">
-                  导航 Logo URL
-                  <input
-                    type="text"
-                    value={settings.preliminaryNavLogoUrl}
-                    onChange={(event) =>
-                      updateSetting("preliminaryNavLogoUrl", event.target.value)
-                    }
-                    className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
-                  />
-                </label>
-                <label className="block text-xs text-muted-fg">
-                  站点 Icon URL
-                  <input
-                    type="text"
-                    value={settings.preliminarySiteIconUrl}
-                    onChange={(event) =>
-                      updateSetting("preliminarySiteIconUrl", event.target.value)
-                    }
-                    className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
-                  />
-                </label>
+                {renderImageUrlField({
+                  label: "站点头像 URL",
+                  field: "preliminaryAvatarUrl",
+                  placeholder: "例如：https://example.com/avatar.png",
+                })}
+                {renderImageUrlField({
+                  label: "导航 Logo URL",
+                  field: "preliminaryNavLogoUrl",
+                  placeholder: "例如：https://example.com/logo.png",
+                })}
+                {renderImageUrlField({
+                  label: "站点图标 URL（favicon）",
+                  field: "preliminarySiteIconUrl",
+                  placeholder: "例如：https://example.com/favicon.ico",
+                })}
                 <label className="flex items-center gap-2 self-end text-sm text-muted-fg">
                   <input
                     type="checkbox"
@@ -166,7 +246,7 @@ export function ThemeSettingsPanel() {
                 </label>
               </div>
               <label className="block text-xs text-muted-fg">
-                SEO Keywords
+                SEO 关键词
                 <input
                   type="text"
                   value={settings.preliminarySeoKeywords}
@@ -177,7 +257,7 @@ export function ThemeSettingsPanel() {
                 />
               </label>
               <label className="block text-xs text-muted-fg">
-                SEO Description
+                SEO 描述
                 <textarea
                   rows={2}
                   value={settings.preliminarySeoDescription}
@@ -206,8 +286,8 @@ export function ThemeSettingsPanel() {
                       )
                     }
                   >
-                    <option value="default">Default</option>
-                    <option value="github">GitHub</option>
+                    <option value="default">默认</option>
+                    <option value="github">GitHub 文档风格</option>
                   </select>
                 </label>
                 <label className="block text-xs text-muted-fg">
@@ -222,9 +302,9 @@ export function ThemeSettingsPanel() {
                       )
                     }
                   >
-                    <option value="mist">Mist</option>
-                    <option value="dream">Dream</option>
-                    <option value="paper">Paper</option>
+                    <option value="mist">薄雾</option>
+                    <option value="dream">梦境</option>
+                    <option value="paper">纸张</option>
                   </select>
                 </label>
                 <label className="block text-xs text-muted-fg">
@@ -239,9 +319,9 @@ export function ThemeSettingsPanel() {
                       )
                     }
                   >
-                    <option value="normal">Normal</option>
-                    <option value="soft">Soft</option>
-                    <option value="none">None</option>
+                    <option value="normal">标准</option>
+                    <option value="soft">柔和</option>
+                    <option value="none">关闭</option>
                   </select>
                 </label>
                 <label className="block text-xs text-muted-fg">
@@ -256,15 +336,15 @@ export function ThemeSettingsPanel() {
                       )
                     }
                   >
-                    <option value="auto">Auto</option>
-                    <option value="float">Float</option>
-                    <option value="static">Static</option>
+                    <option value="auto">自动浮出</option>
+                    <option value="float">始终浮层</option>
+                    <option value="static">页面底部静态</option>
                   </select>
                 </label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs text-muted-fg">
-                  主文本色（Theme Skin）
+                  主文本色
                   <input
                     type="color"
                     value={settings.globalThemeSkin}
@@ -275,7 +355,7 @@ export function ThemeSettingsPanel() {
                   />
                 </label>
                 <label className="block text-xs text-muted-fg">
-                  强调色（Theme Skin Matching）
+                  强调色
                   <input
                     type="color"
                     value={settings.globalThemeSkinMatching}
@@ -365,7 +445,7 @@ export function ThemeSettingsPanel() {
                 主页设置
               </h2>
               <label className="block text-xs text-muted-fg">
-                Hero 遮罩透明度：{settings.homepageHeroOverlayOpacity}
+                首页头图遮罩透明度：{settings.homepageHeroOverlayOpacity}
                 <input
                   type="range"
                   min={0}
@@ -382,7 +462,7 @@ export function ThemeSettingsPanel() {
                 />
               </label>
               <label className="block text-xs text-muted-fg">
-                Hero 信息卡透明度：{settings.homepageHeroInfoCardOpacity}
+                首页信息卡透明度：{settings.homepageHeroInfoCardOpacity}
                 <input
                   type="range"
                   min={0.05}
@@ -399,7 +479,7 @@ export function ThemeSettingsPanel() {
                 />
               </label>
               <label className="block text-xs text-muted-fg">
-                Hero 自动切换背景间隔（秒，0 关闭）
+                首页背景自动切换间隔（秒，0 表示关闭）
                 <input
                   type="number"
                   min={0}
@@ -415,7 +495,7 @@ export function ThemeSettingsPanel() {
                 />
               </label>
               <label className="block text-xs text-muted-fg">
-                Hero 签名文案
+                首页签名文案
                 <input
                   type="text"
                   value={settings.homepageHeroSignature}
@@ -486,8 +566,8 @@ export function ThemeSettingsPanel() {
                       )
                     }
                   >
-                    <option value="glass">Glass</option>
-                    <option value="plain">Plain</option>
+                    <option value="glass">玻璃态</option>
+                    <option value="plain">纯色</option>
                   </select>
                 </label>
                 <label className="block text-xs text-muted-fg">
@@ -500,10 +580,7 @@ export function ThemeSettingsPanel() {
                     className="mt-1 w-full"
                     value={settings.pageTitleDurationSec}
                     onChange={(event) =>
-                      updateSetting(
-                        "pageTitleDurationSec",
-                        Number.parseFloat(event.target.value),
-                      )
+                      updateSetting("pageTitleDurationSec", Number.parseFloat(event.target.value))
                     }
                   />
                 </label>
@@ -570,9 +647,7 @@ export function ThemeSettingsPanel() {
                   <input
                     type="checkbox"
                     checked={settings.pageShowPostTags}
-                    onChange={(event) =>
-                      updateSetting("pageShowPostTags", event.target.checked)
-                    }
+                    onChange={(event) => updateSetting("pageShowPostTags", event.target.checked)}
                   />
                   显示文章标签
                 </label>
@@ -602,9 +677,7 @@ export function ThemeSettingsPanel() {
                 <input
                   type="text"
                   value={settings.commentPlaceholder}
-                  onChange={(event) =>
-                    updateSetting("commentPlaceholder", event.target.value)
-                  }
+                  onChange={(event) => updateSetting("commentPlaceholder", event.target.value)}
                   className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
                 />
               </label>
@@ -613,9 +686,7 @@ export function ThemeSettingsPanel() {
                 <input
                   type="text"
                   value={settings.commentSubmitText}
-                  onChange={(event) =>
-                    updateSetting("commentSubmitText", event.target.value)
-                  }
+                  onChange={(event) => updateSetting("commentSubmitText", event.target.value)}
                   className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
                 />
               </label>
@@ -638,21 +709,15 @@ export function ThemeSettingsPanel() {
                       )
                     }
                   >
-                    <option value="default">Default</option>
-                    <option value="sakurairo">Sakurairo</option>
+                    <option value="default">默认</option>
+                    <option value="sakurairo">樱花风格</option>
                   </select>
                 </label>
-                <label className="block text-xs text-muted-fg">
-                  登录页 Logo URL
-                  <input
-                    type="text"
-                    value={settings.othersLoginLogoUrl}
-                    onChange={(event) =>
-                      updateSetting("othersLoginLogoUrl", event.target.value)
-                    }
-                    className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
-                  />
-                </label>
+                {renderImageUrlField({
+                  label: "登录页 Logo URL",
+                  field: "othersLoginLogoUrl",
+                  placeholder: "例如：https://example.com/login-logo.png",
+                })}
               </div>
               <label className="flex items-center gap-2 text-sm text-muted-fg">
                 <input
