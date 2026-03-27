@@ -114,7 +114,7 @@ export function ProfileSettingsForm() {
 
   if (loading) {
     return (
-      <section className="rounded-xl border border-border bg-card p-6">
+      <section className="glass-panel rounded-[10px] p-6">
         <p className="text-sm text-muted-fg">正在加载个人资料...</p>
       </section>
     );
@@ -122,18 +122,22 @@ export function ProfileSettingsForm() {
 
   if (error && !profile) {
     return (
-      <section className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-700 dark:text-red-300">
+      <section className="glass-panel rounded-[10px] border-red-500/30 bg-red-500/10 p-6 text-sm text-red-700 dark:text-red-300">
         {error}
       </section>
     );
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
+    <section className="glass-panel rounded-[10px] p-6">
       <div className="mb-6 flex flex-wrap items-center gap-2 text-xs text-muted-fg">
-        <span className="rounded bg-muted px-2 py-1">role: {profile?.role ?? "user"}</span>
-        <span className="rounded bg-muted px-2 py-1">status: {profile?.status ?? "active"}</span>
-        <span className="rounded bg-muted px-2 py-1">
+        <span className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1">
+          role: {profile?.role ?? "user"}
+        </span>
+        <span className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1">
+          status: {profile?.status ?? "active"}
+        </span>
+        <span className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1">
           创建于 {profile?.createdAt ? formatDate(profile.createdAt) : "-"}
         </span>
       </div>
@@ -145,7 +149,7 @@ export function ProfileSettingsForm() {
             type="text"
             value={profile?.email ?? ""}
             disabled
-            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-fg"
+            className="w-full rounded-2xl border border-border/70 bg-muted px-3 py-2 text-sm text-muted-fg"
           />
         </label>
 
@@ -156,7 +160,7 @@ export function ProfileSettingsForm() {
             value={form.name}
             onChange={(event) => onChange("name", event.target.value)}
             placeholder="2~30 个字符"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           />
         </label>
 
@@ -167,7 +171,7 @@ export function ProfileSettingsForm() {
             value={form.image}
             onChange={(event) => onChange("image", event.target.value)}
             placeholder="https://example.com/avatar.png"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           />
         </label>
 
@@ -178,7 +182,7 @@ export function ProfileSettingsForm() {
             value={form.website}
             onChange={(event) => onChange("website", event.target.value)}
             placeholder="https://starkirby.top"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           />
         </label>
 
@@ -189,14 +193,14 @@ export function ProfileSettingsForm() {
             onChange={(event) => onChange("bio", event.target.value)}
             rows={4}
             placeholder="一句话介绍你自己（最多 280 字）"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           />
         </label>
 
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? "保存中..." : "保存资料"}
         </button>

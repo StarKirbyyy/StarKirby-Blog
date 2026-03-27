@@ -327,7 +327,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <div className="content-shell pb-10 pt-5 sm:pt-7">
         <p className="text-sm text-muted-fg">正在加载文章...</p>
       </div>
     );
@@ -335,7 +335,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
 
   if (!post) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <div className="content-shell pb-10 pt-5 sm:pt-7">
         <p className="text-sm text-red-700 dark:text-red-300">
           {error || "文章不存在或加载失败。"}
         </p>
@@ -344,9 +344,9 @@ export function PostEditorPanel({ postId }: { postId: string }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <header className="border-b border-border pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           编辑文章
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -358,14 +358,14 @@ export function PostEditorPanel({ postId }: { postId: string }) {
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           <Link
             href="/admin/posts"
-            className="rounded-md bg-muted px-2 py-1 text-foreground transition-colors hover:bg-muted/80"
+            className="rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-muted-fg transition-colors hover:text-foreground"
           >
             返回文章管理
           </Link>
           <Link
             href={`/posts/${post.slug}`}
             target="_blank"
-            className="rounded-md bg-muted px-2 py-1 text-foreground transition-colors hover:bg-muted/80"
+            className="rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-muted-fg transition-colors hover:text-foreground"
           >
             预览当前文章
           </Link>
@@ -377,7 +377,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           event.preventDefault();
           void submitUpdate(draft, draft ? "save_draft" : "publish");
         }}
-        className="mt-6 space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6"
+        className="glass-panel mt-6 space-y-5 rounded-[10px] p-5 sm:p-6"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-2">
@@ -386,7 +386,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               required
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
 
@@ -396,7 +396,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               value={slug}
               onChange={(event) => setSlug(event.target.value)}
               required
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
         </div>
@@ -408,7 +408,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
             required
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           />
         </label>
 
@@ -420,7 +420,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               value={date}
               onChange={(event) => setDate(event.target.value)}
               required
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
 
@@ -430,11 +430,11 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               type="date"
               value={updated}
               onChange={(event) => setUpdated(event.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
 
-          <div className="flex items-center self-end rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+          <div className="flex items-center self-end rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground">
             当前状态：{draft ? "草稿" : "已发布"}
           </div>
         </div>
@@ -444,7 +444,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           <input
             value={tags}
             onChange={(event) => setTags(event.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             placeholder="Next.js,TypeScript,AI"
           />
         </label>
@@ -475,7 +475,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             onClick={() => {
               void submitUpdate(true, "save_draft");
             }}
-            className="inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex rounded-full border border-border/70 bg-surface-soft px-4 py-2 text-sm font-medium text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "处理中..." : "保存草稿"}
           </button>
@@ -485,7 +485,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             onClick={() => {
               void submitUpdate(false, "publish");
             }}
-            className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "处理中..." : "发布更新"}
           </button>
@@ -495,7 +495,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             onClick={() => {
               void submitUpdate(true, "unpublish");
             }}
-            className="inline-flex rounded-md bg-amber-500/15 px-4 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/25 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex rounded-full border border-amber-500/40 bg-amber-500/15 px-4 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/25 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "处理中..." : "下线文章"}
           </button>
@@ -505,14 +505,14 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             onClick={() => {
               void loadPost();
             }}
-            className="inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex rounded-full border border-border/70 bg-surface-soft px-4 py-2 text-sm font-medium text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           >
             刷新最新内容
           </button>
         </div>
       </form>
 
-      <section className="mt-6 rounded-xl border border-border bg-card p-5 sm:p-6">
+      <section className="glass-panel mt-6 rounded-[10px] p-5 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-foreground">版本历史（最近 20 条）</h2>
           <button
@@ -521,7 +521,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               void loadRevisions();
             }}
             disabled={loadingRevisions}
-            className="inline-flex rounded-md bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-xs text-muted-fg transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loadingRevisions ? "刷新中..." : "刷新历史"}
           </button>
@@ -534,7 +534,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             {revisions.map((revision) => (
               <li
                 key={revision.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface-soft px-3 py-2 text-sm"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-foreground">
@@ -552,7 +552,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
                   onClick={() => {
                     void onRestoreRevision(revision);
                   }}
-                  className="inline-flex rounded-md bg-amber-500/15 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/25 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/25 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {restoringRevisionId === revision.id ? "回滚中..." : "回滚到此版本"}
                 </button>

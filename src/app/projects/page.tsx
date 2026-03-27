@@ -14,46 +14,50 @@ export default function ProjectsPage() {
   const projects = [...siteConfig.projects];
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-      <header className="border-b border-border pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+    <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-fg">Portfolio</p>
+        <h1
+          className={`${siteConfig.sakurairo.pageTitleAnimation ? "sakurairo-page-title " : ""}mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl`}
+          style={{
+            ["--sakurairo-title-duration" as string]: `${siteConfig.sakurairo.pageTitleAnimationDuration}s`,
+          }}
+        >
           项目
         </h1>
-        <p className="mt-3 text-base text-muted-fg">
+        <p className="mt-4 text-sm leading-7 text-muted-fg">
           这里收录我正在维护或重点投入的项目。
         </p>
       </header>
 
       {projects.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-border bg-card p-8 text-center">
+        <section className="glass-panel mt-8 rounded-[10px] p-8 text-center">
           <p className="text-base text-muted-fg">项目列表还在整理中。</p>
-        </div>
+        </section>
       ) : (
-        <ul className="mt-8 grid gap-5 sm:grid-cols-2">
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {projects.map((project) => (
             <li key={project.name}>
-              <article className="card-hover h-full rounded-xl border border-border bg-card p-5">
-                <h2 className="text-lg font-semibold text-foreground">{project.name}</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-fg">
-                  {project.description}
-                </p>
+              <article className="glass-panel card-hover h-full rounded-[10px] p-5">
+                <h2 className="text-xl font-semibold text-foreground">{project.name}</h2>
+                <p className="mt-2 text-sm leading-7 text-muted-fg">{project.description}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {project.techStack.map((tech) => (
                     <span
                       key={`${project.name}-${tech}`}
-                      className="rounded-md bg-muted px-2 py-1 text-xs text-muted-fg"
+                      className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-muted-fg"
                     >
                       {tech}
                     </span>
                   ))}
                 </div>
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-5 flex flex-wrap gap-2.5">
                   {project.github ? (
                     <Link
                       href={project.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded-md border border-border px-3 py-2 text-sm text-muted-fg transition-colors hover:bg-muted hover:text-foreground"
+                      className="rounded-full border border-border/70 bg-surface-soft px-3.5 py-2 text-sm text-muted-fg transition-colors hover:text-foreground"
                     >
                       GitHub
                     </Link>
@@ -63,7 +67,7 @@ export default function ProjectsPage() {
                       href={project.demo}
                       target={project.demo.startsWith("/") ? undefined : "_blank"}
                       rel={project.demo.startsWith("/") ? undefined : "noopener noreferrer"}
-                      className="rounded-md bg-accent/10 px-3 py-2 text-sm text-accent transition-colors hover:bg-accent/20"
+                      className="rounded-full bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
                     >
                       访问项目
                     </Link>

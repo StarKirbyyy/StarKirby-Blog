@@ -43,21 +43,24 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="文章目录" className="sticky top-24 rounded-xl border border-border bg-card p-4">
-      <p className="text-sm font-semibold text-foreground">目录</p>
-      <ul className="mt-3 space-y-1 border-l border-border/70">
+    <nav
+      aria-label="文章目录"
+      className="glass-panel sticky top-24 rounded-[10px] p-4"
+    >
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-fg">目录</p>
+      <ul className="mt-3 space-y-1 border-l border-border/70 pl-1.5">
         {items.map((item) => {
           const isActive = item.id === activeId;
           return (
             <li key={item.id}>
               <Link
                 href={`#${item.id}`}
-                className={`block py-1 text-sm transition-colors ${
-                  item.level === 3 ? "pl-6" : "pl-3"
+                className={`block rounded-md px-2 py-1.5 text-sm transition-colors ${
+                  item.level === 3 ? "ml-3" : ""
                 } ${
                   isActive
-                    ? "text-accent"
-                    : "text-muted-fg hover:text-foreground"
+                    ? "bg-surface-soft font-medium text-foreground"
+                    : "text-muted-fg hover:bg-surface-soft hover:text-foreground"
                 }`}
               >
                 {item.text}
