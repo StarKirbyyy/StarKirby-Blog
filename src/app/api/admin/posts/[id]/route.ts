@@ -46,6 +46,10 @@ function toDateInputString(value: Date | null) {
   return value.toISOString().slice(0, 10);
 }
 
+function toVersionToken(value: Date) {
+  return value.toISOString();
+}
+
 function toNonEmptyString(value: unknown) {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
@@ -182,6 +186,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const markdown = await readPostSourceContentForEdit(post.sourceUrl);
 
   return Response.json({
+    versionToken: toVersionToken(post.updatedAt),
     post: {
       ...post,
       date: toDateInputString(post.date),
@@ -213,10 +218,14 @@ export async function PATCH(request: Request, context: RouteContext) {
   const date = toNonEmptyString(body.date);
   const updated = toNonEmptyString(body.updated);
   const slugInput = toNonEmptyString(body.slug);
+  const expectedUpdatedAt = toNonEmptyString(body.expectedUpdatedAt);
+  const intent = toNonEmptyString(body.intent);
   const markdown =
     typeof body.markdown === "string" ? body.markdown.replace(/\r\n/g, "\n") : "";
   const draft = body.draft === true;
   const tags = parseTags(body.tags);
+  const validIntent =
+    intent === "save_draft" || intent === "publish" || intent === "unpublish";
 
   if (!title) {
     return Response.json({ error: "title 不能为空" }, { status: 400 });
@@ -239,6 +248,15 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!markdown.trim()) {
     return Response.json({ error: "markdown 不能为空" }, { status: 400 });
   }
+  if (!expectedUpdatedAt) {
+    return Response.json(
+      { error: "缺少 expectedUpdatedAt，无法进行并发冲突检测" },
+      { status: 400 },
+    );
+  }
+  if (intent && !validIntent) {
+    return Response.json({ error: "intent 参数无效" }, { status: 400 });
+  }
 
   const existingPost = await prisma.post.findUnique({
     where: { id: postId },
@@ -246,15 +264,40 @@ export async function PATCH(request: Request, context: RouteContext) {
       id: true,
       slug: true,
       title: true,
+      description: true,
+      date: true,
+      updated: true,
       tags: true,
       coverUrl: true,
       sourceUrl: true,
       draft: true,
       publishedAt: true,
+      updatedAt: true,
     },
   });
   if (!existingPost) {
     return Response.json({ error: "文章不存在" }, { status: 404 });
+  }
+
+  const currentVersionToken = toVersionToken(existingPost.updatedAt);
+  if (expectedUpdatedAt !== currentVersionToken) {
+    return Response.json(
+      {
+        error: "内容已被其他会话更新，请刷新后重试",
+        conflict: true,
+        latest: {
+          id: existingPost.id,
+          slug: existingPost.slug,
+          title: existingPost.title,
+          description: existingPost.description,
+          date: toDateInputString(existingPost.date),
+          updated: toDateInputString(existingPost.updated),
+          draft: existingPost.draft,
+          updatedAt: currentVersionToken,
+        },
+      },
+      { status: 409 },
+    );
   }
 
   const nextSlug = sanitizeSlug(slugInput ?? existingPost.slug);
@@ -320,12 +363,20 @@ export async function PATCH(request: Request, context: RouteContext) {
     await tx.auditLog.create({
       data: createAuditLogInput({
         actorUserId,
-        action: draft ? "post.edit.save_draft" : "post.edit.publish",
+        action: draft
+          ? existingPost.draft
+            ? "post.edit.save_draft"
+            : "post.edit.unpublish"
+          : existingPost.draft
+            ? "post.edit.publish"
+            : "post.edit.publish_update",
         targetType: "post",
         targetId: post.id,
         meta: {
+          intent: validIntent ? intent : null,
           previousSlug: existingPost.slug,
           slug: post.slug,
+          previousDraft: existingPost.draft,
           draft: post.draft,
           sourceUrl: post.sourceUrl,
           title: post.title,
@@ -362,6 +413,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       date: toDateInputString(updatedPost.date),
       updated: toDateInputString(updatedPost.updated),
     },
+    versionToken: toVersionToken(updatedPost.updatedAt),
     postUrl: `/posts/${updatedPost.slug}`,
   });
 }

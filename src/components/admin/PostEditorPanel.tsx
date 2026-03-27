@@ -29,6 +29,7 @@ type EditorPost = {
 
 type EditorApiResponse = {
   post?: EditorPost;
+  versionToken?: string;
   error?: string;
 };
 
@@ -49,7 +50,19 @@ type UpdateResponse = {
     publishedAt: string | null;
     updatedAt: string;
   };
+  versionToken?: string;
   postUrl?: string;
+  conflict?: boolean;
+  latest?: {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    date: string | null;
+    updated: string | null;
+    draft: boolean;
+    updatedAt: string;
+  };
   error?: string;
 };
 
@@ -76,6 +89,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
   const [tags, setTags] = useState("");
   const [draft, setDraft] = useState(false);
   const [markdown, setMarkdown] = useState("");
+  const [versionToken, setVersionToken] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -105,6 +119,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
         throw new Error(json.error || "文章加载失败");
       }
       applyPostToForm(json.post);
+      setVersionToken(json.versionToken ?? json.post.updatedAt);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "文章加载失败");
     } finally {
@@ -117,8 +132,10 @@ export function PostEditorPanel({ postId }: { postId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
-  const onSave = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submitUpdate = async (
+    nextDraft: boolean,
+    intent: "save_draft" | "publish" | "unpublish",
+  ) => {
     setSaving(true);
     setError("");
     setMessage("");
@@ -136,11 +153,21 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           date,
           updated: updated || null,
           tags,
-          draft,
+          draft: nextDraft,
           markdown,
+          expectedUpdatedAt: versionToken,
+          intent,
         }),
       });
       const json = (await response.json()) as UpdateResponse;
+      if (response.status === 409 && json.conflict) {
+        const latestTime = json.latest?.updatedAt
+          ? formatDateTime(json.latest.updatedAt)
+          : "未知";
+        throw new Error(
+          `检测到并发冲突：该文章已在 ${latestTime} 被其他会话修改，请点击“刷新最新内容”后再编辑。`,
+        );
+      }
       if (!response.ok || !json.success || !json.post) {
         throw new Error(json.error || "保存失败");
       }
@@ -157,7 +184,15 @@ export function PostEditorPanel({ postId }: { postId: string }) {
       setSlug(json.post.slug);
       setDate(json.post.date);
       setUpdated(json.post.updated ?? "");
-      setMessage(`保存成功：${json.postUrl ?? `/posts/${json.post.slug}`}`);
+      setDraft(json.post.draft);
+      setVersionToken(json.versionToken ?? json.post.updatedAt);
+      if (intent === "save_draft") {
+        setMessage(`草稿已保存：${json.postUrl ?? `/posts/${json.post.slug}`}`);
+      } else if (intent === "unpublish") {
+        setMessage(`文章已下线：${json.postUrl ?? `/posts/${json.post.slug}`}`);
+      } else {
+        setMessage(`发布更新成功：${json.postUrl ?? `/posts/${json.post.slug}`}`);
+      }
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "保存失败");
     } finally {
@@ -240,7 +275,13 @@ export function PostEditorPanel({ postId }: { postId: string }) {
         </div>
       </header>
 
-      <form onSubmit={onSave} className="mt-6 space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submitUpdate(draft, draft ? "save_draft" : "publish");
+        }}
+        className="mt-6 space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6"
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-2">
             <span className="text-sm font-medium text-foreground">标题</span>
@@ -296,15 +337,9 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             />
           </label>
 
-          <label className="flex items-center gap-2 self-end rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
-            <input
-              type="checkbox"
-              checked={draft}
-              onChange={(event) => setDraft(event.target.checked)}
-              className="h-4 w-4 accent-accent"
-            />
-            保存为草稿
-          </label>
+          <div className="flex items-center self-end rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+            当前状态：{draft ? "草稿" : "已发布"}
+          </div>
         </div>
 
         <label className="block space-y-2">
@@ -336,13 +371,48 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {saving ? "保存中..." : "保存更新"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              void submitUpdate(true, "save_draft");
+            }}
+            className="inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "处理中..." : "保存草稿"}
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              void submitUpdate(false, "publish");
+            }}
+            className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "处理中..." : "发布更新"}
+          </button>
+          <button
+            type="button"
+            disabled={saving || draft}
+            onClick={() => {
+              void submitUpdate(true, "unpublish");
+            }}
+            className="inline-flex rounded-md bg-amber-500/15 px-4 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/25 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "处理中..." : "下线文章"}
+          </button>
+          <button
+            type="button"
+            disabled={loading || saving}
+            onClick={() => {
+              void loadPost();
+            }}
+            className="inline-flex rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            刷新最新内容
+          </button>
+        </div>
       </form>
     </div>
   );
