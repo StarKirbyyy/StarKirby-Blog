@@ -119,7 +119,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`nav-pill group relative px-3 text-sm font-normal transition-colors ${
+                  className={`nav-pill group relative px-3 text-base font-medium transition-colors ${
                     isActive
                       ? "nav-pill-active"
                       : "text-muted-fg hover:bg-muted hover:text-foreground"
@@ -171,7 +171,7 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="hidden h-9 items-center rounded-full border border-border/70 bg-surface-strong px-4 text-sm text-muted-fg shadow-[var(--shadow-soft)] transition-colors hover:text-foreground sm:inline-flex sm:h-10"
+              className="hidden h-9 items-center rounded-full border border-border/70 bg-surface-strong px-4 text-base font-medium text-muted-fg shadow-[var(--shadow-soft)] transition-colors hover:text-foreground sm:inline-flex sm:h-10"
             >
               登录
             </Link>

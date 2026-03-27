@@ -91,7 +91,7 @@ export const siteConfig = {
     globalThemeSkin: "#000000",
     globalThemeSkinMatching: "#a4cdf6",
     globalBackgroundImageUrl: "",
-    globalFontWeight: 300,
+    globalFontWeight: 400,
     globalMenuRadiusPx: 10,
     globalWidgetTransparency: 0.7,
     globalFrontTransparency: 0.7,

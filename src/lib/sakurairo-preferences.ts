@@ -522,6 +522,11 @@ export function readEffectiveSakurairoPreferencesFromRoot() {
 export function applySakurairoPreferencesToRoot(preferences: SakurairoPreferences) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
+  const toCssBgImage = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "none";
+    return `url("${trimmed.replace(/"/g, '\\"')}")`;
+  };
 
   root.classList.toggle("layout-github", preferences.layoutMode === "github");
   root.classList.toggle("title-anim-off", !preferences.titleAnim);
@@ -589,6 +594,7 @@ export function applySakurairoPreferencesToRoot(preferences: SakurairoPreference
     "--sakurairo-hero-info-opacity",
     String(preferences.homepageHeroInfoCardOpacity),
   );
+  root.style.setProperty("--global-bg-image", toCssBgImage(preferences.globalBackgroundImageUrl));
 
   if (preferences.preliminarySiteIconUrl) {
     const icon =
