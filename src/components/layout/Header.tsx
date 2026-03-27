@@ -12,6 +12,7 @@ type SessionPayload = {
   user?: {
     id?: string;
     image?: string | null;
+    role?: "user" | "admin";
   } | null;
 } | null;
 
@@ -20,6 +21,7 @@ export function Header() {
   const [logoUrl, setLogoUrl] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userAvatarUrl, setUserAvatarUrl] = useState("");
+  const [userRole, setUserRole] = useState<"user" | "admin">("user");
 
   useEffect(() => {
     const syncTheme = () => {
@@ -45,21 +47,25 @@ export function Header() {
         if (!response.ok) {
           setIsLoggedIn(false);
           setUserAvatarUrl("");
+          setUserRole("user");
           return;
         }
         const session = (await response.json()) as SessionPayload;
         const userId = typeof session?.user?.id === "string" ? session.user.id : "";
+        const role = session?.user?.role === "admin" ? "admin" : "user";
         const image =
           typeof session?.user?.image === "string" && session.user.image.trim()
             ? session.user.image.trim()
             : "";
 
         setIsLoggedIn(Boolean(userId));
+        setUserRole(role);
         setUserAvatarUrl(image);
       } catch {
         if (!active) return;
         setIsLoggedIn(false);
         setUserAvatarUrl("");
+        setUserRole("user");
       }
     };
 
@@ -73,7 +79,7 @@ export function Header() {
 
   return (
     <header className="fixed left-0 top-0 z-40 w-full px-3 pt-2.5 sm:px-5 sm:pt-3">
-      <div className="mx-auto flex h-[52px] w-full max-w-[1120px] items-center justify-between rounded-full bg-transparent px-1 sm:h-[58px] sm:px-2">
+      <div className="mx-auto flex h-[52px] w-fit max-w-[calc(100vw-1.5rem)] items-center gap-5 rounded-full bg-transparent px-1 sm:h-[58px] sm:max-w-[calc(100vw-2.5rem)] sm:px-2">
         <Link
           href="/"
           className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-foreground shadow-[var(--shadow-soft)] backdrop-blur-md transition-colors hover:text-accent sm:h-11 sm:w-11"
@@ -102,10 +108,7 @@ export function Header() {
           )}
         </Link>
 
-        <nav
-          aria-label="主导航"
-          className="hidden min-w-0 flex-1 items-center justify-center px-2 md:flex"
-        >
+        <nav aria-label="主导航" className="hidden items-center md:flex">
           <div className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-soft px-2 py-1 shadow-[var(--shadow-soft)] backdrop-blur-md">
             {siteConfig.nav.map((item) => {
               const isActive =
@@ -139,9 +142,9 @@ export function Header() {
         <div className="flex items-center justify-end gap-1">
           {isLoggedIn ? (
             <Link
-              href="/settings/profile"
+              href={userRole === "admin" ? "/admin/posts" : "/settings/profile"}
               className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-surface-soft shadow-[var(--shadow-soft)] transition-colors hover:border-accent/60 sm:inline-flex"
-              aria-label="个人中心"
+              aria-label={userRole === "admin" ? "管理后台" : "个人中心"}
             >
               {userAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
