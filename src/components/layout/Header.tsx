@@ -79,10 +79,10 @@ export function Header() {
 
   return (
     <header className="fixed left-0 top-0 z-40 w-full px-3 pt-2.5 sm:px-5 sm:pt-3">
-      <div className="mx-auto flex h-[52px] w-fit max-w-[calc(100vw-1.5rem)] items-center gap-5 rounded-full bg-transparent px-1 sm:h-[58px] sm:max-w-[calc(100vw-2.5rem)] sm:px-2">
+      <div className="mx-auto flex h-[48px] w-fit max-w-[calc(100vw-1.5rem)] items-center gap-5 rounded-full bg-transparent px-1 sm:h-[52px] sm:max-w-[calc(100vw-2.5rem)] sm:px-2">
         <Link
           href="/"
-          className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface-soft text-foreground shadow-[var(--shadow-soft)] backdrop-blur-md transition-colors hover:text-accent sm:h-11 sm:w-11"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-surface-strong text-foreground shadow-[var(--shadow-soft)] transition-colors hover:text-accent sm:h-10 sm:w-10"
           aria-label="返回首页"
         >
           {logoUrl ? (
@@ -109,7 +109,7 @@ export function Header() {
         </Link>
 
         <nav aria-label="主导航" className="hidden items-center md:flex">
-          <div className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-soft px-2 py-1 shadow-[var(--shadow-soft)] backdrop-blur-md">
+          <div className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-strong px-2 py-1 shadow-[var(--shadow-soft)]">
             {siteConfig.nav.map((item) => {
               const isActive =
                 item.href === "/"
@@ -119,10 +119,10 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`nav-pill group relative px-3 py-1.5 text-sm font-normal transition-colors ${
+                  className={`nav-pill group relative px-3 text-sm font-normal transition-colors ${
                     isActive
                       ? "nav-pill-active"
-                      : "text-muted-fg hover:bg-surface-soft hover:text-foreground"
+                      : "text-muted-fg hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {item.title}
@@ -143,7 +143,7 @@ export function Header() {
           {isLoggedIn ? (
             <Link
               href={userRole === "admin" ? "/admin/posts" : "/settings/profile"}
-              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-surface-soft shadow-[var(--shadow-soft)] transition-colors hover:border-accent/60 sm:inline-flex"
+              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-surface-strong shadow-[var(--shadow-soft)] transition-colors hover:border-accent/60 sm:inline-flex sm:h-10 sm:w-10"
               aria-label={userRole === "admin" ? "管理后台" : "个人中心"}
             >
               {userAvatarUrl ? (
@@ -171,7 +171,7 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="hidden rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-sm text-muted-fg shadow-[var(--shadow-soft)] transition-colors hover:text-foreground sm:inline-flex"
+              className="hidden h-9 items-center rounded-full border border-border/70 bg-surface-strong px-4 text-sm text-muted-fg shadow-[var(--shadow-soft)] transition-colors hover:text-foreground sm:inline-flex sm:h-10"
             >
               登录
             </Link>

@@ -147,6 +147,14 @@ a {
   background: transparent;
 }
 
+.global-bg-mask {
+  background: rgba(255, 255, 255, 0.44);
+}
+
+.dark .global-bg-mask {
+  background: rgba(0, 0, 0, 0.48);
+}
+
 .content-shell {
   width: 100%;
   max-width: 860px;
@@ -188,6 +196,11 @@ a {
   overflow: hidden;
 }
 
+.home-azifan .headertop {
+  margin-top: -4.5rem;
+  min-height: 100vh;
+}
+
 .headertop.filter-dot::before {
   content: "";
   position: absolute;
@@ -223,9 +236,40 @@ a {
   animation: banner-wave-2 10s linear infinite;
 }
 
+.sakura-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sakura-petal {
+  position: absolute;
+  top: -12%;
+  left: var(--petal-left);
+  width: var(--petal-size);
+  height: calc(var(--petal-size) * 0.72);
+  border-radius: 62% 38% 58% 42%;
+  background: linear-gradient(135deg, rgba(255, 220, 230, 0.95), rgba(255, 176, 200, 0.85));
+  opacity: 0.82;
+  box-shadow: 0 0 10px rgba(255, 174, 192, 0.28);
+  transform: translate3d(var(--petal-start-x), -12vh, 0) rotate(var(--petal-rotate));
+  animation: sakura-fall var(--petal-duration) linear infinite;
+  animation-delay: var(--petal-delay);
+}
+
+.sakura-petal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.62), transparent 52%);
+}
+
 .centerbg {
   position: relative;
-  min-height: calc(100vh - 70px);
+  min-height: 100vh;
   margin: 0;
   background-size: cover;
   background-position: center;
@@ -249,13 +293,13 @@ a {
 .focusinfo {
   position: relative;
   z-index: 3;
-  min-height: calc(100vh - 70px);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 5rem 1rem 7rem;
+  padding: 7rem 1rem 5rem;
 }
 
 .header-tou img {
@@ -269,12 +313,13 @@ a {
 
 .header-info {
   width: min(760px, 92%);
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.88);
   border-radius: 14px;
   backdrop-filter: saturate(170%) blur(10px);
   -webkit-backdrop-filter: saturate(170%) blur(10px);
   box-shadow: var(--shadow-soft);
-  color: #fff;
+  background-color: rgba(255, 255, 255, 0.74);
+  color: #111111;
   text-align: center;
   padding: 0.95rem 1.25rem;
 }
@@ -289,34 +334,27 @@ a {
 .header-info p {
   margin: 0.4rem 0 0;
   font-size: 0.94rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.9);
 }
 
 .header-info .hero-subtitle {
   margin-top: 0.18rem;
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(0, 0, 0, 0.8);
 }
 
-.header-info.header-info-plain {
-  color: #000000;
-  background: transparent !important;
-  border-color: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+.dark .header-info {
+  border-color: rgba(255, 255, 255, 0.26);
+  background-color: rgba(0, 0, 0, 0.58);
+  color: #ffffff;
 }
 
-.header-info.header-info-plain p,
-.header-info.header-info-plain .hero-subtitle {
-  color: rgba(0, 0, 0, 0.92);
+.dark .header-info p {
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.dark .header-info.header-info-plain,
-.dark .header-info.header-info-plain p,
-.dark .header-info.header-info-plain .hero-subtitle,
-.dark .header-info.header-info-plain .element {
-  color: #ffffff !important;
+.dark .header-info .hero-subtitle {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .headertop.is-plain .header-tou img {
@@ -405,17 +443,15 @@ a {
   color: var(--foreground);
 }
 
-.headertop.is-plain .headertop-down span {
-  border-color: color-mix(in oklab, var(--foreground) 16%, transparent);
-  background: rgba(255, 255, 255, 0.64);
+.headertop.is-plain .headertop-down-icon {
   color: var(--foreground);
 }
 
 .dark .headertop.is-plain .top-social li a,
 .dark .headertop.is-plain .bg-switch,
 .dark .headertop.is-plain .hero-count,
-.dark .headertop.is-plain .headertop-down span {
-  background: rgba(255, 255, 255, 0.1);
+.dark .headertop.is-plain .headertop-down-icon {
+  background: transparent;
 }
 
 .headertop-down {
@@ -425,21 +461,24 @@ a {
   bottom: 10px;
   z-index: 4;
   cursor: pointer;
+  animation: hero-arrow-float 2.8s ease-in-out infinite;
 }
 
-.headertop-down span {
+.headertop-down-icon {
   display: inline-flex;
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.14);
+  border: none;
+  background: transparent;
   color: #fff;
-  font-size: 1.8rem;
-  line-height: 1;
-  backdrop-filter: blur(8px);
+}
+
+.headertop-down-svg {
+  width: 42px;
+  height: 32px;
+  display: block;
 }
 
 .main-title.posts-area-title {
@@ -493,12 +532,25 @@ a {
 .nav-pill {
   border: 1px solid transparent;
   border-radius: 999px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .nav-pill-active {
-  border-color: color-mix(in oklab, var(--accent) 44%, var(--border));
-  background: color-mix(in oklab, var(--accent) 18%, var(--surface-strong));
-  color: var(--theme-skin);
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted-fg);
+}
+
+.nav-pill-active > span {
+  width: 0 !important;
+  opacity: 0 !important;
+}
+
+.nav-pill-active:hover > span {
+  width: 1.75rem !important;
+  opacity: 1 !important;
 }
 
 .post-list-thumb {
@@ -796,6 +848,12 @@ a {
   display: none !important;
 }
 
+@media (min-width: 640px) {
+  .home-azifan .headertop {
+    margin-top: -6rem;
+  }
+}
+
 @media (max-width: 860px) {
   .content-shell {
     padding-inline: 4%;
@@ -912,5 +970,38 @@ a {
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes sakura-fall {
+  0% {
+    transform: translate3d(var(--petal-start-x), -12vh, 0) rotate(var(--petal-rotate));
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.82;
+  }
+  55% {
+    transform: translate3d(
+        calc(var(--petal-start-x) - var(--petal-slide-mid) + var(--petal-drift)),
+        52vh,
+        0
+      )
+      rotate(calc(var(--petal-rotate) + 110deg));
+  }
+  100% {
+    transform: translate3d(calc(var(--petal-start-x) - var(--petal-slide-x)), 112vh, 0)
+      rotate(calc(var(--petal-rotate) + 220deg));
+    opacity: 0.08;
+  }
+}
+
+@keyframes hero-arrow-float {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-7px);
   }
 }

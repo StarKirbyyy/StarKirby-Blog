@@ -24,6 +24,7 @@ type ImageFieldKey =
   | "preliminaryAvatarUrl"
   | "preliminaryNavLogoUrl"
   | "preliminarySiteIconUrl"
+  | "globalBackgroundImageUrl"
   | "homepageHeroBackgroundUrl1"
   | "homepageHeroBackgroundUrl2"
   | "homepageHeroBackgroundUrl3"
@@ -319,6 +320,11 @@ export function ThemeSettingsPanel() {
                     <option value="paper">纸张</option>
                   </select>
                 </label>
+                {renderImageUrlField({
+                  label: "全站静态背景图 URL",
+                  field: "globalBackgroundImageUrl",
+                  placeholder: "可留空；例如：https://example.com/background.webp",
+                })}
                 <label className="block text-xs text-muted-fg">
                   动效强度
                   <select
