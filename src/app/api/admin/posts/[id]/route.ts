@@ -270,6 +270,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       tags: true,
       coverUrl: true,
       sourceUrl: true,
+      readingTime: true,
       draft: true,
       publishedAt: true,
       updatedAt: true,
@@ -321,6 +322,30 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const now = new Date();
   const updatedPost = await prisma.$transaction(async (tx) => {
+    const hasAnyRevision = await tx.postRevision.findFirst({
+      where: { postId: existingPost.id },
+      select: { id: true },
+    });
+    if (!hasAnyRevision) {
+      await tx.postRevision.create({
+        data: {
+          postId: existingPost.id,
+          slug: existingPost.slug,
+          title: existingPost.title,
+          description: existingPost.description,
+          date: existingPost.date,
+          updated: existingPost.updated,
+          tags: existingPost.tags,
+          coverUrl: existingPost.coverUrl,
+          sourceUrl: existingPost.sourceUrl,
+          readingTime: existingPost.readingTime,
+          draft: existingPost.draft,
+          publishedAt: existingPost.publishedAt,
+          editorUserId: actorUserId,
+        },
+      });
+    }
+
     if (nextSlug !== existingPost.slug) {
       await tx.comment.updateMany({
         where: { postSlug: existingPost.slug },
@@ -357,6 +382,24 @@ export async function PATCH(request: Request, context: RouteContext) {
         draft: true,
         publishedAt: true,
         updatedAt: true,
+      },
+    });
+
+    await tx.postRevision.create({
+      data: {
+        postId: post.id,
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        date: post.date,
+        updated: post.updated,
+        tags: post.tags,
+        coverUrl: post.coverUrl,
+        sourceUrl: post.sourceUrl,
+        readingTime: post.readingTime,
+        draft: post.draft,
+        publishedAt: post.publishedAt,
+        editorUserId: actorUserId,
       },
     });
 

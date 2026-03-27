@@ -423,10 +423,35 @@ export async function POST(request: Request) {
         select: {
           id: true,
           slug: true,
+          title: true,
+          description: true,
+          date: true,
+          updated: true,
+          tags: true,
           coverUrl: true,
           sourceUrl: true,
+          readingTime: true,
           draft: true,
+          publishedAt: true,
           updatedAt: true,
+        },
+      });
+
+      await tx.postRevision.create({
+        data: {
+          postId: upserted.id,
+          slug: upserted.slug,
+          title: upserted.title,
+          description: upserted.description,
+          date: upserted.date,
+          updated: upserted.updated,
+          tags: upserted.tags,
+          coverUrl: upserted.coverUrl,
+          sourceUrl: upserted.sourceUrl,
+          readingTime: upserted.readingTime,
+          draft: upserted.draft,
+          publishedAt: upserted.publishedAt,
+          editorUserId: session.user.id,
         },
       });
 

@@ -33,6 +33,31 @@ type EditorApiResponse = {
   error?: string;
 };
 
+type RevisionItem = {
+  id: string;
+  slug: string;
+  title: string;
+  draft: boolean;
+  readingTime: string;
+  createdAt: string;
+  editorUser: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
+};
+
+type RevisionsApiResponse = {
+  revisions?: RevisionItem[];
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  error?: string;
+};
+
 type UpdateResponse = {
   success?: boolean;
   post?: {
@@ -49,6 +74,7 @@ type UpdateResponse = {
     draft: boolean;
     publishedAt: string | null;
     updatedAt: string;
+    markdown?: string;
   };
   versionToken?: string;
   postUrl?: string;
@@ -90,6 +116,9 @@ export function PostEditorPanel({ postId }: { postId: string }) {
   const [draft, setDraft] = useState(false);
   const [markdown, setMarkdown] = useState("");
   const [versionToken, setVersionToken] = useState("");
+  const [revisions, setRevisions] = useState<RevisionItem[]>([]);
+  const [loadingRevisions, setLoadingRevisions] = useState(false);
+  const [restoringRevisionId, setRestoringRevisionId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -127,8 +156,32 @@ export function PostEditorPanel({ postId }: { postId: string }) {
     }
   };
 
+  const loadRevisions = async () => {
+    setLoadingRevisions(true);
+    try {
+      const response = await fetch(
+        `/api/admin/posts/${encodeURIComponent(postId)}/revisions?page=1&pageSize=20`,
+        {
+          cache: "no-store",
+        },
+      );
+      const json = (await response.json()) as RevisionsApiResponse;
+      if (!response.ok) {
+        throw new Error(json.error || "版本历史加载失败");
+      }
+      setRevisions(json.revisions ?? []);
+    } catch (revisionsError) {
+      setError(
+        revisionsError instanceof Error ? revisionsError.message : "版本历史加载失败",
+      );
+    } finally {
+      setLoadingRevisions(false);
+    }
+  };
+
   useEffect(() => {
     void loadPost();
+    void loadRevisions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
@@ -193,6 +246,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
       } else {
         setMessage(`发布更新成功：${json.postUrl ?? `/posts/${json.post.slug}`}`);
       }
+      await loadRevisions();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "保存失败");
     } finally {
@@ -226,6 +280,49 @@ export function PostEditorPanel({ postId }: { postId: string }) {
       markdown: json.markdown,
       alt: json.alt,
     };
+  };
+
+  const onRestoreRevision = async (revision: RevisionItem) => {
+    if (
+      !window.confirm(
+        `确认回滚到 ${formatDateTime(revision.createdAt)} 的版本吗？当前未保存内容会被覆盖。`,
+      )
+    ) {
+      return;
+    }
+
+    setRestoringRevisionId(revision.id);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(
+        `/api/admin/posts/${encodeURIComponent(postId)}/revisions/${encodeURIComponent(revision.id)}/restore`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            expectedUpdatedAt: versionToken,
+          }),
+        },
+      );
+      const json = (await response.json()) as UpdateResponse;
+      if (response.status === 409 && json.conflict) {
+        throw new Error("回滚冲突：内容已被其他会话更新，请先刷新最新内容。");
+      }
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || "回滚失败");
+      }
+
+      await loadPost();
+      await loadRevisions();
+      setMessage(`已回滚到 ${formatDateTime(revision.createdAt)} 的版本。`);
+    } catch (restoreError) {
+      setError(restoreError instanceof Error ? restoreError.message : "回滚失败");
+    } finally {
+      setRestoringRevisionId(null);
+    }
   };
 
   if (loading) {
@@ -414,6 +511,56 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           </button>
         </div>
       </form>
+
+      <section className="mt-6 rounded-xl border border-border bg-card p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-foreground">版本历史（最近 20 条）</h2>
+          <button
+            type="button"
+            onClick={() => {
+              void loadRevisions();
+            }}
+            disabled={loadingRevisions}
+            className="inline-flex rounded-md bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loadingRevisions ? "刷新中..." : "刷新历史"}
+          </button>
+        </div>
+
+        {revisions.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-fg">暂无版本记录。</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {revisions.map((revision) => (
+              <li
+                key={revision.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-foreground">
+                    {revision.title} · {revision.slug} · {revision.readingTime}
+                  </p>
+                  <p className="text-xs text-muted-fg">
+                    {formatDateTime(revision.createdAt)} ·
+                    {revision.draft ? " 草稿" : " 已发布"} ·
+                    {` ${revision.editorUser?.name ?? revision.editorUser?.email ?? "未知操作者"}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={saving || loading || restoringRevisionId === revision.id}
+                  onClick={() => {
+                    void onRestoreRevision(revision);
+                  }}
+                  className="inline-flex rounded-md bg-amber-500/15 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/25 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {restoringRevisionId === revision.id ? "回滚中..." : "回滚到此版本"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
