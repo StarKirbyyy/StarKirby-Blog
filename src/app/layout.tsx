@@ -10,7 +10,6 @@ import { Footer } from "@/components/layout/Footer";
 import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { UtilityButtons } from "@/components/layout/UtilityButtons";
 import { CopyAttribution } from "@/components/layout/CopyAttribution";
-import { SakurairoCustomizer } from "@/components/layout/SakurairoCustomizer";
 
 // Geist Mono 仅加载 latin 子集，控制字体体积
 const geistMono = Geist_Mono({
@@ -272,7 +271,6 @@ export default function RootLayout({
             {children}
           </main>
           <UtilityButtons />
-          <SakurairoCustomizer />
           <CopyAttribution />
           <Footer />
         </div>

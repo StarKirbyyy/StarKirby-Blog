@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { siteConfig } from "@/config/site";
-import { readEffectiveSakurairoPreferencesFromRoot } from "@/lib/sakurairo-preferences";
+import {
+  getDefaultSakurairoPreferences,
+  readEffectiveSakurairoPreferencesFromRoot,
+} from "@/lib/sakurairo-preferences";
 
 type HomeHeroProps = {
   title: string;
@@ -41,10 +44,13 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
   const [activeBackgroundIndex, setActiveBackgroundIndex] = useState(0);
   const [typedWordIndex, setTypedWordIndex] = useState(0);
   const [heroSettings, setHeroSettings] = useState(() =>
-    readEffectiveSakurairoPreferencesFromRoot(),
+    getDefaultSakurairoPreferences(),
   );
   const [reducedMotion, setReducedMotion] = useState(false);
   const [ready, setReady] = useState(false);
+  const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>(
+    siteConfig.author.avatar,
+  );
 
   const typingWords = useMemo(
     () => (siteConfig.author.skills.length > 0 ? siteConfig.author.skills : ["Next.js"]),
@@ -57,7 +63,7 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
       heroSettings.homepageHeroBackgroundUrl3,
     ];
     return raw
-      .map((item) => item.trim())
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
       .filter(Boolean)
       .map((image, index) => ({
         id: `custom-bg-${index + 1}`,
@@ -76,6 +82,10 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
       : null;
   const avatarSrc = heroSettings.preliminaryAvatarUrl || siteConfig.author.avatar;
   const quoteText = heroSettings.homepageHeroSignature || subtitle;
+
+  useEffect(() => {
+    setResolvedAvatarSrc(avatarSrc);
+  }, [avatarSrc]);
 
   useEffect(() => {
     if (heroBackgrounds.length === 0) {
@@ -160,7 +170,7 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
         style={
           activeBackground
             ? { backgroundImage: `url("${activeBackground.image}")` }
-            : { backgroundImage: "none", backgroundColor: "transparent" }
+            : { backgroundImage: "none" }
         }
       >
         {activeBackground ? (
@@ -178,10 +188,13 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt="avatar"
-                src={avatarSrc}
+                src={resolvedAvatarSrc}
                 width={132}
                 height={132}
-                referrerPolicy="no-referrer"
+                suppressHydrationWarning
+                onError={() => {
+                  setResolvedAvatarSrc(siteConfig.author.avatar);
+                }}
               />
             </Link>
           </div>
@@ -189,7 +202,9 @@ export function HomeHero({ title, subtitle, postsCount }: HomeHeroProps) {
           <div
             className={`header-info${activeBackground ? "" : " header-info-plain"}`}
             style={{
-              backgroundColor: `rgba(255,255,255,${heroSettings.homepageHeroInfoCardOpacity})`,
+              backgroundColor: activeBackground
+                ? `rgba(255,255,255,${heroSettings.homepageHeroInfoCardOpacity})`
+                : "transparent",
             }}
           >
             <span className="element">{quoteText}</span>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import { mdxComponents } from "@/components/mdx/components";
 import { CommentsSection } from "@/components/posts/CommentsSection";
@@ -125,10 +126,13 @@ export default async function PostDetailPage({ params }: PageProps) {
 
   return (
     <div className="content-shell pb-10 pt-5 sm:pt-7">
-      <script
+      <Script
+        id={`post-jsonld-${post.slug}`}
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+        strategy="beforeInteractive"
+      >
+        {JSON.stringify(jsonLd)}
+      </Script>
 
       {post.cover ? (
         <header className="relative h-[320px] overflow-hidden rounded-[10px] border border-border shadow-[var(--shadow-soft)] sm:h-[380px]">

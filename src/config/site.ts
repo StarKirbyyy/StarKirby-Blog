@@ -88,7 +88,7 @@ export const siteConfig = {
     preliminarySeoDescription: "",
 
     // 全局设置
-    globalThemeSkin: "#505050",
+    globalThemeSkin: "#000000",
     globalThemeSkinMatching: "#a4cdf6",
     globalFontWeight: 300,
     globalMenuRadiusPx: 10,
