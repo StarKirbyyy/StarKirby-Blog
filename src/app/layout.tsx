@@ -7,6 +7,7 @@ import "katex/dist/katex.min.css";
 import { siteConfig } from "@/config/site";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { GlobalBackground } from "@/components/layout/GlobalBackground";
 
 // Geist Mono 仅加载 latin 子集，控制字体体积
 const geistMono = Geist_Mono({
@@ -88,12 +89,15 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeScript }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
+      <body className="site-shell min-h-full bg-background text-foreground">
+        <GlobalBackground />
+        <div className="relative z-10 flex min-h-screen flex-col">
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </div>
         <Analytics />
       </body>
     </html>
