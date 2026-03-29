@@ -21,6 +21,14 @@ function isMissingTableError(error: unknown) {
   return /does not exist/i.test(message) && /GlobalSetting/i.test(message);
 }
 
+function isDatabaseUnavailableError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P1001" || error.code === "P1002";
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return /can't reach database server/i.test(message) || /timed out/i.test(message);
+}
+
 function clampInt(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, Math.trunc(value)));
 }
@@ -266,7 +274,7 @@ async function getGlobalSakurairoPatchResult(): Promise<GlobalSakurairoPatchResu
       persisted: true,
     };
   } catch (error) {
-    if (isMissingTableError(error)) {
+    if (isMissingTableError(error) || isDatabaseUnavailableError(error)) {
       return {
         patch: null,
         persisted: false,

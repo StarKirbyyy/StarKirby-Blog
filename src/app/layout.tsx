@@ -6,7 +6,7 @@ import "./globals.css";
 import "katex/dist/katex.min.css";
 import { siteConfig } from "@/config/site";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { FooterClientMount } from "@/components/layout/FooterClientMount";
 import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { UtilityButtons } from "@/components/layout/UtilityButtons";
 import { CopyAttribution } from "@/components/layout/CopyAttribution";
@@ -279,12 +279,12 @@ export default function RootLayout({
         <GlobalBackground />
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1 pb-36 pt-[4.5rem] sm:pb-40 sm:pt-24">
+          <main className="flex-1 pb-44 pt-[4.5rem] sm:pb-48 sm:pt-24">
             {children}
           </main>
           <UtilityButtons />
           <CopyAttribution />
-          <Footer />
+          <FooterClientMount />
         </div>
         <Analytics />
       </body>
