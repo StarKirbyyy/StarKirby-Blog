@@ -45,6 +45,15 @@ function createSeededRandom(seed: number) {
   };
 }
 
+function preloadImage(src: string) {
+  return new Promise<void>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    image.src = src;
+  });
+}
+
 function createSakuraPetals(): SakuraPetal[] {
   const random = createSeededRandom(20260328);
   const petals: SakuraPetal[] = [];
@@ -123,11 +132,13 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [ready, setReady] = useState(false);
+  const [homeIntroReady, setHomeIntroReady] = useState(false);
   const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>(
     siteConfig.author.avatar,
   );
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [quoteTypedLength, setQuoteTypedLength] = useState(-1);
 
   const typingWords = useMemo(
     () => (siteConfig.author.skills.length > 0 ? siteConfig.author.skills : ["Next.js"]),
@@ -160,6 +171,17 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
       : null;
   const avatarSrc = heroSettings.preliminaryAvatarUrl || siteConfig.author.avatar;
   const quoteText = heroSettings.homepageHeroSignature || subtitle;
+  const quoteChars = useMemo(() => Array.from(quoteText), [quoteText]);
+  const quoteTypedText = useMemo(
+    () => (quoteTypedLength < 0 ? quoteText : quoteChars.slice(0, quoteTypedLength).join("")),
+    [quoteChars, quoteText, quoteTypedLength],
+  );
+  const focusInfoClassName = [
+    "focusinfo",
+    mounted ? (homeIntroReady ? "home-profile-enter-ready" : "home-profile-enter-prep") : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   useEffect(() => {
     setResolvedAvatarSrc(avatarSrc);
@@ -243,6 +265,56 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    let cancelled = false;
+    setHomeIntroReady(false);
+
+    const sources = new Set<string>();
+    for (const background of heroBackgrounds) {
+      sources.add(background.image);
+    }
+    if (avatarSrc) sources.add(avatarSrc);
+    for (const variant of PETAL_VARIANT_POOL) {
+      sources.add(`/images/petals/petal-${variant}.png`);
+    }
+
+    const tasks = [...sources].map((src) => preloadImage(src));
+    void Promise.allSettled(tasks).then(() => {
+      if (cancelled) return;
+      setHomeIntroReady(true);
+      document.documentElement.dataset.homeHeroReady = "true";
+      window.dispatchEvent(new CustomEvent("home:hero-resources-ready"));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mounted, heroBackgrounds, avatarSrc]);
+
+  useEffect(() => {
+    setQuoteTypedLength(-1);
+    if (!mounted) return;
+    if (!homeIntroReady) return;
+    if (quoteChars.length === 0) return;
+    if (reducedMotion) {
+      setQuoteTypedLength(quoteChars.length);
+      return;
+    }
+
+    setQuoteTypedLength(0);
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index += 1;
+      setQuoteTypedLength(Math.min(index, quoteChars.length));
+      if (index >= quoteChars.length) {
+        window.clearInterval(timer);
+      }
+    }, 110);
+
+    return () => window.clearInterval(timer);
+  }, [mounted, homeIntroReady, quoteChars, reducedMotion]);
+
   return (
     <section className={`headertop filter-dot${activeBackground ? "" : " is-plain"}`}>
       <div id="banner_wave_1" />
@@ -299,7 +371,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
           />
         ) : null}
 
-        <div className="focusinfo">
+        <div className={focusInfoClassName}>
           <div className="header-tou">
             <Link href="/">
               <div className="header-avatar-shell">
@@ -330,7 +402,19 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
           </div>
 
           <div className="header-info">
-            <span className="element">{quoteText}</span>
+            {mounted ? (
+              <span className="element hero-quote-typewriter">
+                <span>{quoteTypedText}</span>
+                <span
+                  className={`hero-quote-caret${homeIntroReady ? " is-visible" : ""}`}
+                  aria-hidden="true"
+                >
+                  |
+                </span>
+              </span>
+            ) : (
+              <span className="element">{quoteText}</span>
+            )}
             <p>
               {title} · {heroSettings.homepageHeroTypingEffect ? typingWords[typedWordIndex] : typingWords[0]}
             </p>

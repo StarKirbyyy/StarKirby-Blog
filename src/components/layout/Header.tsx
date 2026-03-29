@@ -22,6 +22,8 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userAvatarUrl, setUserAvatarUrl] = useState("");
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
+  const [mounted, setMounted] = useState(false);
+  const [homeNavState, setHomeNavState] = useState<"idle" | "prep" | "ready">("idle");
 
   useEffect(() => {
     const syncTheme = () => {
@@ -77,8 +79,45 @@ export function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setHomeNavState("idle");
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setHomeNavState(
+      document.documentElement.dataset.homeHeroReady === "true" ? "ready" : "prep",
+    );
+
+    const onReady = () => {
+      setHomeNavState("ready");
+    };
+    window.addEventListener("home:hero-resources-ready", onReady);
+    return () => window.removeEventListener("home:hero-resources-ready", onReady);
+  }, [mounted, pathname]);
+
+  const homeNavClass =
+    homeNavState === "prep"
+      ? "home-nav-enter-prep"
+      : homeNavState === "ready"
+        ? "home-nav-enter-ready"
+        : "";
+  const headerClassName = [
+    "fixed left-0 top-0 z-40 w-full px-3 pt-2.5 sm:px-5 sm:pt-3",
+    homeNavClass,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <header className="fixed left-0 top-0 z-40 w-full px-3 pt-2.5 sm:px-5 sm:pt-3">
+    <header className={headerClassName}>
       <div className="mx-auto flex h-[48px] w-fit max-w-[calc(100vw-1.5rem)] items-center gap-5 rounded-full bg-transparent px-1 sm:h-[52px] sm:max-w-[calc(100vw-2.5rem)] sm:px-2">
         <Link
           href="/"
