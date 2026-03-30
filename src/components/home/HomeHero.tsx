@@ -138,6 +138,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   );
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [activeBackgroundLoaded, setActiveBackgroundLoaded] = useState(false);
   const [quoteTypedLength, setQuoteTypedLength] = useState(-1);
 
   const typingWords = useMemo(
@@ -169,6 +170,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     heroBackgrounds.length > 0
       ? heroBackgrounds[activeBackgroundIndex % heroBackgrounds.length]
       : null;
+  const activeBackgroundImage = activeBackground?.image ?? "";
   const avatarSrc = heroSettings.preliminaryAvatarUrl || siteConfig.author.avatar;
   const quoteText = heroSettings.homepageHeroSignature || subtitle;
   const quoteChars = useMemo(() => Array.from(quoteText), [quoteText]);
@@ -176,9 +178,15 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     () => (quoteTypedLength < 0 ? quoteText : quoteChars.slice(0, quoteTypedLength).join("")),
     [quoteChars, quoteText, quoteTypedLength],
   );
+  const heroTextReady =
+    mounted &&
+    homeIntroReady &&
+    avatarLoaded &&
+    !avatarFailed &&
+    (!activeBackgroundImage || activeBackgroundLoaded);
   const focusInfoClassName = [
     "focusinfo",
-    mounted ? (homeIntroReady ? "home-profile-enter-ready" : "home-profile-enter-prep") : "",
+    mounted && homeIntroReady ? "home-profile-enter-ready" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -188,6 +196,30 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     setAvatarLoaded(false);
     setAvatarFailed(false);
   }, [avatarSrc]);
+
+  useEffect(() => {
+    if (!activeBackgroundImage) {
+      setActiveBackgroundLoaded(true);
+      return;
+    }
+
+    let cancelled = false;
+    setActiveBackgroundLoaded(false);
+
+    void preloadImage(activeBackgroundImage)
+      .then(() => {
+        if (cancelled) return;
+        setActiveBackgroundLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setActiveBackgroundLoaded(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeBackgroundImage]);
 
   useEffect(() => {
     if (heroBackgrounds.length === 0) {
@@ -269,23 +301,27 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     if (!mounted) return;
     let cancelled = false;
     setHomeIntroReady(false);
+    document.documentElement.dataset.homeHeroReady = "false";
 
     const sources = new Set<string>();
     for (const background of heroBackgrounds) {
       sources.add(background.image);
     }
     if (avatarSrc) sources.add(avatarSrc);
-    for (const variant of PETAL_VARIANT_POOL) {
-      sources.add(`/images/petals/petal-${variant}.png`);
-    }
 
     const tasks = [...sources].map((src) => preloadImage(src));
-    void Promise.allSettled(tasks).then(() => {
-      if (cancelled) return;
-      setHomeIntroReady(true);
-      document.documentElement.dataset.homeHeroReady = "true";
-      window.dispatchEvent(new CustomEvent("home:hero-resources-ready"));
-    });
+    void Promise.all(tasks)
+      .then(() => {
+        if (cancelled) return;
+        setHomeIntroReady(true);
+        document.documentElement.dataset.homeHeroReady = "true";
+        window.dispatchEvent(new CustomEvent("home:hero-resources-ready"));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setHomeIntroReady(false);
+        document.documentElement.dataset.homeHeroReady = "false";
+      });
 
     return () => {
       cancelled = true;
@@ -393,7 +429,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
                     onLoad={() => setAvatarLoaded(true)}
                     onError={() => {
                       setAvatarFailed(true);
-                      setAvatarLoaded(true);
+                      setAvatarLoaded(false);
                     }}
                   />
                 ) : null}
@@ -402,26 +438,34 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
           </div>
 
           <div className="header-info">
-            {mounted ? (
-              <span className="element hero-quote-typewriter">
-                <span>{quoteTypedText}</span>
-                <span
-                  className={`hero-quote-caret${homeIntroReady ? " is-visible" : ""}`}
-                  aria-hidden="true"
-                >
-                  |
-                </span>
+            <span
+              className={`element hero-quote-typewriter${heroTextReady ? "" : " hero-text-skeleton-line is-main"}`}
+              aria-hidden={heroTextReady ? undefined : true}
+            >
+              <span>{heroTextReady ? quoteTypedText : ""}</span>
+              <span
+                className={`hero-quote-caret${heroTextReady ? " is-visible" : ""}`}
+                aria-hidden="true"
+              >
+                |
               </span>
-            ) : (
-              <span className="element">{quoteText}</span>
-            )}
-            <p>
-              {title} · {heroSettings.homepageHeroTypingEffect ? typingWords[typedWordIndex] : typingWords[0]}
+            </span>
+            <p className={heroTextReady ? "" : "hero-text-skeleton-line is-sub"} aria-hidden={heroTextReady ? undefined : true}>
+              {heroTextReady
+                ? `${title} · ${
+                    heroSettings.homepageHeroTypingEffect ? typingWords[typedWordIndex] : typingWords[0]
+                  }`
+                : ""}
             </p>
-            <p className="hero-subtitle">{subtitle}</p>
+            <p
+              className={`hero-subtitle${heroTextReady ? "" : " hero-text-skeleton-line is-subtle"}`}
+              aria-hidden={heroTextReady ? undefined : true}
+            >
+              {heroTextReady ? subtitle : ""}
+            </p>
           </div>
 
-          {heroSettings.homepageHeroShowSocial ? (
+          {heroTextReady && heroSettings.homepageHeroShowSocial ? (
             <ul className="top-social">
               {socialItems.map((item) => (
                 <li key={item.label}>

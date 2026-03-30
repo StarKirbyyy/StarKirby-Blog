@@ -26,6 +26,9 @@ export interface PostFrontmatter {
 export interface PostMeta extends Omit<PostFrontmatter, "slug"> {
   slug: string;
   readingTime: string;
+  viewCount?: number;
+  commentCount?: number;
+  wordCount?: number;
 }
 
 export interface Post extends PostMeta {
@@ -133,6 +136,21 @@ function parseTags(value: unknown) {
   return tags.length > 0 ? tags : undefined;
 }
 
+function countContentWords(content: string) {
+  const cjkMatches = content.match(/[\u3400-\u9fff]/g);
+  const latinMatches = content.match(/[A-Za-z0-9]+/g);
+  const cjkCount = cjkMatches?.length ?? 0;
+  const latinCount = latinMatches?.length ?? 0;
+  return cjkCount + latinCount;
+}
+
+function estimateWordCountFromReadingTime(readingTimeText: string) {
+  const minuteMatch = readingTimeText.match(/(\d+(\.\d+)?)/);
+  const minutes = minuteMatch ? Number.parseFloat(minuteMatch[1]) : 0;
+  if (!Number.isFinite(minutes) || minutes <= 0) return undefined;
+  return Math.max(120, Math.round(minutes * 260));
+}
+
 function parseFrontmatter(
   data: unknown,
   fileName: string,
@@ -204,6 +222,7 @@ async function readPostFromFile(fileName: string) {
     ...frontmatter,
     slug: frontmatter.slug ?? fileSlug,
     readingTime: readingTime(parsed.content).text,
+    wordCount: countContentWords(parsed.content),
   };
 
   return { meta, content: parsed.content };
@@ -338,6 +357,7 @@ async function getAllPostsFromDatabase() {
         cover: post.coverUrl ?? undefined,
         draft: post.draft,
         readingTime: post.readingTime,
+        wordCount: estimateWordCountFromReadingTime(post.readingTime),
       } satisfies PostMeta;
     })
     .filter((post) => shouldIncludePost(post));
@@ -406,19 +426,46 @@ async function hasPostBySlugFromFileSystem(slug: string) {
   return Boolean(post);
 }
 
+async function getVisibleCommentCountMap() {
+  try {
+    const rows = await withPrismaReadRetry(() =>
+      prisma.comment.groupBy({
+        by: ["postSlug"],
+        where: { status: "visible" },
+        _count: { _all: true },
+      }),
+    );
+    return new Map(rows.map((row) => [normalizeSlug(row.postSlug), row._count._all]));
+  } catch {
+    return new Map<string, number>();
+  }
+}
+
+async function attachListMetrics(posts: PostMeta[]) {
+  if (posts.length === 0) return posts;
+  const commentCountMap = await getVisibleCommentCountMap();
+  return posts.map((post) => ({
+    ...post,
+    commentCount: commentCountMap.get(normalizeSlug(post.slug)) ?? post.commentCount ?? 0,
+    wordCount: post.wordCount ?? estimateWordCountFromReadingTime(post.readingTime),
+  }));
+}
+
 export async function getAllPosts() {
   if (!isDatabaseContentSource()) {
-    return getAllPostsFromFileSystem();
+    const posts = await getAllPostsFromFileSystem();
+    return attachListMetrics(posts);
   }
 
   if (allowFileFallback() && shouldSkipDatabaseReadsTemporarily()) {
-    return getAllPostsFromFileSystem();
+    const posts = await getAllPostsFromFileSystem();
+    return attachListMetrics(posts);
   }
 
   try {
     const posts = await getAllPostsFromDatabase();
     if (posts.length > 0 || !allowFileFallback()) {
-      return sortByDateDesc(posts);
+      return attachListMetrics(sortByDateDesc(posts));
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -428,7 +475,8 @@ export async function getAllPosts() {
     }
   }
 
-  return getAllPostsFromFileSystem();
+  const posts = await getAllPostsFromFileSystem();
+  return attachListMetrics(posts);
 }
 
 export async function getPostBySlug(slug: string) {
