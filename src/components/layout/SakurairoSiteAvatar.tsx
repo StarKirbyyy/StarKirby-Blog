@@ -19,6 +19,7 @@ export function SakurairoSiteAvatar({
   height,
 }: SakurairoSiteAvatarProps) {
   const [src, setSrc] = useState(fallbackSrc);
+  const normalizedSrc = src.trim();
 
   useEffect(() => {
     const sync = () => {
@@ -35,15 +36,22 @@ export function SakurairoSiteAvatar({
   }, [fallbackSrc]);
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      className={className}
-      loading="lazy"
-      referrerPolicy="no-referrer"
-    />
+    normalizedSrc ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={normalizedSrc}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+      />
+    ) : (
+      <span
+        aria-hidden="true"
+        className={`${className ?? ""} inline-block animate-pulse bg-black/8 dark:bg-white/14`}
+      />
+    )
   );
 }

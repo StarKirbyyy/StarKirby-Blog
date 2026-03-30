@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import {
+  SAKURAIRO_STORAGE_KEYS,
   applySakurairoPreferencesToRoot,
   getDefaultSakurairoPreferences,
   hasLocalOverride,
@@ -28,11 +29,23 @@ const URL_OVERRIDE_KEYS = new Set<keyof SakurairoPreferences>([
 export function SakurairoRuntimeSync() {
   useEffect(() => {
     let active = true;
+    const root = document.documentElement;
+    root.dataset.sakurairoRuntimeReady = "false";
     const defaults = getDefaultSakurairoPreferences();
     const local = readSakurairoPreferencesFromStorage();
+    if (local.preliminaryAvatarUrl.trim() === "/images/avatar.svg") {
+      local.preliminaryAvatarUrl = "";
+      window.localStorage.removeItem(SAKURAIRO_STORAGE_KEYS.preliminaryAvatarUrl);
+    }
 
     // 先应用本地覆盖，避免视觉回跳。
     applySakurairoPreferencesToRoot(local);
+
+    const markRuntimeReady = () => {
+      if (!active) return;
+      root.dataset.sakurairoRuntimeReady = "true";
+      window.dispatchEvent(new CustomEvent("sakurairo:runtime-ready"));
+    };
 
     const syncRemoteSettings = async () => {
       try {
@@ -63,6 +76,8 @@ export function SakurairoRuntimeSync() {
         applySakurairoPreferencesToRoot(merged);
       } catch {
         // ignore network failures; keep local/default settings
+      } finally {
+        markRuntimeReady();
       }
     };
 
