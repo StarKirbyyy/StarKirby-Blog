@@ -177,45 +177,38 @@ export default async function PostDetailPage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="mx-auto mt-6 w-full max-w-[1500px] px-4 sm:mt-8 sm:px-6">
-        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-          <Link
-            href="/posts"
-            className="inline-flex rounded-full border border-border/70 bg-surface-soft px-3 py-1.5 text-muted-fg transition-colors hover:text-foreground"
-          >
-            ← 返回文章列表
-          </Link>
-          {post.tags?.length ? (
-            <div className="sakurairo-post-tags flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/tags/${encodeURIComponent(tag)}`}
-                  className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-muted-fg transition-colors hover:text-accent"
-                >
-                  #{tag}
-                </Link>
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(60%,1fr)] lg:items-start lg:justify-center xl:gap-8">
-          <aside className="sakurairo-post-toc hidden lg:block">
-            <TableOfContents items={tocItems} />
-          </aside>
+      <div className="relative mx-auto mt-6 w-full max-w-[1500px] px-4 sm:mt-8 sm:px-6">
+        <div className="mx-auto w-full max-w-[900px]">
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+            <Link
+              href="/posts"
+              className="inline-flex px-1 py-1 text-muted-fg transition-colors hover:text-foreground"
+            >
+              ← 返回文章列表
+            </Link>
+            {post.tags?.length ? (
+              <div className="sakurairo-post-tags flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/tags/${encodeURIComponent(tag)}`}
+                    className="rounded-full border border-border/70 bg-surface-soft px-2.5 py-1 text-xs text-muted-fg transition-colors hover:text-accent"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
 
           <article className="min-w-0 space-y-6">
-            <div className="glass-panel w-full rounded-[10px] p-5 sm:p-7">
+            <div className="px-1 sm:px-2">
               <div className="markdown-content prose prose-slate max-w-none dark:prose-invert">
                 <MDXContent components={mdxComponents} />
               </div>
             </div>
 
-            <nav
-              aria-label="文章导航"
-              className="sakurairo-post-navigation grid w-full gap-3 sm:grid-cols-2"
-            >
+            <nav aria-label="文章导航" className="sakurairo-post-navigation grid w-full gap-3 sm:grid-cols-2">
               <div className="glass-panel card-hover min-h-24 rounded-[10px] p-4">
                 {olderPost ? (
                   <Link href={`/posts/${olderPost.slug}`} className="block">
@@ -247,6 +240,10 @@ export default async function PostDetailPage({ params }: PageProps) {
             </div>
           </article>
         </div>
+
+        <aside className="sakurairo-post-toc absolute left-1/2 top-0 ml-[500px] hidden w-[280px] xl:block">
+          <TableOfContents items={tocItems} />
+        </aside>
       </div>
     </div>
   );

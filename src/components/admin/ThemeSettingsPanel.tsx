@@ -32,7 +32,7 @@ type ImageFieldKey =
 
 const DEFAULT_SETTINGS = getDefaultSakurairoPreferences();
 const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/avif,image/gif,image/svg+xml";
-const MAX_UPLOAD_SIZE_MB = 3;
+const MAX_UPLOAD_SIZE_MB = 20;
 const MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 function normalizeUrlValue(value: string) {
@@ -54,6 +54,7 @@ export function ThemeSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<ImageFieldKey | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<ImageFieldKey, string>>>({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [warning, setWarning] = useState("");
@@ -64,6 +65,7 @@ export function ThemeSettingsPanel() {
       setError("");
       setMessage("");
       setWarning("");
+      setFieldErrors({});
       try {
         const response = await fetch("/api/admin/theme/settings", {
           cache: "no-store",
@@ -100,13 +102,24 @@ export function ThemeSettingsPanel() {
   };
 
   const updateImageUrlSetting = (key: ImageFieldKey, rawValue: string) => {
+    setFieldErrors((previous) => {
+      if (!previous[key]) return previous;
+      const next = { ...previous };
+      delete next[key];
+      return next;
+    });
     updateSetting(key, normalizeUrlValue(rawValue));
   };
 
   const uploadImageForField = async (field: ImageFieldKey, file: File) => {
     setUploadingField(field);
-    setError("");
     setMessage("");
+    setFieldErrors((previous) => {
+      if (!previous[field]) return previous;
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
     try {
       if (file.size > MAX_UPLOAD_SIZE) {
         throw new Error(`图片大小不能超过 ${MAX_UPLOAD_SIZE_MB}MB，请压缩后再上传。`);
@@ -130,7 +143,12 @@ export function ThemeSettingsPanel() {
       updateImageUrlSetting(field, json.url);
       setMessage("图片上传成功，已自动填入 URL。");
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "图片上传失败");
+      const uploadErrorMessage =
+        uploadError instanceof Error ? uploadError.message : "图片上传失败";
+      setFieldErrors((previous) => ({
+        ...previous,
+        [field]: uploadErrorMessage,
+      }));
     } finally {
       setUploadingField(null);
     }
@@ -178,6 +196,7 @@ export function ThemeSettingsPanel() {
   }) => {
     const { label, field, placeholder } = params;
     const isUploading = uploadingField === field;
+    const fieldError = fieldErrors[field];
 
     return (
       <label className="block text-xs text-muted-fg">
@@ -207,6 +226,9 @@ export function ThemeSettingsPanel() {
             />
           </label>
         </div>
+        {fieldError ? (
+          <p className="mt-1 text-xs text-red-700 dark:text-red-300">{fieldError}</p>
+        ) : null}
       </label>
     );
   };

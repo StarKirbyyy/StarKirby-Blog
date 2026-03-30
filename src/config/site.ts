@@ -10,7 +10,7 @@ export const siteConfig = {
   // 作者信息
   author: {
     name: "StarKirby",
-    avatar: "/images/avatar.svg",
+    avatar: "",
     bio: "热爱编程与开源的开发者。",
     skills: [
       "TypeScript",
@@ -80,7 +80,7 @@ export const siteConfig = {
 
   sakurairo: {
     // 初步设置
-    preliminaryAvatarUrl: "/images/avatar.svg",
+    preliminaryAvatarUrl: "",
     preliminaryWhiteCatText: false,
     preliminaryNavLogoUrl: "",
     preliminarySiteIconUrl: "",

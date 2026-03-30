@@ -129,13 +129,12 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   const [heroSettings, setHeroSettings] = useState(() =>
     getDefaultSakurairoPreferences(),
   );
+  const [heroSettingsReady, setHeroSettingsReady] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [ready, setReady] = useState(false);
   const [homeIntroReady, setHomeIntroReady] = useState(false);
-  const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>(
-    siteConfig.author.avatar,
-  );
+  const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>("");
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [activeBackgroundLoaded, setActiveBackgroundLoaded] = useState(false);
@@ -171,27 +170,36 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
       ? heroBackgrounds[activeBackgroundIndex % heroBackgrounds.length]
       : null;
   const activeBackgroundImage = activeBackground?.image ?? "";
-  const avatarSrc = heroSettings.preliminaryAvatarUrl || siteConfig.author.avatar;
+  const avatarSrc = heroSettingsReady
+    ? heroSettings.preliminaryAvatarUrl || siteConfig.author.avatar
+    : "";
   const quoteText = heroSettings.homepageHeroSignature || subtitle;
   const quoteChars = useMemo(() => Array.from(quoteText), [quoteText]);
   const quoteTypedText = useMemo(
     () => (quoteTypedLength < 0 ? quoteText : quoteChars.slice(0, quoteTypedLength).join("")),
     [quoteChars, quoteText, quoteTypedLength],
   );
+  const avatarReady = !avatarSrc || avatarLoaded || avatarFailed;
   const heroTextReady =
     mounted &&
+    heroSettingsReady &&
     homeIntroReady &&
-    avatarLoaded &&
-    !avatarFailed &&
+    avatarReady &&
     (!activeBackgroundImage || activeBackgroundLoaded);
   const focusInfoClassName = [
     "focusinfo",
-    mounted && homeIntroReady ? "home-profile-enter-ready" : "",
+    heroTextReady ? "home-profile-enter-ready" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   useEffect(() => {
+    if (!avatarSrc) {
+      setResolvedAvatarSrc("");
+      setAvatarLoaded(false);
+      setAvatarFailed(false);
+      return;
+    }
     setResolvedAvatarSrc(avatarSrc);
     setAvatarLoaded(false);
     setAvatarFailed(false);
@@ -213,7 +221,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
       })
       .catch(() => {
         if (cancelled) return;
-        setActiveBackgroundLoaded(false);
+        setActiveBackgroundLoaded(true);
       });
 
     return () => {
@@ -287,18 +295,34 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   }, [heroBackgrounds.length, heroSettings.homepageHeroAutoBackgroundSec]);
 
   useEffect(() => {
-    const sync = () => setHeroSettings(readEffectiveSakurairoPreferencesFromRoot());
+    const sync = () => {
+      setHeroSettings(readEffectiveSakurairoPreferencesFromRoot());
+    };
+    const onRuntimeReady = () => {
+      sync();
+      setHeroSettingsReady(true);
+    };
     sync();
+    if (document.documentElement.dataset.sakurairoRuntimeReady === "true") {
+      setHeroSettingsReady(true);
+    }
     window.addEventListener("storage", sync);
     window.addEventListener("sakurairo:preferences-change", sync as EventListener);
+    window.addEventListener("sakurairo:runtime-ready", onRuntimeReady as EventListener);
     return () => {
       window.removeEventListener("storage", sync);
       window.removeEventListener("sakurairo:preferences-change", sync as EventListener);
+      window.removeEventListener("sakurairo:runtime-ready", onRuntimeReady as EventListener);
     };
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
+    if (!heroSettingsReady) {
+      setHomeIntroReady(false);
+      document.documentElement.dataset.homeHeroReady = "false";
+      return;
+    }
     let cancelled = false;
     setHomeIntroReady(false);
     document.documentElement.dataset.homeHeroReady = "false";
@@ -310,23 +334,18 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     if (avatarSrc) sources.add(avatarSrc);
 
     const tasks = [...sources].map((src) => preloadImage(src));
-    void Promise.all(tasks)
+    void Promise.allSettled(tasks)
       .then(() => {
         if (cancelled) return;
         setHomeIntroReady(true);
         document.documentElement.dataset.homeHeroReady = "true";
         window.dispatchEvent(new CustomEvent("home:hero-resources-ready"));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setHomeIntroReady(false);
-        document.documentElement.dataset.homeHeroReady = "false";
       });
 
     return () => {
       cancelled = true;
     };
-  }, [mounted, heroBackgrounds, avatarSrc]);
+  }, [mounted, heroSettingsReady, heroBackgrounds, avatarSrc]);
 
   useEffect(() => {
     setQuoteTypedLength(-1);
@@ -411,13 +430,13 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
           <div className="header-tou">
             <Link href="/">
               <div className="header-avatar-shell">
-                {!avatarLoaded || avatarFailed ? (
+                {avatarSrc && (!avatarLoaded || avatarFailed) ? (
                   <span
                     className={`header-avatar-skeleton${avatarFailed ? " is-failed" : ""}`}
                     aria-hidden="true"
                   />
                 ) : null}
-                {!avatarFailed ? (
+                {!avatarFailed && avatarSrc && resolvedAvatarSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     alt="avatar"
