@@ -20,6 +20,7 @@ const URL_OVERRIDE_KEYS = new Set<keyof SakurairoPreferences>([
   "preliminaryNavLogoUrl",
   "preliminarySiteIconUrl",
   "globalBackgroundImageUrl",
+  "homepageHeroBackgroundUrls",
   "homepageHeroBackgroundUrl1",
   "homepageHeroBackgroundUrl2",
   "homepageHeroBackgroundUrl3",

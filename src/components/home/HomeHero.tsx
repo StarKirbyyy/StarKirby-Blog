@@ -145,25 +145,38 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     [],
   );
   const sakuraPetals = useMemo(() => createSakuraPetals(), []);
-  const heroBackgrounds = useMemo(() => {
-    const raw = [
-      heroSettings.homepageHeroBackgroundUrl1,
-      heroSettings.homepageHeroBackgroundUrl2,
-      heroSettings.homepageHeroBackgroundUrl3,
-    ];
+  const heroBackgroundUrls = useMemo(() => {
+    const arrayUrls = Array.isArray(heroSettings.homepageHeroBackgroundUrls)
+      ? heroSettings.homepageHeroBackgroundUrls
+      : [];
+    const raw = arrayUrls.length
+      ? arrayUrls
+      : [
+          heroSettings.homepageHeroBackgroundUrl1,
+          heroSettings.homepageHeroBackgroundUrl2,
+          heroSettings.homepageHeroBackgroundUrl3,
+        ];
+    const unique = new Set<string>();
     return raw
       .map((item) => (typeof item === "string" ? item.trim() : ""))
-      .filter(Boolean)
-      .map((image, index) => ({
-        id: `custom-bg-${index + 1}`,
-        label: `背景 ${index + 1}`,
-        image,
-      }));
+      .filter((item) => {
+        if (!item || unique.has(item)) return false;
+        unique.add(item);
+        return true;
+      });
   }, [
+    heroSettings.homepageHeroBackgroundUrls,
     heroSettings.homepageHeroBackgroundUrl1,
     heroSettings.homepageHeroBackgroundUrl2,
     heroSettings.homepageHeroBackgroundUrl3,
   ]);
+  const heroBackgrounds = useMemo(() => {
+    return heroBackgroundUrls.map((image, index) => ({
+        id: `custom-bg-${index + 1}`,
+        label: `背景 ${index + 1}`,
+        image,
+      }));
+  }, [heroBackgroundUrls]);
   const socialItems = getSocialItems();
   const activeBackground =
     heroBackgrounds.length > 0
