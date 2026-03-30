@@ -49,6 +49,26 @@ function sanitizeString(
   return trimmed.slice(0, maxLength);
 }
 
+function sanitizeStringArray(
+  value: unknown,
+  options?: { maxLength?: number; maxItems?: number },
+) {
+  if (!Array.isArray(value)) return undefined;
+  const maxLength = options?.maxLength ?? 512;
+  const maxItems = options?.maxItems ?? 50;
+  const next: string[] = [];
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const normalized = item.trim().slice(0, maxLength);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    next.push(normalized);
+    if (next.length >= maxItems) break;
+  }
+  return next;
+}
+
 export function sanitizeSakurairoPatch(
   input: unknown,
 ): Partial<SakurairoPreferences> {
@@ -181,6 +201,13 @@ export function sanitizeSakurairoPatch(
   });
   if (homepageHeroSignature !== undefined) {
     patch.homepageHeroSignature = homepageHeroSignature;
+  }
+  const homepageHeroBackgroundUrls = sanitizeStringArray(raw.homepageHeroBackgroundUrls, {
+    maxLength: 512,
+    maxItems: 50,
+  });
+  if (homepageHeroBackgroundUrls !== undefined) {
+    patch.homepageHeroBackgroundUrls = homepageHeroBackgroundUrls;
   }
   const homepageHeroBackgroundUrl1 = sanitizeString(raw.homepageHeroBackgroundUrl1, {
     allowEmpty: true,

@@ -20,15 +20,23 @@ type ThemeAssetUploadResponse = {
   error?: string;
 };
 
+type ThemeAssetPresignResponse = {
+  success?: boolean;
+  mode?: "direct";
+  uploadUrl?: string;
+  uploadHeaders?: Record<string, string>;
+  url?: string;
+  objectKey?: string;
+  error?: string;
+};
+
 type ImageFieldKey =
   | "preliminaryAvatarUrl"
   | "preliminaryNavLogoUrl"
   | "preliminarySiteIconUrl"
   | "globalBackgroundImageUrl"
-  | "homepageHeroBackgroundUrl1"
-  | "homepageHeroBackgroundUrl2"
-  | "homepageHeroBackgroundUrl3"
   | "othersLoginLogoUrl";
+type UploadFieldKey = ImageFieldKey | `homepageHeroBackgroundUrls.${number}`;
 
 const DEFAULT_SETTINGS = getDefaultSakurairoPreferences();
 const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp,image/avif,image/gif,image/svg+xml";
@@ -49,12 +57,27 @@ function normalizeUrlValue(value: string) {
   }
 }
 
+function normalizeBackgroundUrls(
+  urls: string[],
+  legacy: [string, string, string],
+) {
+  const source = urls.length > 0 ? urls : legacy;
+  const seen = new Set<string>();
+  return source
+    .map((item) => normalizeUrlValue(item))
+    .filter((item) => {
+      if (!item || seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
+}
+
 export function ThemeSettingsPanel() {
   const [settings, setSettings] = useState<SakurairoPreferences>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingField, setUploadingField] = useState<ImageFieldKey | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<ImageFieldKey, string>>>({});
+  const [uploadingField, setUploadingField] = useState<UploadFieldKey | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<UploadFieldKey, string>>>({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [warning, setWarning] = useState("");
@@ -74,7 +97,22 @@ export function ThemeSettingsPanel() {
         if (!response.ok) {
           throw new Error(json.error || "主题设置加载失败");
         }
-        setSettings(mergeSakurairoPreferences(DEFAULT_SETTINGS, json.settings));
+        const merged = mergeSakurairoPreferences(DEFAULT_SETTINGS, json.settings);
+        const normalizedHeroBackgrounds = normalizeBackgroundUrls(
+          merged.homepageHeroBackgroundUrls,
+          [
+            merged.homepageHeroBackgroundUrl1,
+            merged.homepageHeroBackgroundUrl2,
+            merged.homepageHeroBackgroundUrl3,
+          ],
+        );
+        setSettings({
+          ...merged,
+          homepageHeroBackgroundUrls: normalizedHeroBackgrounds,
+          homepageHeroBackgroundUrl1: normalizedHeroBackgrounds[0] || "",
+          homepageHeroBackgroundUrl2: normalizedHeroBackgrounds[1] || "",
+          homepageHeroBackgroundUrl3: normalizedHeroBackgrounds[2] || "",
+        });
         if (json.persisted === false) {
           setWarning(
             json.warning ||
@@ -101,6 +139,34 @@ export function ThemeSettingsPanel() {
     }));
   };
 
+  const clearHeroBackgroundFieldErrors = () => {
+    setFieldErrors((previous) => {
+      const next: Partial<Record<UploadFieldKey, string>> = {};
+      let changed = false;
+      for (const [key, value] of Object.entries(previous)) {
+        if (key.startsWith("homepageHeroBackgroundUrls.")) {
+          changed = true;
+          continue;
+        }
+        next[key as UploadFieldKey] = value;
+      }
+      return changed ? next : previous;
+    });
+  };
+
+  const updateHeroBackgroundUrls = (nextRaw: string[]) => {
+    const next = nextRaw.map((item) => normalizeUrlValue(item));
+    const normalizedForLegacy = normalizeBackgroundUrls(next, ["", "", ""]);
+    clearHeroBackgroundFieldErrors();
+    setSettings((previous) => ({
+      ...previous,
+      homepageHeroBackgroundUrls: next,
+      homepageHeroBackgroundUrl1: normalizedForLegacy[0] || "",
+      homepageHeroBackgroundUrl2: normalizedForLegacy[1] || "",
+      homepageHeroBackgroundUrl3: normalizedForLegacy[2] || "",
+    }));
+  };
+
   const updateImageUrlSetting = (key: ImageFieldKey, rawValue: string) => {
     setFieldErrors((previous) => {
       if (!previous[key]) return previous;
@@ -111,7 +177,60 @@ export function ThemeSettingsPanel() {
     updateSetting(key, normalizeUrlValue(rawValue));
   };
 
-  const uploadImageForField = async (field: ImageFieldKey, file: File) => {
+  const uploadImageViaProxy = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/admin/theme/assets", {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 413) {
+      throw new Error(
+        "图片上传被部署平台拦截（413）。请使用 OSS 直传模式，或在 OSS 控制台配置 CORS 后重试。",
+      );
+    }
+    const json = (await response.json().catch(() => null)) as ThemeAssetUploadResponse | null;
+    if (!response.ok || !json?.success || !json?.url) {
+      throw new Error(json?.error || "图片上传失败");
+    }
+    return json.url;
+  };
+
+  const uploadImageDirectToOss = async (file: File) => {
+    const response = await fetch("/api/admin/theme/assets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type || "application/octet-stream",
+        size: file.size,
+      }),
+    });
+
+    const json = (await response.json().catch(() => null)) as ThemeAssetPresignResponse | null;
+    if (!response.ok || !json?.success || !json?.uploadUrl || !json?.uploadHeaders || !json?.url) {
+      throw new Error(json?.error || "获取 OSS 直传地址失败");
+    }
+
+    const uploadResponse = await fetch(json.uploadUrl, {
+      method: "PUT",
+      headers: json.uploadHeaders,
+      body: file,
+    });
+    if (!uploadResponse.ok) {
+      throw new Error(`OSS 直传失败（${uploadResponse.status}）`);
+    }
+    return json.url;
+  };
+
+  const uploadImageForField = async (
+    field: UploadFieldKey,
+    file: File,
+    onUploaded: (url: string) => void,
+  ) => {
     setUploadingField(field);
     setMessage("");
     setFieldErrors((previous) => {
@@ -125,22 +244,21 @@ export function ThemeSettingsPanel() {
         throw new Error(`图片大小不能超过 ${MAX_UPLOAD_SIZE_MB}MB，请压缩后再上传。`);
       }
 
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/admin/theme/assets", {
-        method: "POST",
-        body: formData,
-      });
-      if (response.status === 413) {
-        throw new Error(`图片过大（413），请压缩到 ${MAX_UPLOAD_SIZE_MB}MB 以内后重试。`);
+      let uploadedUrl = "";
+      try {
+        uploadedUrl = await uploadImageDirectToOss(file);
+      } catch (directError) {
+        if (file.size > 4 * 1024 * 1024) {
+          const message =
+            directError instanceof Error ? directError.message : "OSS 直传失败";
+          throw new Error(
+            `${message}。请在 OSS Bucket CORS 中放行当前站点的 PUT/GET/HEAD 请求头后重试。`,
+          );
+        }
+        uploadedUrl = await uploadImageViaProxy(file);
       }
-      const json = (await response.json().catch(() => null)) as ThemeAssetUploadResponse | null;
-      if (!response.ok || !json?.success || !json?.url) {
-        throw new Error(json?.error || "图片上传失败");
-      }
 
-      updateImageUrlSetting(field, json.url);
+      onUploaded(uploadedUrl);
       setMessage("图片上传成功，已自动填入 URL。");
     } catch (uploadError) {
       const uploadErrorMessage =
@@ -160,20 +278,50 @@ export function ThemeSettingsPanel() {
     setMessage("");
     setWarning("");
     try {
+      const normalizedHeroBackgrounds = normalizeBackgroundUrls(
+        settings.homepageHeroBackgroundUrls,
+        [
+          settings.homepageHeroBackgroundUrl1,
+          settings.homepageHeroBackgroundUrl2,
+          settings.homepageHeroBackgroundUrl3,
+        ],
+      );
+      const settingsToSave: SakurairoPreferences = {
+        ...settings,
+        homepageHeroBackgroundUrls: normalizedHeroBackgrounds,
+        homepageHeroBackgroundUrl1: normalizedHeroBackgrounds[0] || "",
+        homepageHeroBackgroundUrl2: normalizedHeroBackgrounds[1] || "",
+        homepageHeroBackgroundUrl3: normalizedHeroBackgrounds[2] || "",
+      };
       const response = await fetch("/api/admin/theme/settings", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          settings,
+          settings: settingsToSave,
         }),
       });
       const json = (await response.json()) as ThemeSettingsResponse;
       if (!response.ok) {
         throw new Error(json.error || "主题设置保存失败");
       }
-      setSettings(mergeSakurairoPreferences(DEFAULT_SETTINGS, json.settings));
+      const merged = mergeSakurairoPreferences(DEFAULT_SETTINGS, json.settings);
+      const normalizedHeroBackgroundsFromServer = normalizeBackgroundUrls(
+        merged.homepageHeroBackgroundUrls,
+        [
+          merged.homepageHeroBackgroundUrl1,
+          merged.homepageHeroBackgroundUrl2,
+          merged.homepageHeroBackgroundUrl3,
+        ],
+      );
+      setSettings({
+        ...merged,
+        homepageHeroBackgroundUrls: normalizedHeroBackgroundsFromServer,
+        homepageHeroBackgroundUrl1: normalizedHeroBackgroundsFromServer[0] || "",
+        homepageHeroBackgroundUrl2: normalizedHeroBackgroundsFromServer[1] || "",
+        homepageHeroBackgroundUrl3: normalizedHeroBackgroundsFromServer[2] || "",
+      });
       if (json.persisted === false) {
         setWarning(
           json.warning ||
@@ -220,7 +368,7 @@ export function ThemeSettingsPanel() {
               onChange={(event) => {
                 const file = event.currentTarget.files?.[0];
                 if (!file) return;
-                void uploadImageForField(field, file);
+                void uploadImageForField(field, file, (url) => updateImageUrlSetting(field, url));
                 event.currentTarget.value = "";
               }}
             />
@@ -230,6 +378,84 @@ export function ThemeSettingsPanel() {
           <p className="mt-1 text-xs text-red-700 dark:text-red-300">{fieldError}</p>
         ) : null}
       </label>
+    );
+  };
+
+  const renderHeroBackgroundList = () => {
+    const urls = settings.homepageHeroBackgroundUrls;
+
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-muted-fg">首页背景图 URL（不限制数量）</p>
+        <div className="space-y-3">
+          {urls.map((url, index) => {
+            const fieldKey = `homepageHeroBackgroundUrls.${index}` as UploadFieldKey;
+            const fieldError = fieldErrors[fieldKey];
+            const isUploading = uploadingField === fieldKey;
+            return (
+              <div key={fieldKey} className="rounded-[10px] border border-border/60 p-3">
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="text"
+                    value={url}
+                    placeholder={`例如：https://example.com/hero-${index + 1}.webp`}
+                    onChange={(event) => {
+                      const next = [...urls];
+                      next[index] = event.target.value;
+                      updateHeroBackgroundUrls(next);
+                    }}
+                    onBlur={(event) => {
+                      const next = [...urls];
+                      next[index] = event.target.value;
+                      updateHeroBackgroundUrls(next);
+                    }}
+                    className="min-w-[260px] flex-1 rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
+                  />
+                  <label className="inline-flex cursor-pointer items-center rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-xs text-muted-fg transition-colors hover:text-foreground">
+                    {isUploading ? "上传中..." : "上传图片"}
+                    <input
+                      type="file"
+                      accept={IMAGE_ACCEPT}
+                      disabled={isUploading || saving}
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.currentTarget.files?.[0];
+                        if (!file) return;
+                        void uploadImageForField(fieldKey, file, (uploadedUrl) => {
+                          const next = [...urls];
+                          next[index] = uploadedUrl;
+                          updateHeroBackgroundUrls(next);
+                        });
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = urls.filter((_, currentIndex) => currentIndex !== index);
+                      updateHeroBackgroundUrls(next);
+                    }}
+                    className="inline-flex items-center rounded-full border border-border/70 px-3 py-2 text-xs text-muted-fg transition-colors hover:text-foreground"
+                  >
+                    删除
+                  </button>
+                </div>
+                {fieldError ? (
+                  <p className="mt-1 text-xs text-red-700 dark:text-red-300">{fieldError}</p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => updateHeroBackgroundUrls([...urls, ""])}
+          className="inline-flex items-center rounded-full border border-border/70 bg-surface-soft px-3 py-2 text-xs text-muted-fg transition-colors hover:text-foreground"
+        >
+          新增一张背景图
+        </button>
+      </div>
     );
   };
 
@@ -545,23 +771,7 @@ export function ThemeSettingsPanel() {
                   className="mt-1 w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground"
                 />
               </label>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {renderImageUrlField({
-                  label: "首页背景图 URL 1",
-                  field: "homepageHeroBackgroundUrl1",
-                  placeholder: "可留空；例如：https://example.com/hero-1.webp",
-                })}
-                {renderImageUrlField({
-                  label: "首页背景图 URL 2",
-                  field: "homepageHeroBackgroundUrl2",
-                  placeholder: "可留空；例如：https://example.com/hero-2.webp",
-                })}
-                {renderImageUrlField({
-                  label: "首页背景图 URL 3",
-                  field: "homepageHeroBackgroundUrl3",
-                  placeholder: "可留空；例如：https://example.com/hero-3.webp",
-                })}
-              </div>
+              {renderHeroBackgroundList()}
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="flex items-center gap-2 text-sm text-muted-fg">
                   <input

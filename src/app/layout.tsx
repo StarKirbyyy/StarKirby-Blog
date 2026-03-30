@@ -78,6 +78,7 @@ const themeScript = `
       homepageHeroShowStats: ${siteConfig.sakurairo.homepageHeroShowStats ? "true" : "false"},
       homepageHeroShowScrollHint: ${siteConfig.sakurairo.homepageHeroShowScrollHint ? "true" : "false"},
       homepageHeroSignature: ${JSON.stringify(siteConfig.sakurairo.homepageHeroSignature)},
+      homepageHeroBackgroundUrls: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrls)},
       homepageHeroBackgroundUrl1: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrl1)},
       homepageHeroBackgroundUrl2: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrl2)},
       homepageHeroBackgroundUrl3: ${JSON.stringify(siteConfig.sakurairo.homepageHeroBackgroundUrl3)},
@@ -112,6 +113,20 @@ const themeScript = `
       var value = localStorage.getItem(key);
       if (value === null) return fallback;
       return value === "true";
+    }
+    function getStringArray(key, fallback) {
+      var raw = localStorage.getItem(key);
+      if (raw === null || raw === "") return fallback;
+      try {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .filter(function(item) { return typeof item === "string"; })
+            .map(function(item) { return item.trim(); })
+            .filter(Boolean);
+        }
+      } catch(e) {}
+      return fallback;
     }
     function toCssBgImage(value) {
       if (!value) return "none";
@@ -150,6 +165,7 @@ const themeScript = `
       homepageHeroShowStats: getBoolean("sakurairo:homepage-hero-show-stats", defaults.homepageHeroShowStats),
       homepageHeroShowScrollHint: getBoolean("sakurairo:homepage-hero-show-scroll-hint", defaults.homepageHeroShowScrollHint),
       homepageHeroSignature: getString("sakurairo:homepage-hero-signature", defaults.homepageHeroSignature),
+      homepageHeroBackgroundUrls: getStringArray("sakurairo:homepage-hero-bg-urls", defaults.homepageHeroBackgroundUrls),
       homepageHeroBackgroundUrl1: getString("sakurairo:homepage-hero-bg-url-1", defaults.homepageHeroBackgroundUrl1),
       homepageHeroBackgroundUrl2: getString("sakurairo:homepage-hero-bg-url-2", defaults.homepageHeroBackgroundUrl2),
       homepageHeroBackgroundUrl3: getString("sakurairo:homepage-hero-bg-url-3", defaults.homepageHeroBackgroundUrl3),
@@ -169,6 +185,18 @@ const themeScript = `
       othersLoginLogoUrl: getString("sakurairo:others-login-logo-url", defaults.othersLoginLogoUrl),
       othersLoginRedirectToAdmin: getBoolean("sakurairo:others-login-redirect-to-admin", defaults.othersLoginRedirectToAdmin)
     };
+
+    if (settings.homepageHeroBackgroundUrls.length > 0) {
+      settings.homepageHeroBackgroundUrl1 = settings.homepageHeroBackgroundUrls[0] || "";
+      settings.homepageHeroBackgroundUrl2 = settings.homepageHeroBackgroundUrls[1] || "";
+      settings.homepageHeroBackgroundUrl3 = settings.homepageHeroBackgroundUrls[2] || "";
+    } else {
+      settings.homepageHeroBackgroundUrls = [
+        settings.homepageHeroBackgroundUrl1,
+        settings.homepageHeroBackgroundUrl2,
+        settings.homepageHeroBackgroundUrl3
+      ].filter(Boolean);
+    }
 
     document.documentElement.classList.toggle('layout-github', settings.layoutMode === 'github');
     document.documentElement.classList.remove('motion-normal', 'motion-soft', 'motion-none');
@@ -196,6 +224,7 @@ const themeScript = `
     document.documentElement.dataset.homepageHeroShowStats = String(settings.homepageHeroShowStats);
     document.documentElement.dataset.homepageHeroShowScrollHint = String(settings.homepageHeroShowScrollHint);
     document.documentElement.dataset.homepageHeroSignature = settings.homepageHeroSignature;
+    document.documentElement.dataset.homepageHeroBackgroundUrls = JSON.stringify(settings.homepageHeroBackgroundUrls);
     document.documentElement.dataset.homepageHeroBackgroundUrl1 = settings.homepageHeroBackgroundUrl1;
     document.documentElement.dataset.homepageHeroBackgroundUrl2 = settings.homepageHeroBackgroundUrl2;
     document.documentElement.dataset.homepageHeroBackgroundUrl3 = settings.homepageHeroBackgroundUrl3;

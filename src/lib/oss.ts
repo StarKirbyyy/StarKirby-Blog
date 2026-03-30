@@ -15,6 +15,11 @@ interface UploadToOssInput {
   contentType: string;
 }
 
+interface SignedOssPutUploadInput {
+  objectKey: string;
+  contentType: string;
+}
+
 function getEnv(name: string) {
   const value = process.env[name];
   if (!value || !value.trim()) {
@@ -129,6 +134,30 @@ function createAuthorization(input: {
 }
 
 export async function uploadToOss(input: UploadToOssInput) {
+  const signed = createSignedOssPutUpload({
+    objectKey: input.objectKey,
+    contentType: input.contentType,
+  });
+
+  const response = await fetch(signed.uploadUrl, {
+    method: "PUT",
+    headers: signed.uploadHeaders,
+    body: new Uint8Array(input.content),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`OSS upload failed (${response.status}): ${text}`);
+  }
+
+  return {
+    objectKey: signed.objectKey,
+    url: signed.url,
+  };
+}
+
+export function createSignedOssPutUpload(input: SignedOssPutUploadInput) {
   const config = getOssConfig();
   const objectKey = normalizeObjectKey(input.objectKey);
   if (!objectKey) {
@@ -147,9 +176,10 @@ export async function uploadToOss(input: UploadToOssInput) {
     resourcePath,
   });
 
-  const response = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
+  return {
+    objectKey,
+    uploadUrl,
+    uploadHeaders: {
       "Content-Type": input.contentType,
       Date: date,
       Authorization: authorization,
@@ -157,22 +187,9 @@ export async function uploadToOss(input: UploadToOssInput) {
         ? { "x-oss-security-token": config.securityToken }
         : {}),
     },
-    body: new Uint8Array(input.content),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`OSS upload failed (${response.status}): ${text}`);
-  }
-
-  const publicUrl = config.publicBaseUrl
-    ? `${config.publicBaseUrl}/${encodedObjectKey}`
-    : uploadUrl;
-
-  return {
-    objectKey,
-    url: publicUrl,
+    url: config.publicBaseUrl
+      ? `${config.publicBaseUrl}/${encodedObjectKey}`
+      : uploadUrl,
   };
 }
 

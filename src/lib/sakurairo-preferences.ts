@@ -39,6 +39,7 @@ export type SakurairoPreferences = {
   homepageHeroShowStats: boolean;
   homepageHeroShowScrollHint: boolean;
   homepageHeroSignature: string;
+  homepageHeroBackgroundUrls: string[];
   homepageHeroBackgroundUrl1: string;
   homepageHeroBackgroundUrl2: string;
   homepageHeroBackgroundUrl3: string;
@@ -92,6 +93,7 @@ export const SAKURAIRO_STORAGE_KEYS: Record<keyof SakurairoPreferences, string> 
   homepageHeroShowStats: "sakurairo:homepage-hero-show-stats",
   homepageHeroShowScrollHint: "sakurairo:homepage-hero-show-scroll-hint",
   homepageHeroSignature: "sakurairo:homepage-hero-signature",
+  homepageHeroBackgroundUrls: "sakurairo:homepage-hero-bg-urls",
   homepageHeroBackgroundUrl1: "sakurairo:homepage-hero-bg-url-1",
   homepageHeroBackgroundUrl2: "sakurairo:homepage-hero-bg-url-2",
   homepageHeroBackgroundUrl3: "sakurairo:homepage-hero-bg-url-3",
@@ -147,7 +149,61 @@ function parseOptionalDatasetBoolean(value: string | undefined) {
   return undefined;
 }
 
+function normalizeUrlArray(input: string[]) {
+  const result: string[] = [];
+  const seen = new Set<string>();
+  for (const item of input) {
+    const normalized = item.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+  return result;
+}
+
+function parseStringArray(value: string | null | undefined) {
+  if (!value) return [];
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (Array.isArray(parsed)) {
+      return normalizeUrlArray(parsed.filter((item): item is string => typeof item === "string"));
+    }
+  } catch {
+    // fallback below
+  }
+
+  return normalizeUrlArray(
+    trimmed
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
+}
+
+function pickHeroBackgroundUrls(params: {
+  arrayValue: string[];
+  legacyValues: string[];
+  fallback: string[];
+}) {
+  if (params.arrayValue.length > 0) return params.arrayValue;
+  if (params.legacyValues.length > 0) return params.legacyValues;
+  return params.fallback;
+}
+
 export function getDefaultSakurairoPreferences(): SakurairoPreferences {
+  const defaultHeroBackgroundUrls = normalizeUrlArray(
+    siteConfig.sakurairo.homepageHeroBackgroundUrls.length > 0
+      ? siteConfig.sakurairo.homepageHeroBackgroundUrls
+      : [
+          siteConfig.sakurairo.homepageHeroBackgroundUrl1,
+          siteConfig.sakurairo.homepageHeroBackgroundUrl2,
+          siteConfig.sakurairo.homepageHeroBackgroundUrl3,
+        ],
+  );
+
   return {
     preliminaryAvatarUrl: siteConfig.sakurairo.preliminaryAvatarUrl,
     preliminaryWhiteCatText: siteConfig.sakurairo.preliminaryWhiteCatText,
@@ -177,9 +233,13 @@ export function getDefaultSakurairoPreferences(): SakurairoPreferences {
     homepageHeroShowStats: siteConfig.sakurairo.homepageHeroShowStats,
     homepageHeroShowScrollHint: siteConfig.sakurairo.homepageHeroShowScrollHint,
     homepageHeroSignature: siteConfig.sakurairo.homepageHeroSignature,
-    homepageHeroBackgroundUrl1: siteConfig.sakurairo.homepageHeroBackgroundUrl1,
-    homepageHeroBackgroundUrl2: siteConfig.sakurairo.homepageHeroBackgroundUrl2,
-    homepageHeroBackgroundUrl3: siteConfig.sakurairo.homepageHeroBackgroundUrl3,
+    homepageHeroBackgroundUrls: defaultHeroBackgroundUrls,
+    homepageHeroBackgroundUrl1:
+      defaultHeroBackgroundUrls[0] || siteConfig.sakurairo.homepageHeroBackgroundUrl1,
+    homepageHeroBackgroundUrl2:
+      defaultHeroBackgroundUrls[1] || siteConfig.sakurairo.homepageHeroBackgroundUrl2,
+    homepageHeroBackgroundUrl3:
+      defaultHeroBackgroundUrls[2] || siteConfig.sakurairo.homepageHeroBackgroundUrl3,
 
     titleAnim: siteConfig.sakurairo.pageTitleAnimation,
     pageTitleDurationSec: siteConfig.sakurairo.pageTitleAnimationDuration,
@@ -215,6 +275,19 @@ export function readSakurairoPreferencesFromStorage(): SakurairoPreferences {
   const commentStyleRaw = get("commentStyle");
   const footerModeRaw = get("globalFooterMode");
   const loginStyleRaw = get("othersLoginStyle");
+  const legacyHeroBackgroundUrls = normalizeUrlArray([
+    get("homepageHeroBackgroundUrl1")?.trim() || "",
+    get("homepageHeroBackgroundUrl2")?.trim() || "",
+    get("homepageHeroBackgroundUrl3")?.trim() || "",
+  ]);
+  const storageHeroBackgroundUrls = parseStringArray(
+    window.localStorage.getItem(SAKURAIRO_STORAGE_KEYS.homepageHeroBackgroundUrls),
+  );
+  const heroBackgroundUrls = pickHeroBackgroundUrls({
+    arrayValue: storageHeroBackgroundUrls,
+    legacyValues: legacyHeroBackgroundUrls,
+    fallback: defaults.homepageHeroBackgroundUrls,
+  });
 
   return {
     preliminaryAvatarUrl: get("preliminaryAvatarUrl")?.trim() || defaults.preliminaryAvatarUrl,
@@ -303,12 +376,13 @@ export function readSakurairoPreferencesFromStorage(): SakurairoPreferences {
       defaults.homepageHeroShowScrollHint,
     ),
     homepageHeroSignature: get("homepageHeroSignature")?.trim() || defaults.homepageHeroSignature,
+    homepageHeroBackgroundUrls: heroBackgroundUrls,
     homepageHeroBackgroundUrl1:
-      get("homepageHeroBackgroundUrl1")?.trim() || defaults.homepageHeroBackgroundUrl1,
+      heroBackgroundUrls[0] || defaults.homepageHeroBackgroundUrl1,
     homepageHeroBackgroundUrl2:
-      get("homepageHeroBackgroundUrl2")?.trim() || defaults.homepageHeroBackgroundUrl2,
+      heroBackgroundUrls[1] || defaults.homepageHeroBackgroundUrl2,
     homepageHeroBackgroundUrl3:
-      get("homepageHeroBackgroundUrl3")?.trim() || defaults.homepageHeroBackgroundUrl3,
+      heroBackgroundUrls[2] || defaults.homepageHeroBackgroundUrl3,
 
     titleAnim: parseBoolean(get("titleAnim"), defaults.titleAnim),
     pageTitleDurationSec: parseFloatInRange(
@@ -364,8 +438,13 @@ export function readSakurairoPreferencesFromStorage(): SakurairoPreferences {
 
 export function saveSakurairoPreferencesToStorage(preferences: SakurairoPreferences) {
   if (typeof window === "undefined") return;
+  const serializePreferenceValue = (value: unknown) =>
+    Array.isArray(value) ? JSON.stringify(value) : String(value);
   PREFERENCE_KEYS.forEach((key) => {
-    window.localStorage.setItem(SAKURAIRO_STORAGE_KEYS[key], String(preferences[key]));
+    window.localStorage.setItem(
+      SAKURAIRO_STORAGE_KEYS[key],
+      serializePreferenceValue(preferences[key]),
+    );
   });
 }
 
@@ -374,7 +453,10 @@ export function saveSakurairoPreferenceToStorage<K extends keyof SakurairoPrefer
   value: SakurairoPreferences[K],
 ) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(SAKURAIRO_STORAGE_KEYS[key], String(value));
+  window.localStorage.setItem(
+    SAKURAIRO_STORAGE_KEYS[key],
+    Array.isArray(value) ? JSON.stringify(value) : String(value),
+  );
 }
 
 export function clearSakurairoPreferencesFromStorage() {
@@ -415,6 +497,14 @@ export function readSakurairoPreferencesFromRoot(): Partial<SakurairoPreferences
   const titleDurationRaw = root.style.getPropertyValue("--sakurairo-title-duration");
   const heroOverlayRaw = root.style.getPropertyValue("--sakurairo-hero-overlay-opacity");
   const heroInfoRaw = root.style.getPropertyValue("--sakurairo-hero-info-opacity");
+  const rootHeroBackgroundUrls = parseStringArray(root.dataset.homepageHeroBackgroundUrls);
+  const legacyRootHeroBackgroundUrls = normalizeUrlArray([
+    root.dataset.homepageHeroBackgroundUrl1 || "",
+    root.dataset.homepageHeroBackgroundUrl2 || "",
+    root.dataset.homepageHeroBackgroundUrl3 || "",
+  ]);
+  const effectiveRootHeroBackgroundUrls =
+    rootHeroBackgroundUrls.length > 0 ? rootHeroBackgroundUrls : legacyRootHeroBackgroundUrls;
 
   return {
     preliminaryAvatarUrl: root.dataset.preliminaryAvatarUrl || undefined,
@@ -481,9 +571,14 @@ export function readSakurairoPreferencesFromRoot(): Partial<SakurairoPreferences
     homepageHeroShowStats: parseOptionalDatasetBoolean(root.dataset.homepageHeroShowStats),
     homepageHeroShowScrollHint: parseOptionalDatasetBoolean(root.dataset.homepageHeroShowScrollHint),
     homepageHeroSignature: root.dataset.homepageHeroSignature || undefined,
-    homepageHeroBackgroundUrl1: root.dataset.homepageHeroBackgroundUrl1 || undefined,
-    homepageHeroBackgroundUrl2: root.dataset.homepageHeroBackgroundUrl2 || undefined,
-    homepageHeroBackgroundUrl3: root.dataset.homepageHeroBackgroundUrl3 || undefined,
+    homepageHeroBackgroundUrls:
+      effectiveRootHeroBackgroundUrls.length > 0 ? effectiveRootHeroBackgroundUrls : undefined,
+    homepageHeroBackgroundUrl1:
+      effectiveRootHeroBackgroundUrls[0] || root.dataset.homepageHeroBackgroundUrl1 || undefined,
+    homepageHeroBackgroundUrl2:
+      effectiveRootHeroBackgroundUrls[1] || root.dataset.homepageHeroBackgroundUrl2 || undefined,
+    homepageHeroBackgroundUrl3:
+      effectiveRootHeroBackgroundUrls[2] || root.dataset.homepageHeroBackgroundUrl3 || undefined,
 
     titleAnim: !root.classList.contains("title-anim-off"),
     pageTitleDurationSec: parseOptionalCssVarNumber(titleDurationRaw, 1.2, 0.3, 5),
@@ -522,6 +617,15 @@ export function readEffectiveSakurairoPreferencesFromRoot() {
 export function applySakurairoPreferencesToRoot(preferences: SakurairoPreferences) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
+  const heroBackgroundUrls = normalizeUrlArray(
+    preferences.homepageHeroBackgroundUrls.length > 0
+      ? preferences.homepageHeroBackgroundUrls
+      : [
+          preferences.homepageHeroBackgroundUrl1,
+          preferences.homepageHeroBackgroundUrl2,
+          preferences.homepageHeroBackgroundUrl3,
+        ],
+  );
   const toCssBgImage = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return "none";
@@ -554,9 +658,10 @@ export function applySakurairoPreferencesToRoot(preferences: SakurairoPreference
   root.dataset.homepageHeroShowStats = String(preferences.homepageHeroShowStats);
   root.dataset.homepageHeroShowScrollHint = String(preferences.homepageHeroShowScrollHint);
   root.dataset.homepageHeroSignature = preferences.homepageHeroSignature;
-  root.dataset.homepageHeroBackgroundUrl1 = preferences.homepageHeroBackgroundUrl1;
-  root.dataset.homepageHeroBackgroundUrl2 = preferences.homepageHeroBackgroundUrl2;
-  root.dataset.homepageHeroBackgroundUrl3 = preferences.homepageHeroBackgroundUrl3;
+  root.dataset.homepageHeroBackgroundUrls = JSON.stringify(heroBackgroundUrls);
+  root.dataset.homepageHeroBackgroundUrl1 = heroBackgroundUrls[0] || "";
+  root.dataset.homepageHeroBackgroundUrl2 = heroBackgroundUrls[1] || "";
+  root.dataset.homepageHeroBackgroundUrl3 = heroBackgroundUrls[2] || "";
 
   root.dataset.pagePostTitleUnderline = String(preferences.pagePostTitleUnderline);
   root.dataset.pageShowToc = String(preferences.pageShowToc);
