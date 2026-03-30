@@ -15,51 +15,56 @@ function formatDate(input: string) {
 }
 
 export function HomePostThumbCard({ post }: HomePostThumbCardProps) {
-  const primaryTag = post.tags?.[0];
+  const viewCountText =
+    typeof post.viewCount === "number"
+      ? `浏览量 ${post.viewCount.toLocaleString("zh-CN")}`
+      : "浏览量 --";
+  const commentCountText = `评论数 ${(post.commentCount ?? 0).toLocaleString("zh-CN")}`;
+  const wordCountText =
+    typeof post.wordCount === "number"
+      ? `字数 ${post.wordCount.toLocaleString("zh-CN")}`
+      : "字数 --";
+  const readingTimeText = `阅读 ${post.readingTime}`;
 
   return (
     <article className="post post-list-thumb">
-      <div className="post-thumb">
-        <Link href={`/posts/${post.slug}`} aria-label={`阅读：${post.title}`}>
-          {post.cover ? (
-            <Image
-              src={post.cover}
-              alt={`${post.title} 封面图`}
-              fill
-              sizes="(max-width: 860px) 100vw, 860px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="h-full w-full bg-[linear-gradient(135deg,rgba(164,205,246,0.6),rgba(255,255,255,0.86),rgba(164,205,246,0.55))] dark:bg-[linear-gradient(135deg,rgba(41,74,164,0.55),rgba(26,34,54,0.92),rgba(41,74,164,0.45))]" />
-          )}
-        </Link>
-      </div>
+      <Link href={`/posts/${post.slug}`} aria-label={`阅读：${post.title}`} className="post-card-link">
+        <div className="post-card-cover">
+          <div className="post-thumb">
+            {post.cover ? (
+              <Image
+                src={post.cover}
+                alt={`${post.title} 封面图`}
+                fill
+                sizes="(max-width: 860px) 100vw, 860px"
+                className="post-thumb-image"
+              />
+            ) : (
+              <div className="post-thumb-fallback" />
+            )}
+          </div>
+          <div className="post-card-cover-mask" />
 
-      <div className="post-date">
-        <i>◷</i>发布于 {formatDate(post.date)}
-      </div>
+          <div className="post-date">发布于 {formatDate(post.date)}</div>
 
-      <div className="post-meta">
-        <span>
-          <i>#</i>
-          {primaryTag ? primaryTag : "未分类"}
-        </span>
-        <span>
-          <i>⌛</i>
-          {post.readingTime}
-        </span>
-      </div>
+          <div className="post-meta">
+            <span>{viewCountText}</span>
+            <span className="post-meta-separator">|</span>
+            <span>{commentCountText}</span>
+            <span className="post-meta-separator">|</span>
+            <span>{wordCountText}</span>
+            <span className="post-meta-separator">|</span>
+            <span>{readingTimeText}</span>
+          </div>
 
-      <div className="post-title">
-        <Link href={`/posts/${post.slug}`}>
-          <h3>{post.title}</h3>
-        </Link>
-      </div>
+        </div>
 
-      <div className="post-excerpt">
-        <div className="ai-excerpt-tip">摘要</div>
-        <p>{post.description}</p>
-      </div>
+        <div className="post-floating-title">{post.title}</div>
+
+        <div className="post-excerpt">
+          <p>{post.description}</p>
+        </div>
+      </Link>
     </article>
   );
 }
