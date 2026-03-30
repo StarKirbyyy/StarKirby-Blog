@@ -1,7 +1,7 @@
 export interface TocItem {
   id: string;
   text: string;
-  level: 2 | 3;
+  level: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 function stripMarkdown(input: string) {
@@ -37,10 +37,10 @@ export function extractTableOfContents(content: string) {
     }
     if (inCodeFence) continue;
 
-    const match = line.match(/^(#{2,3})\s+(.+)$/);
+    const match = line.match(/^(#{1,6})\s+(.+)$/);
     if (!match) continue;
 
-    const level = match[1].length as 2 | 3;
+    const level = match[1].length as 1 | 2 | 3 | 4 | 5 | 6;
     const text = stripMarkdown(match[2]);
     if (!text) continue;
 

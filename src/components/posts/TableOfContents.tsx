@@ -51,13 +51,25 @@ export function TableOfContents({ items }: TableOfContentsProps) {
       <ul className="mt-3 space-y-1 border-l border-border/70 pl-1.5">
         {items.map((item) => {
           const isActive = item.id === activeId;
+          const levelClass =
+            item.level === 1
+              ? "pl-1"
+              : item.level === 2
+                ? "pl-3"
+                : item.level === 3
+                  ? "pl-5"
+                  : item.level === 4
+                    ? "pl-7"
+                    : item.level === 5
+                      ? "pl-9"
+                      : "pl-11";
+
+          const textSizeClass = item.level <= 2 ? "text-sm" : "text-xs";
           return (
             <li key={item.id}>
               <Link
                 href={`#${item.id}`}
-                className={`block rounded-md px-2 py-1.5 text-sm transition-colors ${
-                  item.level === 3 ? "ml-3" : ""
-                } ${
+                className={`block rounded-md py-1.5 transition-colors ${levelClass} ${textSizeClass} ${
                   isActive
                     ? "bg-surface-soft font-medium text-foreground"
                     : "text-muted-fg hover:bg-surface-soft hover:text-foreground"

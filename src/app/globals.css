@@ -620,7 +620,7 @@ a {
   font-size: 1.48rem;
   font-weight: 500;
   letter-spacing: 0.03em;
-  color: var(--theme-skin);
+  color: var(--foreground);
 }
 
 .posts-area-icon {
@@ -629,7 +629,15 @@ a {
   justify-content: center;
   font-size: 0.75rem;
   line-height: 1;
-  color: var(--theme-skin-matching);
+  color: var(--muted-fg);
+}
+
+.dark .main-title.posts-area-title {
+  color: var(--foreground);
+}
+
+.dark .posts-area-icon {
+  color: color-mix(in oklab, var(--foreground) 72%, transparent);
 }
 
 .glass-panel {
