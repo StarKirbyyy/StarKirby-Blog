@@ -64,12 +64,11 @@ export function TableOfContents({ items }: TableOfContentsProps) {
                       ? "pl-9"
                       : "pl-11";
 
-          const textSizeClass = item.level <= 2 ? "text-sm" : "text-xs";
           return (
             <li key={item.id}>
               <Link
                 href={`#${item.id}`}
-                className={`block py-1.5 transition-colors ${levelClass} ${textSizeClass} ${
+                className={`block py-1.5 text-sm transition-colors ${levelClass} ${
                   isActive
                     ? "font-semibold text-foreground"
                     : "text-muted-fg hover:text-foreground"

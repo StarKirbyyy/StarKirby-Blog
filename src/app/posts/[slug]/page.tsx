@@ -223,7 +223,7 @@ export default async function PostDetailPage({ params }: PageProps) {
 
           <article className="min-w-0 space-y-6">
             <div className="px-1 sm:px-2">
-              <div className="markdown-content prose prose-slate max-w-none dark:prose-invert">
+              <div className="markdown-content post-reading-markdown prose prose-slate max-w-none dark:prose-invert">
                 <MDXContent components={postMdxComponents} />
               </div>
             </div>
