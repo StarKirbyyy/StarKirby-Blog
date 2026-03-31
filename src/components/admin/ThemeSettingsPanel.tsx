@@ -248,14 +248,19 @@ export function ThemeSettingsPanel() {
       try {
         uploadedUrl = await uploadImageDirectToOss(file);
       } catch (directError) {
-        if (file.size > 4 * 1024 * 1024) {
-          const message =
-            directError instanceof Error ? directError.message : "OSS 直传失败";
+        const directErrorMessage =
+          directError instanceof Error ? directError.message : "OSS 直传失败";
+        try {
+          uploadedUrl = await uploadImageViaProxy(file);
+        } catch (proxyError) {
+          const proxyErrorMessage =
+            proxyError instanceof Error ? proxyError.message : "代理上传失败";
           throw new Error(
-            `${message}。请在 OSS Bucket CORS 中放行当前站点的 PUT/GET/HEAD 请求头后重试。`,
+            `${directErrorMessage}；${proxyErrorMessage}。` +
+              "请在 OSS Bucket CORS 中放行当前站点的 PUT/GET/HEAD 请求头，" +
+              "或使用可接收大文件请求体的部署环境。",
           );
         }
-        uploadedUrl = await uploadImageViaProxy(file);
       }
 
       onUploaded(uploadedUrl);
