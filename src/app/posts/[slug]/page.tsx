@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ComponentPropsWithoutRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
@@ -17,6 +18,9 @@ interface PageProps {
     slug: string;
   }>;
 }
+
+type ParagraphProps = ComponentPropsWithoutRef<"p">;
+type ListItemProps = ComponentPropsWithoutRef<"li">;
 
 export const dynamicParams = true;
 export const revalidate = 3600;
@@ -129,6 +133,21 @@ export default async function PostDetailPage({ params }: PageProps) {
     image: [post.cover ? toAbsoluteUrl(post.cover) : ogImageUrl],
     keywords: post.tags?.join(", "),
   };
+  const postMdxComponents = {
+    ...mdxComponents,
+    p: ({ className, ...props }: ParagraphProps) => (
+      <p
+        className={["post-reading-text", className].filter(Boolean).join(" ")}
+        {...props}
+      />
+    ),
+    li: ({ className, ...props }: ListItemProps) => (
+      <li
+        className={["post-reading-text", className].filter(Boolean).join(" ")}
+        {...props}
+      />
+    ),
+  };
 
   return (
     <div className="-mt-[4.5rem] pb-10 sm:-mt-24 sm:pb-12">
@@ -160,6 +179,7 @@ export default async function PostDetailPage({ params }: PageProps) {
           <div className="absolute inset-x-0 bottom-0">
             <div className="content-shell pb-8 sm:pb-10">
               <h1
+                data-post-title={post.title}
                 className="sakurairo-page-title sakurairo-post-title-underline relative max-w-4xl font-medium tracking-tight text-white after:absolute after:bottom-[-2px] after:left-0 after:h-[0.38em] after:w-[68%] after:rounded-full after:bg-white/30 after:content-['']"
                 style={{
                   fontSize: "clamp(2rem,4vw,var(--sakurairo-post-title-size,34px))",
@@ -204,7 +224,7 @@ export default async function PostDetailPage({ params }: PageProps) {
           <article className="min-w-0 space-y-6">
             <div className="px-1 sm:px-2">
               <div className="markdown-content prose prose-slate max-w-none dark:prose-invert">
-                <MDXContent components={mdxComponents} />
+                <MDXContent components={postMdxComponents} />
               </div>
             </div>
 
@@ -241,7 +261,7 @@ export default async function PostDetailPage({ params }: PageProps) {
           </article>
         </div>
 
-        <aside className="sakurairo-post-toc absolute left-1/2 top-0 ml-[500px] hidden w-[280px] xl:block">
+        <aside className="sakurairo-post-toc absolute left-1/2 top-0 bottom-0 ml-[500px] hidden w-[280px] xl:block">
           <TableOfContents items={tocItems} />
         </aside>
       </div>

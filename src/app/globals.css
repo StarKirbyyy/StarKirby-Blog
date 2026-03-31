@@ -941,6 +941,12 @@ a {
   --tw-prose-pre-code: var(--foreground);
 }
 
+.post-reading-text {
+  font-size: 1.4rem !important;
+  line-height: 1.95 !important;
+  color: #4f5867 !important;
+}
+
 .prose :where(h2, h3, h4) {
   position: relative;
 }

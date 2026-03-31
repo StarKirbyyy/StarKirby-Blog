@@ -45,10 +45,10 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   return (
     <nav
       aria-label="文章目录"
-      className="glass-panel sticky top-24 rounded-[10px] p-4"
+      className="glass-panel sticky top-24 max-h-[calc(100vh-7.5rem)] overflow-auto rounded-[10px] border border-border/70 p-4"
     >
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-fg">目录</p>
-      <ul className="mt-3 space-y-1 border-l border-border/70 pl-1.5">
+      <p className="text-base font-bold text-foreground sm:text-lg">目录</p>
+      <ul className="mt-3 space-y-1">
         {items.map((item) => {
           const isActive = item.id === activeId;
           const levelClass =
@@ -69,10 +69,10 @@ export function TableOfContents({ items }: TableOfContentsProps) {
             <li key={item.id}>
               <Link
                 href={`#${item.id}`}
-                className={`block rounded-md py-1.5 transition-colors ${levelClass} ${textSizeClass} ${
+                className={`block py-1.5 transition-colors ${levelClass} ${textSizeClass} ${
                   isActive
-                    ? "bg-surface-soft font-medium text-foreground"
-                    : "text-muted-fg hover:bg-surface-soft hover:text-foreground"
+                    ? "font-semibold text-foreground"
+                    : "text-muted-fg hover:text-foreground"
                 }`}
               >
                 {item.text}

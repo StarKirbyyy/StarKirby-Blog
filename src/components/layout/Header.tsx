@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { siteConfig } from "@/config/site";
 import { readEffectiveSakurairoPreferencesFromRoot } from "@/lib/sakurairo-preferences";
 import { ThemeToggle } from "./ThemeToggle";
@@ -18,12 +18,20 @@ type SessionPayload = {
 
 export function Header() {
   const pathname = usePathname() ?? "/";
+  const isPostDetailRoute = pathname.startsWith("/posts/");
   const [logoUrl, setLogoUrl] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userAvatarUrl, setUserAvatarUrl] = useState("");
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [mounted, setMounted] = useState(false);
   const [homeNavState, setHomeNavState] = useState<"idle" | "prep" | "ready">("idle");
+  const [postHeaderTitle, setPostHeaderTitle] = useState("");
+  const [showPostTitle, setShowPostTitle] = useState(false);
+  const restoreTitleTimeoutRef = useRef<number | null>(null);
+  const navLayerRef = useRef<HTMLDivElement | null>(null);
+  const titleLayerRef = useRef<HTMLDivElement | null>(null);
+  const [navLayerWidth, setNavLayerWidth] = useState(0);
+  const [titleLayerWidth, setTitleLayerWidth] = useState(0);
 
   useEffect(() => {
     const syncTheme = () => {
@@ -103,6 +111,125 @@ export function Header() {
     return () => window.removeEventListener("home:hero-resources-ready", onReady);
   }, [mounted, pathname]);
 
+  useEffect(() => {
+    const clearRestoreTimer = () => {
+      if (restoreTitleTimeoutRef.current !== null) {
+        window.clearTimeout(restoreTitleTimeoutRef.current);
+        restoreTitleTimeoutRef.current = null;
+      }
+    };
+
+    clearRestoreTimer();
+
+    if (!isPostDetailRoute) {
+      setPostHeaderTitle("");
+      setShowPostTitle(false);
+      return;
+    }
+
+    const readPostTitle = () => {
+      const titleFromHero =
+        document
+          .querySelector<HTMLElement>("[data-post-title]")
+          ?.dataset.postTitle?.trim() ?? "";
+      if (titleFromHero) {
+        return titleFromHero;
+      }
+
+      const documentTitle = document.title.trim();
+      if (!documentTitle) {
+        return "";
+      }
+      const titleSegments = documentTitle
+        .split("|")
+        .map((part) => part.trim())
+        .filter(Boolean);
+      return titleSegments[0] ?? documentTitle;
+    };
+
+    const syncTitle = () => {
+      const nextTitle = readPostTitle();
+      setPostHeaderTitle(nextTitle);
+      setShowPostTitle(Boolean(nextTitle));
+    };
+
+    syncTitle();
+    const rafId = window.requestAnimationFrame(syncTitle);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      clearRestoreTimer();
+    };
+  }, [isPostDetailRoute, pathname]);
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    const measure = () => {
+      const navWidth = Math.ceil(navLayerRef.current?.getBoundingClientRect().width ?? 0);
+      const titleWidth = Math.ceil(titleLayerRef.current?.getBoundingClientRect().width ?? 0);
+      if (navWidth > 0) {
+        setNavLayerWidth(navWidth);
+      }
+      if (titleWidth > 0) {
+        setTitleLayerWidth(titleWidth);
+      }
+    };
+
+    measure();
+    const rafId = window.requestAnimationFrame(measure);
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    if (resizeObserver) {
+      if (navLayerRef.current) {
+        resizeObserver.observe(navLayerRef.current);
+      }
+      if (titleLayerRef.current) {
+        resizeObserver.observe(titleLayerRef.current);
+      }
+    }
+    window.addEventListener("resize", measure);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [mounted, pathname, postHeaderTitle, showPostTitle]);
+
+  const titleSwapEnabled = isPostDetailRoute && postHeaderTitle.length > 0;
+  const showNavLinks = !titleSwapEnabled || !showPostTitle;
+  const navTargetWidth = navLayerWidth > 0 ? navLayerWidth + 32 : 460;
+  const titleTargetWidth =
+    titleLayerWidth > 0 ? Math.min(960, titleLayerWidth + 10) : navTargetWidth;
+  const centerNavWidth = showNavLinks ? navTargetWidth : titleTargetWidth;
+
+  const handleNavMouseEnter = () => {
+    if (!titleSwapEnabled) {
+      return;
+    }
+    if (restoreTitleTimeoutRef.current !== null) {
+      window.clearTimeout(restoreTitleTimeoutRef.current);
+      restoreTitleTimeoutRef.current = null;
+    }
+    setShowPostTitle(false);
+  };
+
+  const handleNavMouseLeave = () => {
+    if (!titleSwapEnabled) {
+      return;
+    }
+    if (restoreTitleTimeoutRef.current !== null) {
+      window.clearTimeout(restoreTitleTimeoutRef.current);
+    }
+    restoreTitleTimeoutRef.current = window.setTimeout(() => {
+      setShowPostTitle(true);
+      restoreTitleTimeoutRef.current = null;
+    }, 1200);
+  };
+
   const homeNavClass =
     homeNavState === "prep"
       ? "home-nav-enter-prep"
@@ -147,34 +274,77 @@ export function Header() {
           )}
         </Link>
 
-        <nav aria-label="主导航" className="hidden items-center md:flex">
-          <div className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-strong px-2 py-1 shadow-[var(--shadow-soft)]">
-            {siteConfig.nav.map((item) => {
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`nav-pill group relative px-3 text-base font-medium transition-colors ${
-                    isActive
-                      ? "nav-pill-active"
-                      : "text-muted-fg hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {item.title}
-                  <span
-                    className={`absolute bottom-[4px] left-1/2 h-[1.5px] -translate-x-1/2 rounded-full bg-accent transition-all duration-300 ${
+        <nav
+          aria-label="主导航"
+          className="hidden items-center md:flex"
+          onMouseEnter={handleNavMouseEnter}
+          onMouseLeave={handleNavMouseLeave}
+        >
+          <div
+            className="relative h-[42px] overflow-hidden rounded-full border border-border/70 bg-surface-strong px-3 py-1 shadow-[var(--shadow-soft)]"
+            style={{
+              width: `${centerNavWidth}px`,
+              transition: "width 1120ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
+            <div
+              ref={navLayerRef}
+              className="absolute left-1/2 top-1/2 inline-flex items-center gap-1 whitespace-nowrap"
+              style={{
+                opacity: showNavLinks ? 1 : 0,
+                transform: `translate(-50%, -50%) scale(${showNavLinks ? 1 : 0.95})`,
+                transition:
+                  "opacity 760ms ease, transform 960ms cubic-bezier(0.22, 1, 0.36, 1)",
+                pointerEvents: showNavLinks ? "auto" : "none",
+              }}
+            >
+              {siteConfig.nav.map((item) => {
+                const isActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`nav-pill group relative inline-flex h-8 items-center justify-center whitespace-nowrap px-3 text-base font-medium leading-none transition-colors ${
                       isActive
-                        ? "w-8 opacity-100"
-                        : "w-0 opacity-0 group-hover:w-7 group-hover:opacity-100"
+                        ? "nav-pill-active"
+                        : "text-muted-fg hover:bg-muted hover:text-foreground"
                     }`}
-                  />
-                </Link>
-              );
-            })}
+                  >
+                    {item.title}
+                    <span
+                      className={`absolute bottom-[4px] left-1/2 h-[1.5px] -translate-x-1/2 rounded-full bg-accent transition-all duration-300 ${
+                        isActive
+                          ? "w-8 opacity-100"
+                          : "w-0 opacity-0 group-hover:w-7 group-hover:opacity-100"
+                      }`}
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div
+              className="absolute left-1/2 top-1/2 flex items-center justify-center"
+              style={{
+                opacity: titleSwapEnabled && showPostTitle ? 1 : 0,
+                transform: `translate(-50%, -50%) scale(${
+                  titleSwapEnabled && showPostTitle ? 1 : 0.95
+                })`,
+                transition:
+                  "opacity 760ms ease, transform 960ms cubic-bezier(0.22, 1, 0.36, 1)",
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                ref={titleLayerRef}
+                className="max-w-[min(62vw,720px)] truncate px-4 text-center text-base font-semibold text-foreground"
+              >
+                {postHeaderTitle}
+              </div>
+            </div>
           </div>
         </nav>
 
