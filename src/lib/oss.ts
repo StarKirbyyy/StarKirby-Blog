@@ -106,8 +106,12 @@ function createAuthorization(input: {
   contentType: string;
   date: string;
   resourcePath: string;
+  useOssDateHeader?: boolean;
 }) {
   const headersForSign: Array<[string, string]> = [];
+  if (input.useOssDateHeader) {
+    headersForSign.push(["x-oss-date", input.date]);
+  }
   if (input.config.securityToken) {
     headersForSign.push(["x-oss-security-token", input.config.securityToken]);
   }
@@ -122,7 +126,7 @@ function createAuthorization(input: {
     `${input.method}\n` +
     `\n` +
     `${input.contentType}\n` +
-    `${input.date}\n` +
+    `${input.useOssDateHeader ? "" : input.date}\n` +
     `${canonicalizedOssHeaders}${input.resourcePath}`;
 
   const signature = crypto
@@ -174,6 +178,7 @@ export function createSignedOssPutUpload(input: SignedOssPutUploadInput) {
     contentType: input.contentType,
     date,
     resourcePath,
+    useOssDateHeader: true,
   });
 
   return {
@@ -181,7 +186,7 @@ export function createSignedOssPutUpload(input: SignedOssPutUploadInput) {
     uploadUrl,
     uploadHeaders: {
       "Content-Type": input.contentType,
-      Date: date,
+      "x-oss-date": date,
       Authorization: authorization,
       ...(config.securityToken
         ? { "x-oss-security-token": config.securityToken }

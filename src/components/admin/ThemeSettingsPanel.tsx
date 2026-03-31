@@ -221,7 +221,13 @@ export function ThemeSettingsPanel() {
       body: file,
     });
     if (!uploadResponse.ok) {
-      throw new Error(`OSS 直传失败（${uploadResponse.status}）`);
+      const responseText = await uploadResponse.text().catch(() => "");
+      const compactText = responseText.replace(/\s+/g, " ").trim();
+      throw new Error(
+        compactText
+          ? `OSS 直传失败（${uploadResponse.status}）：${compactText}`
+          : `OSS 直传失败（${uploadResponse.status}）`,
+      );
     }
     return json.url;
   };
