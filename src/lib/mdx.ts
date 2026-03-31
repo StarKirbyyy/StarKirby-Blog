@@ -26,10 +26,23 @@ function stripScriptTagsFromMdx(source: string) {
     .replace(/<script\b[^>]*\/>/gi, "");
 }
 
+function detectLikelyMdxSyntax(source: string) {
+  if (/^\s*(import|export)\s.+$/m.test(source)) {
+    return true;
+  }
+  // Detect custom JSX component usage like <MyComponent ... />
+  if (/<\s*[A-Z][\w.-]*(\s|\/?>)/.test(source)) {
+    return true;
+  }
+  return false;
+}
+
 export async function getMDXContent(source: string) {
   const sanitizedSource = stripScriptTagsFromMdx(source);
+  const format = detectLikelyMdxSyntax(sanitizedSource) ? "mdx" : "md";
   const evaluated = await evaluate(sanitizedSource, {
     ...jsxRuntime,
+    format,
     remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
       rehypeSlug,
