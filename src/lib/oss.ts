@@ -126,7 +126,7 @@ function createAuthorization(input: {
     `${input.method}\n` +
     `\n` +
     `${input.contentType}\n` +
-    `${input.useOssDateHeader ? "" : input.date}\n` +
+    `${input.date}\n` +
     `${canonicalizedOssHeaders}${input.resourcePath}`;
 
   const signature = crypto
