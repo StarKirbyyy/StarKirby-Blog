@@ -128,6 +128,10 @@ const themeScript = `
       } catch(e) {}
       return fallback;
     }
+    function sanitizeAvatarUrl(value) {
+      var next = String(value || "").trim();
+      return next === "/images/avatar.svg" ? "" : next;
+    }
     function toCssBgImage(value) {
       if (!value) return "none";
       return 'url("' + String(value).replace(/"/g, '\\"') + '")';
@@ -139,7 +143,7 @@ const themeScript = `
     }
 
     var settings = {
-      preliminaryAvatarUrl: getString("sakurairo:preliminary-avatar-url", defaults.preliminaryAvatarUrl),
+      preliminaryAvatarUrl: sanitizeAvatarUrl(getString("sakurairo:preliminary-avatar-url", defaults.preliminaryAvatarUrl)),
       preliminaryWhiteCatText: getBoolean("sakurairo:preliminary-white-cat-text", defaults.preliminaryWhiteCatText),
       preliminaryNavLogoUrl: getString("sakurairo:preliminary-nav-logo-url", defaults.preliminaryNavLogoUrl),
       preliminarySiteIconUrl: getString("sakurairo:preliminary-site-icon-url", defaults.preliminarySiteIconUrl),

@@ -117,6 +117,14 @@ export const SAKURAIRO_STORAGE_KEYS: Record<keyof SakurairoPreferences, string> 
 } as const;
 
 const PREFERENCE_KEYS = Object.keys(SAKURAIRO_STORAGE_KEYS) as (keyof SakurairoPreferences)[];
+const REMOVED_AVATAR_PATHS = new Set(["/images/avatar.svg"]);
+
+function sanitizeAvatarUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (REMOVED_AVATAR_PATHS.has(trimmed)) return "";
+  return trimmed;
+}
 
 function parseIntInRange(value: string | null, fallback: number, min: number, max: number) {
   if (!value) return fallback;
@@ -205,7 +213,7 @@ export function getDefaultSakurairoPreferences(): SakurairoPreferences {
   );
 
   return {
-    preliminaryAvatarUrl: siteConfig.sakurairo.preliminaryAvatarUrl,
+    preliminaryAvatarUrl: sanitizeAvatarUrl(siteConfig.sakurairo.preliminaryAvatarUrl),
     preliminaryWhiteCatText: siteConfig.sakurairo.preliminaryWhiteCatText,
     preliminaryNavLogoUrl: siteConfig.sakurairo.preliminaryNavLogoUrl,
     preliminarySiteIconUrl: siteConfig.sakurairo.preliminarySiteIconUrl,
@@ -290,7 +298,9 @@ export function readSakurairoPreferencesFromStorage(): SakurairoPreferences {
   });
 
   return {
-    preliminaryAvatarUrl: get("preliminaryAvatarUrl")?.trim() || defaults.preliminaryAvatarUrl,
+    preliminaryAvatarUrl: sanitizeAvatarUrl(
+      get("preliminaryAvatarUrl") ?? defaults.preliminaryAvatarUrl,
+    ),
     preliminaryWhiteCatText: parseBoolean(
       get("preliminaryWhiteCatText"),
       defaults.preliminaryWhiteCatText,
@@ -481,7 +491,11 @@ export function mergeSakurairoPreferences(
   (Object.keys(patch) as (keyof SakurairoPreferences)[]).forEach((key) => {
     const value = patch[key];
     if (value !== undefined) {
-      mergedRecord[key] = value;
+      if (key === "preliminaryAvatarUrl" && typeof value === "string") {
+        mergedRecord[key] = sanitizeAvatarUrl(value);
+      } else {
+        mergedRecord[key] = value;
+      }
     }
   });
   return merged;
@@ -507,7 +521,9 @@ export function readSakurairoPreferencesFromRoot(): Partial<SakurairoPreferences
     rootHeroBackgroundUrls.length > 0 ? rootHeroBackgroundUrls : legacyRootHeroBackgroundUrls;
 
   return {
-    preliminaryAvatarUrl: root.dataset.preliminaryAvatarUrl || undefined,
+    preliminaryAvatarUrl: root.dataset.preliminaryAvatarUrl
+      ? sanitizeAvatarUrl(root.dataset.preliminaryAvatarUrl)
+      : undefined,
     preliminaryWhiteCatText: parseOptionalDatasetBoolean(root.dataset.preliminaryWhiteCatText),
     preliminaryNavLogoUrl: root.dataset.preliminaryNavLogoUrl || undefined,
     preliminarySiteIconUrl: root.dataset.preliminarySiteIconUrl || undefined,
@@ -645,7 +661,7 @@ export function applySakurairoPreferencesToRoot(preferences: SakurairoPreference
   root.dataset.globalShowUtilityButtons = String(preferences.globalShowUtilityButtons);
   root.dataset.globalBackgroundImageUrl = preferences.globalBackgroundImageUrl;
 
-  root.dataset.preliminaryAvatarUrl = preferences.preliminaryAvatarUrl;
+  root.dataset.preliminaryAvatarUrl = sanitizeAvatarUrl(preferences.preliminaryAvatarUrl);
   root.dataset.preliminaryWhiteCatText = String(preferences.preliminaryWhiteCatText);
   root.dataset.preliminaryNavLogoUrl = preferences.preliminaryNavLogoUrl;
   root.dataset.preliminarySiteIconUrl = preferences.preliminarySiteIconUrl;
