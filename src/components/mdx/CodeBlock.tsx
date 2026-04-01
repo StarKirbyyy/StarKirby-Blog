@@ -38,7 +38,7 @@ export function CodeBlock({ language, code, children }: CodeBlockProps) {
   };
 
   return (
-    <div className="my-6 overflow-hidden rounded-xl border border-border bg-card">
+    <div className="my-6 overflow-hidden rounded-md border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border bg-muted px-3 py-2">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-fg">
           {language || "text"}
