@@ -18,6 +18,10 @@ function formatDate(date: string) {
 export function PostListCard({ post, href }: PostListCardProps) {
   const target = href ?? `/posts/${post.slug}`;
   const hasCover = Boolean(post.cover);
+  const tags = post.tags ?? [];
+  const maxVisibleTags = 4;
+  const visibleTags = tags.slice(0, maxVisibleTags);
+  const hasMoreTags = tags.length > maxVisibleTags;
 
   return (
     <article className="group relative h-44 overflow-hidden rounded-[10px] border border-border bg-surface shadow-[var(--shadow-soft)] md:flex md:h-40">
@@ -51,19 +55,25 @@ export function PostListCard({ post, href }: PostListCardProps) {
           <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-7 text-foreground transition-colors group-hover:text-accent md:text-xl">
             {post.title}
           </h3>
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-fg">{post.description}</p>
+          <p className="mt-2 line-clamp-1 text-sm leading-6 text-muted-fg">{post.description}</p>
         </div>
 
-        {post.tags?.length ? (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {post.tags.slice(0, 4).map((tag) => (
+        {tags.length ? (
+          <div className="mt-3 flex flex-nowrap items-center gap-1.5 overflow-hidden">
+            {visibleTags.map((tag) => (
               <span
                 key={`${post.slug}-${tag}`}
-                className="rounded-full border border-border/70 bg-surface-soft px-2 py-0.5 text-xs text-muted-fg"
+                className="max-w-[8.5rem] shrink-0 truncate rounded-full border border-border/70 bg-surface-soft px-2 py-0.5 text-xs text-muted-fg"
+                title={`#${tag}`}
               >
                 #{tag}
               </span>
             ))}
+            {hasMoreTags ? (
+              <span className="shrink-0 rounded-full border border-border/70 bg-surface-soft px-2 py-0.5 text-xs text-muted-fg">
+                ...
+              </span>
+            ) : null}
           </div>
         ) : null}
       </Link>

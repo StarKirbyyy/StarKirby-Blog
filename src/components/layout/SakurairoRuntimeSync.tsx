@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import {
-  SAKURAIRO_STORAGE_KEYS,
   applySakurairoPreferencesToRoot,
   getDefaultSakurairoPreferences,
   hasLocalOverride,
@@ -34,10 +33,6 @@ export function SakurairoRuntimeSync() {
     root.dataset.sakurairoRuntimeReady = "false";
     const defaults = getDefaultSakurairoPreferences();
     const local = readSakurairoPreferencesFromStorage();
-    if (local.preliminaryAvatarUrl.trim() === "/images/avatar.svg") {
-      local.preliminaryAvatarUrl = "";
-      window.localStorage.removeItem(SAKURAIRO_STORAGE_KEYS.preliminaryAvatarUrl);
-    }
 
     // 先应用本地覆盖，避免视觉回跳。
     applySakurairoPreferencesToRoot(local);
