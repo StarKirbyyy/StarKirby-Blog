@@ -40,7 +40,8 @@ export function MdxLightboxImage({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative block w-full overflow-hidden rounded-xl border border-border text-left"
+        className="group relative block w-full overflow-hidden text-left"
+        data-mdx-image="true"
         aria-label={alt ? `查看大图：${alt}` : "查看图片大图"}
       >
         <Image
@@ -83,7 +84,7 @@ export function MdxLightboxImage({
               width={width}
               height={height}
               sizes="100vw"
-              className="mx-auto h-auto max-h-[85vh] w-auto rounded-lg"
+              className="mx-auto h-auto max-h-[85vh] w-auto"
               unoptimized={isRemote}
               priority
             />

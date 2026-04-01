@@ -947,6 +947,152 @@ a {
   color: #4f5867 !important;
 }
 
+.codeblock-pre {
+  padding: 0;
+  tab-size: 2;
+  line-height: 1.22;
+}
+
+.codeblock-pre .codeblock-code {
+  display: block !important;
+  min-width: 100%;
+  width: max-content;
+  counter-reset: code-line;
+  line-height: 1.22;
+  white-space: normal !important;
+}
+
+.codeblock-pre .codeblock-code [data-line] {
+  display: block;
+  position: relative;
+  line-height: 1.22;
+  min-height: 1.22em;
+  padding: 0 0.75rem 0 2.45rem;
+  counter-increment: code-line;
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.codeblock-pre .codeblock-code [data-line]::before {
+  content: counter(code-line);
+  position: absolute;
+  left: 0.35rem;
+  top: 0;
+  width: 1.4rem;
+  color: color-mix(in oklab, var(--muted-fg) 72%, transparent);
+  text-align: left;
+  user-select: none;
+}
+
+.codeblock-pre .codeblock-code [data-line]::after {
+  content: "";
+  position: absolute;
+  left: 2rem;
+  top: -0.03em;
+  bottom: -0.03em;
+  width: 1px;
+  background: color-mix(in oklab, var(--muted-fg) 44%, transparent);
+}
+
+.codeblock-pre .codeblock-code [data-line] * {
+  display: inline !important;
+  white-space: inherit !important;
+  word-break: inherit !important;
+  overflow-wrap: inherit !important;
+}
+
+.codeblock-pre .codeblock-code [data-line]:empty::after {
+  content: " ";
+}
+
+.codeblock-pre .codeblock-code [data-line]:first-child:empty,
+.codeblock-pre .codeblock-code [data-line]:last-child:empty {
+  display: none;
+}
+
+.post-reading-markdown.prose :where(img, picture, video) {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+.post-reading-markdown.prose :where([data-mdx-image="true"]) {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.post-reading-markdown.prose :where(p:has(> [data-mdx-image="true"])) {
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
+}
+
+.markdown-content :where(mark) {
+  background: color-mix(in oklab, #ffe66a 68%, transparent);
+  color: inherit;
+  border-radius: 4px;
+  padding: 0 0.22em;
+}
+
+.markdown-content .footnotes {
+  margin-top: 1.8rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+}
+
+.markdown-content .footnotes :where(ol) {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding-left: 0;
+}
+
+.markdown-content .footnotes :where(li) {
+  margin: 0.35rem 0;
+}
+
+.markdown-content .footnotes :where(li, p) {
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.markdown-content .footnotes :where(p) {
+  margin: 0.35em 0;
+}
+
+.markdown-content .footnotes :where(.footnote-label) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: color-mix(in oklab, var(--muted-fg) 86%, transparent);
+}
+
+.markdown-content :where(sub) {
+  vertical-align: sub;
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+.markdown-content :where(sup) {
+  vertical-align: baseline;
+  position: relative;
+  top: -0.45em;
+  font-size: 0.72em;
+  line-height: 1;
+}
+
+.markdown-content :where(a[data-footnote-ref]) {
+  text-decoration: none;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.markdown-content :where(a[data-footnote-ref])::before {
+  content: "[";
+}
+
+.markdown-content :where(a[data-footnote-ref])::after {
+  content: "]";
+}
+
 .post-reading-markdown.prose :where(h1) {
   font-size: 3.1rem;
   line-height: 1.2;

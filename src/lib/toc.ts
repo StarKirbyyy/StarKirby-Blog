@@ -1,16 +1,9 @@
+import { removeLeadingDuplicateTitleHeading, stripInlineMarkdown } from "@/lib/markdown";
+
 export interface TocItem {
   id: string;
   text: string;
   level: 1 | 2 | 3 | 4 | 5 | 6;
-}
-
-function stripMarkdown(input: string) {
-  return input
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/[*_~]/g, "")
-    .replace(/<[^>]+>/g, "")
-    .trim();
 }
 
 function slugify(text: string) {
@@ -23,8 +16,18 @@ function slugify(text: string) {
   return normalized || "section";
 }
 
-export function extractTableOfContents(content: string) {
-  const lines = content.split("\n");
+interface ExtractTableOfContentsOptions {
+  postTitle?: string;
+}
+
+export function extractTableOfContents(
+  content: string,
+  options: ExtractTableOfContentsOptions = {},
+) {
+  const normalizedContent = removeLeadingDuplicateTitleHeading(content, {
+    postTitle: options.postTitle,
+  });
+  const lines = normalizedContent.split("\n");
   const slugCount = new Map<string, number>();
   const toc: TocItem[] = [];
   let inCodeFence = false;
@@ -41,7 +44,7 @@ export function extractTableOfContents(content: string) {
     if (!match) continue;
 
     const level = match[1].length as 1 | 2 | 3 | 4 | 5 | 6;
-    const text = stripMarkdown(match[2]);
+    const text = stripInlineMarkdown(match[2]);
     if (!text) continue;
 
     const baseSlug = slugify(text);

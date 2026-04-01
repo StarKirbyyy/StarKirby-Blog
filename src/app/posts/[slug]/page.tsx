@@ -96,9 +96,12 @@ export default async function PostDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [allPosts, MDXContent] = await Promise.all([getAllPosts(), getMDXContent(post.content)]);
+  const [allPosts, MDXContent] = await Promise.all([
+    getAllPosts(),
+    getMDXContent(post.content, { postTitle: post.title }),
+  ]);
 
-  const toc = extractTableOfContents(post.content);
+  const toc = extractTableOfContents(post.content, { postTitle: post.title });
   const currentIndex = allPosts.findIndex((item) => item.slug === post.slug);
   const currentMeta = currentIndex >= 0 ? allPosts[currentIndex] : null;
   const newerPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;

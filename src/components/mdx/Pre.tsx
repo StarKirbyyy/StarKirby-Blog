@@ -57,12 +57,7 @@ export function Pre({ children, className, ...props }: PreProps) {
 
   return (
     <CodeBlock language={language} code={codeChildren}>
-      <pre
-        className="m-0 max-h-[32rem] overflow-x-auto px-4 py-4 text-sm leading-6"
-        {...props}
-      >
-        <code className={codeClassName}>{codeChildren}</code>
-      </pre>
+      <pre className="codeblock-pre m-0 max-h-[32rem] overflow-auto text-sm" {...props}><code className={`codeblock-code ${codeClassName ?? ""}`.trim()}>{codeChildren}</code></pre>
     </CodeBlock>
   );
 }
