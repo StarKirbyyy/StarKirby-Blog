@@ -266,7 +266,13 @@ export async function getMDXContent(source: string, options: GetMDXContentOption
       ),
     ),
   );
-  const format = detectLikelyMdxSyntax(normalizedSource) ? "mdx" : "md";
+  // Safety-first: default to pure markdown parsing to avoid runtime crashes
+  // from accidental MDX expressions such as `{i}` in normal article text.
+  // Set ENABLE_UNSAFE_MDX_SYNTAX=1 only when you explicitly need MDX JS/JSX syntax.
+  const mdxEnabled =
+    process.env.ENABLE_UNSAFE_MDX_SYNTAX?.trim() === "1" &&
+    detectLikelyMdxSyntax(normalizedSource);
+  const format = mdxEnabled ? "mdx" : "md";
   const evaluated = await evaluate(normalizedSource, {
     ...jsxRuntime,
     format,
