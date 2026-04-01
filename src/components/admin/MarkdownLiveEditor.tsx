@@ -4,10 +4,19 @@ import type { JSX } from "react";
 import { evaluate } from "@mdx-js/mdx";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Component,
+  startTransition,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as jsxRuntime from "react/jsx-runtime";
 import { mdxComponents } from "@/components/mdx/components";
 
@@ -16,6 +25,30 @@ type MDXContentComponent = (
 ) => JSX.Element;
 
 type ViewMode = "typora" | "edit" | "split" | "preview";
+
+class PreviewErrorBoundary extends Component<
+  { fallback: JSX.Element; resetKey: string; children: JSX.Element },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps: { resetKey: string }) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 interface MarkdownLiveEditorProps {
   value: string;
@@ -67,10 +100,16 @@ function stripFrontmatter(source: string) {
 }
 
 async function evaluatePreviewComponent(source: string) {
-  const evaluated = await evaluate(source, {
+  const sanitizedSource = source
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<script\b[^>]*\/>/gi, "");
+  const evaluated = await evaluate(sanitizedSource, {
     ...jsxRuntime,
+    // 编辑器预览默认使用纯 Markdown 语义，避免 `{i}` 等文本被当作 JS 表达式执行。
+    format: "md",
     remarkPlugins: [remarkGfm, remarkMath],
     rehypePlugins: [
+      rehypeRaw,
       rehypeSlug,
       [
         rehypeAutolinkHeadings,
@@ -355,7 +394,8 @@ function TyporaLikeEditor({
         line.type !== "blank" &&
         line.type !== "hr" &&
         line.type !== "codeFence" &&
-        line.type !== "codeLine",
+        line.type !== "codeLine" &&
+        !/[{}]/.test(line.raw),
     );
     if (previewable.length === 0) {
       queueMicrotask(() => {
@@ -429,9 +469,14 @@ function TyporaLikeEditor({
         if (linePreviewMap[line.sourceIndex]) {
           const Content = linePreviewMap[line.sourceIndex];
           return (
-            <article className="prose prose-slate max-w-none dark:prose-invert [&>*]:my-0 [&>*]:leading-7">
-              <Content components={mdxComponents} />
-            </article>
+            <PreviewErrorBoundary
+              resetKey={`line-${line.sourceIndex}-${line.raw}`}
+              fallback={<p className="text-sm leading-7 text-foreground">{line.text}</p>}
+            >
+              <article className="prose prose-slate max-w-none dark:prose-invert [&>*]:my-0 [&>*]:leading-7">
+                <Content components={mdxComponents} />
+              </article>
+            </PreviewErrorBoundary>
           );
         }
         return <p className="text-sm leading-7 text-foreground">{line.text}</p>;
@@ -968,9 +1013,18 @@ export function MarkdownLiveEditor({
             ) : !hasPreviewSource ? (
               <p className="text-sm text-muted-fg">暂无可预览内容。</p>
             ) : previewComponent ? (
-              <article className="prose prose-slate max-w-none dark:prose-invert">
-                {previewComponent({ components: mdxComponents })}
-              </article>
+              <PreviewErrorBoundary
+                resetKey={sourceForPreview}
+                fallback={
+                  <pre className="whitespace-pre-wrap text-xs text-muted-fg">
+                    预览渲染异常，已回退为纯文本预览。
+                  </pre>
+                }
+              >
+                <article className="prose prose-slate max-w-none dark:prose-invert">
+                  {previewComponent({ components: mdxComponents })}
+                </article>
+              </PreviewErrorBoundary>
             ) : (
               <p className="text-sm text-muted-fg">预览编译中...</p>
             )}
