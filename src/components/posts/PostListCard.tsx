@@ -19,6 +19,10 @@ export function PostListCard({ post, href }: PostListCardProps) {
   const target = href ?? `/posts/${post.slug}`;
   const hasCover = Boolean(post.cover);
   const tags = post.tags ?? [];
+  const viewCountText =
+    typeof post.viewCount === "number"
+      ? `${post.viewCount.toLocaleString("zh-CN")} 次阅读`
+      : "-- 次阅读";
   const maxVisibleTags = 4;
   const visibleTags = tags.slice(0, maxVisibleTags);
   const hasMoreTags = tags.length > maxVisibleTags;
@@ -51,6 +55,8 @@ export function PostListCard({ post, href }: PostListCardProps) {
             <span>{formatDate(post.date)}</span>
             <span>·</span>
             <span>{post.readingTime}</span>
+            <span>·</span>
+            <span>{viewCountText}</span>
           </div>
           <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-7 text-foreground transition-colors group-hover:text-accent md:text-xl">
             {post.title}

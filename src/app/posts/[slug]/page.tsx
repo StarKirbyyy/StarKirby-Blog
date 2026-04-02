@@ -6,6 +6,7 @@ import Script from "next/script";
 import { notFound } from "next/navigation";
 import { mdxComponents } from "@/components/mdx/components";
 import { CommentsSection } from "@/components/posts/CommentsSection";
+import { PostViewCounter } from "@/components/posts/PostViewCounter";
 import { TableOfContents } from "@/components/posts/TableOfContents";
 import { siteConfig } from "@/config/site";
 import { getMDXContent } from "@/lib/mdx";
@@ -109,10 +110,6 @@ export default async function PostDetailPage({ params }: PageProps) {
     currentIndex >= 0 && currentIndex < allPosts.length - 1
       ? allPosts[currentIndex + 1]
       : null;
-  const readCountText =
-    typeof currentMeta?.viewCount === "number"
-      ? currentMeta.viewCount.toLocaleString("zh-CN")
-      : "--";
   const tocItems = [{ id: "post-top", text: post.title, level: 1 as const }, ...toc];
   const postUrl = toAbsoluteUrl(`/posts/${encodeURIComponent(post.slug)}`);
   const ogImageUrl = toAbsoluteUrl(
@@ -193,7 +190,14 @@ export default async function PostDetailPage({ params }: PageProps) {
               <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-white/92 sm:text-base">
                 <span>发布于 {formatDate(post.date)}</span>
                 <span>·</span>
-                <span>{readCountText} 次阅读</span>
+                <PostViewCounter
+                  slug={post.slug}
+                  initialCount={
+                    typeof post.viewCount === "number"
+                      ? post.viewCount
+                      : currentMeta?.viewCount
+                  }
+                />
               </div>
             </div>
           </div>

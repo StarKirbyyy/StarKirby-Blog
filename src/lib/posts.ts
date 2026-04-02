@@ -62,6 +62,11 @@ function isRetryablePrismaClosedConnectionError(error: unknown) {
   );
 }
 
+function isMissingViewCountColumnError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Post\.viewCount/i.test(message) && /does not exist/i.test(message);
+}
+
 async function withPrismaReadRetry<T>(query: () => Promise<T>) {
   try {
     const result = await query();
@@ -134,6 +139,36 @@ function parseTags(value: unknown) {
     .map((item) => item.trim())
     .filter(Boolean);
   return tags.length > 0 ? tags : undefined;
+}
+
+function escapeRegExp(input: string) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function toSearchTokens(query: string) {
+  return query
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function stripMarkdownForSearch(content: string) {
+  return content
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[#>*_~\-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function includesAllTokens(text: string, tokens: string[]) {
+  return tokens.every((token) => text.includes(token));
 }
 
 function countContentWords(content: string) {
@@ -326,23 +361,64 @@ async function readPostSourceContent(sourceUrl: string) {
 }
 
 async function getAllPostsFromDatabase() {
-  const dbPosts = await withPrismaReadRetry(() =>
-    prisma.post.findMany({
-      where: isProduction() ? { draft: false } : undefined,
-      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-      select: {
-        slug: true,
-        title: true,
-        description: true,
-        date: true,
-        updated: true,
-        tags: true,
-        coverUrl: true,
-        draft: true,
-        readingTime: true,
-      },
-    }),
-  );
+  let dbPosts: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    date: Date;
+    updated: Date | null;
+    tags: string[];
+    coverUrl: string | null;
+    draft: boolean;
+    readingTime: string;
+    viewCount: number;
+  }>;
+
+  try {
+    dbPosts = await withPrismaReadRetry(() =>
+      prisma.post.findMany({
+        where: isProduction() ? { draft: false } : undefined,
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+        select: {
+          slug: true,
+          title: true,
+          description: true,
+          date: true,
+          updated: true,
+          tags: true,
+          coverUrl: true,
+          draft: true,
+          readingTime: true,
+          viewCount: true,
+        },
+      }),
+    );
+  } catch (error) {
+    if (!isMissingViewCountColumnError(error)) {
+      throw error;
+    }
+    const legacyPosts = await withPrismaReadRetry(() =>
+      prisma.post.findMany({
+        where: isProduction() ? { draft: false } : undefined,
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+        select: {
+          slug: true,
+          title: true,
+          description: true,
+          date: true,
+          updated: true,
+          tags: true,
+          coverUrl: true,
+          draft: true,
+          readingTime: true,
+        },
+      }),
+    );
+    dbPosts = legacyPosts.map((item) => ({
+      ...item,
+      viewCount: 0,
+    }));
+  }
 
   return dbPosts
     .map((post) => {
@@ -357,6 +433,7 @@ async function getAllPostsFromDatabase() {
         cover: post.coverUrl ?? undefined,
         draft: post.draft,
         readingTime: post.readingTime,
+        viewCount: post.viewCount,
         wordCount: estimateWordCountFromReadingTime(post.readingTime),
       } satisfies PostMeta;
     })
@@ -367,23 +444,67 @@ async function getPostBySlugFromDatabase(slug: string) {
   const targetSlug = normalizeSlug(slug);
   if (!targetSlug) return null;
 
-  const dbPost = await withPrismaReadRetry(() =>
-    prisma.post.findUnique({
-      where: { slug: targetSlug },
-      select: {
-        slug: true,
-        title: true,
-        description: true,
-        date: true,
-        updated: true,
-        tags: true,
-        coverUrl: true,
-        draft: true,
-        sourceUrl: true,
-        readingTime: true,
-      },
-    }),
-  );
+  let dbPost: {
+    slug: string;
+    title: string;
+    description: string;
+    date: Date;
+    updated: Date | null;
+    tags: string[];
+    coverUrl: string | null;
+    draft: boolean;
+    sourceUrl: string;
+    readingTime: string;
+    viewCount: number;
+  } | null;
+
+  try {
+    dbPost = await withPrismaReadRetry(() =>
+      prisma.post.findUnique({
+        where: { slug: targetSlug },
+        select: {
+          slug: true,
+          title: true,
+          description: true,
+          date: true,
+          updated: true,
+          tags: true,
+          coverUrl: true,
+          draft: true,
+          sourceUrl: true,
+          readingTime: true,
+          viewCount: true,
+        },
+      }),
+    );
+  } catch (error) {
+    if (!isMissingViewCountColumnError(error)) {
+      throw error;
+    }
+    const legacyPost = await withPrismaReadRetry(() =>
+      prisma.post.findUnique({
+        where: { slug: targetSlug },
+        select: {
+          slug: true,
+          title: true,
+          description: true,
+          date: true,
+          updated: true,
+          tags: true,
+          coverUrl: true,
+          draft: true,
+          sourceUrl: true,
+          readingTime: true,
+        },
+      }),
+    );
+    dbPost = legacyPost
+      ? {
+          ...legacyPost,
+          viewCount: 0,
+        }
+      : null;
+  }
   if (!dbPost) return null;
   if (!shouldIncludePost(dbPost)) return null;
 
@@ -401,6 +522,7 @@ async function getPostBySlugFromDatabase(slug: string) {
     cover: dbPost.coverUrl ?? undefined,
     draft: dbPost.draft,
     readingTime: dbPost.readingTime,
+    viewCount: dbPost.viewCount,
     content: parsed.content,
   } satisfies Post;
 }
@@ -527,6 +649,77 @@ export async function getPostsByTag(tag: string) {
   return posts.filter((post) =>
     (post.tags ?? []).some((item) => item.toLowerCase() === target),
   );
+}
+
+function getSearchScore(post: PostMeta, contentText: string, tokens: string[]) {
+  const titleText = post.title.toLowerCase();
+  const descriptionText = post.description.toLowerCase();
+  const tagsText = (post.tags ?? []).join(" ").toLowerCase();
+  let score = 0;
+
+  for (const token of tokens) {
+    if (titleText.includes(token)) score += 8;
+    if (tagsText.includes(token)) score += 5;
+    if (descriptionText.includes(token)) score += 3;
+    if (contentText.includes(token)) score += 1;
+
+    const titleMatches = titleText.match(new RegExp(escapeRegExp(token), "g"))?.length ?? 0;
+    const descriptionMatches =
+      descriptionText.match(new RegExp(escapeRegExp(token), "g"))?.length ?? 0;
+    score += Math.min(3, titleMatches + descriptionMatches);
+  }
+
+  return score;
+}
+
+export async function searchPosts(query: string) {
+  const normalized = query.trim();
+  if (!normalized) {
+    return getAllPosts();
+  }
+
+  const tokens = toSearchTokens(normalized);
+  if (tokens.length === 0) {
+    return getAllPosts();
+  }
+
+  const posts = await getAllPosts();
+  if (posts.length === 0) {
+    return [];
+  }
+
+  const matched = await Promise.all(
+    posts.map(async (post) => {
+      const metaText = `${post.title} ${post.description} ${(post.tags ?? []).join(" ")}`
+        .toLowerCase()
+        .trim();
+
+      let contentText = "";
+      const metaMatched = includesAllTokens(metaText, tokens);
+
+      if (!metaMatched) {
+        const detail = await getPostBySlug(post.slug);
+        if (!detail) return null;
+        contentText = stripMarkdownForSearch(detail.content);
+        if (!includesAllTokens(contentText, tokens)) {
+          return null;
+        }
+      }
+
+      return {
+        post,
+        score: getSearchScore(post, contentText, tokens),
+      };
+    }),
+  );
+
+  return matched
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
+    })
+    .map((item) => item.post);
 }
 
 export async function hasPostBySlug(slug: string) {
