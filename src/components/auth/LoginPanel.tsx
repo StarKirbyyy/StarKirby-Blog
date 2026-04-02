@@ -146,12 +146,6 @@ function LoginPanelInner() {
                 >
                   管理评论
                 </Link>
-                <Link
-                  href="/admin/newsletter"
-                  className="ml-2 inline-flex rounded-full border border-border/70 bg-surface-soft px-4 py-2 text-sm font-medium text-muted-fg transition-colors hover:text-foreground"
-                >
-                  管理订阅
-                </Link>
               </>
             ) : null}
           </div>

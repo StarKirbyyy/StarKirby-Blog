@@ -15,11 +15,36 @@ export const metadata: Metadata = {
 };
 
 function getContactLinks() {
+  const toGmailCompose = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("https://mail.google.com/")) return trimmed;
+
+    let email = "";
+    if (trimmed.startsWith("mailto:")) {
+      email = trimmed.replace(/^mailto:/i, "").trim();
+    } else if (trimmed.includes("@")) {
+      email = trimmed;
+    }
+
+    if (email) {
+      return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
+    }
+
+    return trimmed;
+  };
+
   const links = [];
-  const { github, twitter, email } = siteConfig.author.social;
+  const { github, twitter, bilibili, xiaohongshu, neteaseMusic, steam, gmail, email } =
+    siteConfig.author.social;
   if (github) links.push({ label: "GitHub", href: github });
   if (twitter) links.push({ label: "Twitter/X", href: twitter });
-  if (email) links.push({ label: "Email", href: email });
+  if (bilibili) links.push({ label: "Bilibili", href: bilibili });
+  if (xiaohongshu) links.push({ label: "小红书", href: xiaohongshu });
+  if (neteaseMusic) links.push({ label: "网易云音乐", href: neteaseMusic });
+  if (steam) links.push({ label: "Steam", href: steam });
+  const gmailHref = toGmailCompose(gmail || email || "");
+  if (gmailHref) links.push({ label: "Gmail", href: gmailHref });
   return links;
 }
 

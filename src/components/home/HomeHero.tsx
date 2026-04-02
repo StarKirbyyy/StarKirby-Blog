@@ -16,10 +16,12 @@ type HomeHeroProps = {
 type SocialItem = {
   label: string;
   href: string;
-  icon: string;
+  fallback: string;
+  iconUrl: string;
 };
 
 const HERO_BG_STORAGE_KEY = "home-hero-bg-index";
+const HERO_BG_FADE_MS = 760;
 const PETAL_COUNT = 26;
 const PETAL_VARIANT_POOL = [1, 2, 3, 10, 11, 12] as const;
 
@@ -115,12 +117,152 @@ function createSakuraPetals(): SakuraPetal[] {
 }
 
 function getSocialItems() {
+  const toGmailCompose = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("https://mail.google.com/")) return trimmed;
+
+    let email = "";
+    if (trimmed.startsWith("mailto:")) {
+      email = trimmed.replace(/^mailto:/i, "").trim();
+    } else if (trimmed.includes("@")) {
+      email = trimmed;
+    }
+
+    if (email) {
+      return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
+    }
+
+    return trimmed;
+  };
+
+  const buildIconUrl = (href: string) => {
+    const normalizedHref = href.trim();
+    if (!normalizedHref) return "";
+
+    try {
+      if (normalizedHref.startsWith("mailto:")) {
+        return "https://cdn.simpleicons.org/gmail";
+      }
+
+      const url = new URL(normalizedHref);
+      const host = url.hostname.toLowerCase();
+      if (host.includes("github.com")) {
+        return "https://cdn.simpleicons.org/github";
+      }
+      if (host.includes("x.com") || host.includes("twitter.com")) {
+        return "https://cdn.simpleicons.org/x";
+      }
+      if (host.includes("bilibili.com")) {
+        return "https://cdn.simpleicons.org/bilibili";
+      }
+      if (host.includes("xiaohongshu.com") || host.includes("xhslink.com")) {
+        return "https://cdn.simpleicons.org/xiaohongshu";
+      }
+      if (host.includes("music.163.com")) {
+        return "https://cdn.simpleicons.org/neteasecloudmusic";
+      }
+      if (
+        host.includes("steampowered.com") ||
+        host.includes("steamcommunity.com")
+      ) {
+        return "https://cdn.simpleicons.org/steam";
+      }
+      if (host.includes("gmail.com") || host.includes("mail.google.com")) {
+        return "https://cdn.simpleicons.org/gmail";
+      }
+
+      return `https://logo.clearbit.com/${host}`;
+    } catch {
+      return "";
+    }
+  };
+
   const items: SocialItem[] = [];
-  const { github, twitter, email } = siteConfig.author.social;
-  if (github) items.push({ label: "GitHub", href: github, icon: "G" });
-  if (twitter) items.push({ label: "Twitter/X", href: twitter, icon: "X" });
-  if (email) items.push({ label: "Email", href: email, icon: "@" });
+  const { github, twitter, bilibili, xiaohongshu, neteaseMusic, steam, gmail, email } =
+    siteConfig.author.social;
+  if (github) {
+    items.push({
+      label: "GitHub",
+      href: github,
+      fallback: "G",
+      iconUrl: buildIconUrl(github),
+    });
+  }
+  if (twitter) {
+    items.push({
+      label: "Twitter/X",
+      href: twitter,
+      fallback: "X",
+      iconUrl: buildIconUrl(twitter),
+    });
+  }
+  if (bilibili) {
+    items.push({
+      label: "Bilibili",
+      href: bilibili,
+      fallback: "B",
+      iconUrl: buildIconUrl(bilibili),
+    });
+  }
+  if (xiaohongshu) {
+    items.push({
+      label: "小红书",
+      href: xiaohongshu,
+      fallback: "红",
+      iconUrl: buildIconUrl(xiaohongshu),
+    });
+  }
+  if (neteaseMusic) {
+    items.push({
+      label: "网易云音乐",
+      href: neteaseMusic,
+      fallback: "云",
+      iconUrl: buildIconUrl(neteaseMusic),
+    });
+  }
+  if (steam) {
+    items.push({
+      label: "Steam",
+      href: steam,
+      fallback: "S",
+      iconUrl: buildIconUrl(steam),
+    });
+  }
+  const gmailHref = toGmailCompose(gmail || email || "");
+  if (gmailHref) {
+    items.push({
+      label: "Gmail",
+      href: gmailHref,
+      fallback: "@",
+      iconUrl: buildIconUrl(gmailHref),
+    });
+  }
   return items;
+}
+
+function SocialLinkIcon({ item }: { item: SocialItem }) {
+  const [failed, setFailed] = useState(false);
+  const hasIcon = !failed && item.iconUrl.length > 0;
+  return (
+    <>
+      {hasIcon ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.iconUrl}
+          alt={item.label}
+          className="top-social-icon-image"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="top-social-icon-fallback" aria-hidden="true">
+          {item.fallback}
+        </span>
+      )}
+    </>
+  );
 }
 
 export function HomeHero({ title, subtitle }: HomeHeroProps) {
@@ -137,8 +279,11 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   const [resolvedAvatarSrc, setResolvedAvatarSrc] = useState<string>("");
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const [activeBackgroundLoaded, setActiveBackgroundLoaded] = useState(false);
   const [quoteTypedLength, setQuoteTypedLength] = useState(-1);
+  const [heroBgLayerA, setHeroBgLayerA] = useState("");
+  const [heroBgLayerB, setHeroBgLayerB] = useState("");
+  const [activeHeroBgLayer, setActiveHeroBgLayer] = useState<"a" | "b">("a");
+  const [heroBgTransitioning, setHeroBgTransitioning] = useState(false);
 
   const typingWords = useMemo(
     () => (siteConfig.author.skills.length > 0 ? siteConfig.author.skills : ["Next.js"]),
@@ -193,12 +338,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
     [quoteChars, quoteText, quoteTypedLength],
   );
   const avatarReady = !avatarSrc || avatarLoaded || avatarFailed;
-  const heroTextReady =
-    mounted &&
-    heroSettingsReady &&
-    homeIntroReady &&
-    avatarReady &&
-    (!activeBackgroundImage || activeBackgroundLoaded);
+  const heroTextReady = mounted && heroSettingsReady && homeIntroReady && avatarReady;
   const focusInfoClassName = [
     "focusinfo",
     heroTextReady ? "home-profile-enter-ready" : "",
@@ -219,28 +359,57 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
   }, [avatarSrc]);
 
   useEffect(() => {
-    if (!activeBackgroundImage) {
-      setActiveBackgroundLoaded(true);
+    const nextImage = activeBackgroundImage.trim();
+    const activeImage = activeHeroBgLayer === "a" ? heroBgLayerA : heroBgLayerB;
+    const inactiveLayer = activeHeroBgLayer === "a" ? "b" : "a";
+
+    if (!nextImage) {
+      setHeroBgLayerA("");
+      setHeroBgLayerB("");
+      setHeroBgTransitioning(false);
+      return;
+    }
+
+    if (!activeImage) {
+      if (activeHeroBgLayer === "a") {
+        setHeroBgLayerA(nextImage);
+      } else {
+        setHeroBgLayerB(nextImage);
+      }
+      setHeroBgTransitioning(false);
+      return;
+    }
+
+    if (activeImage === nextImage) {
       return;
     }
 
     let cancelled = false;
-    setActiveBackgroundLoaded(false);
-
-    void preloadImage(activeBackgroundImage)
+    void preloadImage(nextImage)
+      .catch(() => undefined)
       .then(() => {
         if (cancelled) return;
-        setActiveBackgroundLoaded(true);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setActiveBackgroundLoaded(true);
+        if (inactiveLayer === "a") {
+          setHeroBgLayerA(nextImage);
+        } else {
+          setHeroBgLayerB(nextImage);
+        }
+        setHeroBgTransitioning(true);
+        setActiveHeroBgLayer(inactiveLayer);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [activeBackgroundImage]);
+  }, [activeBackgroundImage, activeHeroBgLayer, heroBgLayerA, heroBgLayerB]);
+
+  useEffect(() => {
+    if (!heroBgTransitioning) return;
+    const timer = window.setTimeout(() => {
+      setHeroBgTransitioning(false);
+    }, HERO_BG_FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [heroBgTransitioning]);
 
   useEffect(() => {
     if (heroBackgrounds.length === 0) {
@@ -424,12 +593,21 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
       <figure
         id="centerbg"
         className="centerbg"
-        style={
-          activeBackground
-            ? { backgroundImage: `url("${activeBackground.image}")` }
-            : { backgroundImage: "none" }
-        }
       >
+        <span
+          className={`hero-bg-layer ${activeHeroBgLayer === "a" ? "is-active" : ""} ${
+            heroBgTransitioning ? "is-transitioning" : ""
+          }`}
+          style={heroBgLayerA ? { backgroundImage: `url("${heroBgLayerA}")` } : undefined}
+          aria-hidden="true"
+        />
+        <span
+          className={`hero-bg-layer ${activeHeroBgLayer === "b" ? "is-active" : ""} ${
+            heroBgTransitioning ? "is-transitioning" : ""
+          }`}
+          style={heroBgLayerB ? { backgroundImage: `url("${heroBgLayerB}")` } : undefined}
+          aria-hidden="true"
+        />
         {activeBackground ? (
           <div
             className="hero-overlay"
@@ -507,7 +685,7 @@ export function HomeHero({ title, subtitle }: HomeHeroProps) {
                     rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                     title={item.label}
                   >
-                    <span>{item.icon}</span>
+                    <SocialLinkIcon item={item} />
                   </a>
                 </li>
               ))}
