@@ -14,9 +14,19 @@ export const size = {
 };
 export const contentType = "image/png";
 
+function decodeSlugParam(slug: string) {
+  const raw = slug.trim();
+  if (!raw) return "";
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export default async function PostOpenGraphImage({ params }: PostOgImageProps) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getPostBySlug(decodeSlugParam(slug));
 
   const title = post?.title ?? siteConfig.title;
   const description = post?.description ?? siteConfig.description;

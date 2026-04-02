@@ -28,7 +28,11 @@ export function HomePostThumbCard({ post }: HomePostThumbCardProps) {
 
   return (
     <article className="post post-list-thumb">
-      <Link href={`/posts/${post.slug}`} aria-label={`阅读：${post.title}`} className="post-card-link">
+      <Link
+        href={`/posts/${encodeURIComponent(post.slug)}`}
+        aria-label={`阅读：${post.title}`}
+        className="post-card-link"
+      >
         <div className="post-card-cover">
           <div className="post-thumb">
             {post.cover ? (

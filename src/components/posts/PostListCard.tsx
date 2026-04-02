@@ -16,7 +16,7 @@ function formatDate(date: string) {
 }
 
 export function PostListCard({ post, href }: PostListCardProps) {
-  const target = href ?? `/posts/${post.slug}`;
+  const target = href ?? `/posts/${encodeURIComponent(post.slug)}`;
   const hasCover = Boolean(post.cover);
   const tags = post.tags ?? [];
   const viewCountText =

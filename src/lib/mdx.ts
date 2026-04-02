@@ -290,7 +290,13 @@ export async function getMDXContent(source: string, options: GetMDXContentOption
           },
         },
       ],
-      rehypeKatex,
+      [
+        rehypeKatex,
+        {
+          strict: false,
+          throwOnError: false,
+        },
+      ],
       [rehypePrettyCode, prettyCodeOptions],
       rehypeFootnoteLabelFromId,
     ],

@@ -31,6 +31,20 @@ export const dynamicParams = true;
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function decodeSlugParam(slug: string) {
+  const raw = slug.trim();
+  if (!raw) return "";
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+function toPostPath(slug: string) {
+  return `/posts/${encodeURIComponent(slug)}`;
+}
+
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
@@ -41,7 +55,8 @@ function formatDate(date: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const decodedSlug = decodeSlugParam(slug);
+  const post = await getPostBySlug(decodedSlug);
 
   if (!post) {
     return {
@@ -62,7 +77,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: post.title,
     description: post.description,
     alternates: {
-      canonical: `/posts/${post.slug}`,
+      canonical: toPostPath(post.slug),
     },
     openGraph: {
       type: "article",
@@ -86,7 +101,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PostDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const decodedSlug = decodeSlugParam(slug);
+  const post = await getPostBySlug(decodedSlug);
 
   if (!post) {
     notFound();
@@ -233,7 +249,7 @@ export default async function PostDetailPage({ params }: PageProps) {
             <nav aria-label="文章导航" className="sakurairo-post-navigation grid w-full gap-3 sm:grid-cols-2">
               <div className="glass-panel card-hover min-h-24 rounded-[10px] p-4">
                 {olderPost ? (
-                  <Link href={`/posts/${olderPost.slug}`} className="block">
+                  <Link href={toPostPath(olderPost.slug)} className="block">
                     <p className="text-xs uppercase tracking-[0.12em] text-muted-fg">上一篇</p>
                     <p className="mt-2 text-base font-medium text-foreground transition-colors hover:text-accent">
                       {olderPost.title}
@@ -245,7 +261,7 @@ export default async function PostDetailPage({ params }: PageProps) {
               </div>
               <div className="glass-panel card-hover min-h-24 rounded-[10px] p-4 text-right">
                 {newerPost ? (
-                  <Link href={`/posts/${newerPost.slug}`} className="block">
+                  <Link href={toPostPath(newerPost.slug)} className="block">
                     <p className="text-xs uppercase tracking-[0.12em] text-muted-fg">下一篇</p>
                     <p className="mt-2 text-base font-medium text-foreground transition-colors hover:text-accent">
                       {newerPost.title}

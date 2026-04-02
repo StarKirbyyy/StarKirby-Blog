@@ -20,6 +20,19 @@ function toDimension(value: unknown, fallback: number) {
   return fallback;
 }
 
+function normalizeMdxImageSrc(rawSrc: string) {
+  const src = rawSrc.trim();
+  if (!src) return "";
+  if (src.startsWith("data:")) return src;
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/")) return src;
+  if (src.startsWith("./")) return `/${src.slice(2)}`;
+  if (src.startsWith("../")) {
+    return `/${src.replace(/^(\.\.\/)+/, "")}`;
+  }
+  return `/${src.replace(/^\.?\/*/, "")}`;
+}
+
 function MdxAnchor({ href, children, ...props }: AnchorProps) {
   if (!href) {
     return (
@@ -47,15 +60,19 @@ function MdxAnchor({ href, children, ...props }: AnchorProps) {
 
 function MdxImage({ src, alt = "", width, height }: ImageProps) {
   if (typeof src !== "string" || !src) return null;
-  const isRemote = /^https?:\/\//.test(src);
+  const normalizedSrc = normalizeMdxImageSrc(src);
+  if (!normalizedSrc) return null;
+  const isRemote = /^https?:\/\//.test(normalizedSrc);
+  const useNativeImage = normalizedSrc.startsWith("data:");
 
   return (
     <MdxLightboxImage
-      src={src}
+      src={normalizedSrc}
       alt={alt}
       width={toDimension(width, FALLBACK_IMAGE_WIDTH)}
       height={toDimension(height, FALLBACK_IMAGE_HEIGHT)}
       isRemote={isRemote}
+      useNativeImage={useNativeImage}
     />
   );
 }
