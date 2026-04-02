@@ -1141,6 +1141,26 @@ a {
   color: #4f5867 !important;
 }
 
+.dark .post-reading-text {
+  color: #ffffff !important;
+}
+
+.dark .post-reading-markdown.prose {
+  --tw-prose-body: #ffffff;
+  --tw-prose-headings: #ffffff;
+  --tw-prose-bold: #ffffff;
+  --tw-prose-counters: #ffffff;
+  --tw-prose-bullets: #ffffff;
+  --tw-prose-quotes: #ffffff;
+  --tw-prose-captions: #ffffff;
+  --tw-prose-code: #ffffff;
+  --tw-prose-pre-code: #ffffff;
+}
+
+.dark .post-reading-markdown.prose :where(p, li, blockquote, dd, figcaption) {
+  color: #ffffff !important;
+}
+
 .codeblock-pre {
   padding: 0;
   tab-size: 2;
