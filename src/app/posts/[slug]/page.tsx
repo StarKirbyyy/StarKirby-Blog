@@ -24,7 +24,12 @@ type ParagraphProps = ComponentPropsWithoutRef<"p">;
 type ListItemProps = ComponentPropsWithoutRef<"li">;
 
 export const dynamicParams = true;
-export const revalidate = 3600;
+// Some slugs can contain non-ASCII characters (e.g. Chinese). In production,
+// Next.js may include route cache tags in `x-next-cache-tags`, and non-ASCII
+// values can trigger "Invalid character in header content" errors.
+// Force dynamic rendering for this route to avoid invalid cache-tag headers.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -32,16 +37,6 @@ function formatDate(date: string) {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date(date));
-}
-
-export async function generateStaticParams() {
-  const isDatabaseContentSource =
-    (process.env.CONTENT_SOURCE ?? "").trim().toLowerCase() === "database";
-  if (isDatabaseContentSource) {
-    return [];
-  }
-  const posts = await getAllPosts();
-  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
