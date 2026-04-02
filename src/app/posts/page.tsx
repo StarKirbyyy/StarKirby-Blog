@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PostListCard } from "@/components/posts/PostListCard";
 import { siteConfig } from "@/config/site";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, searchPosts } from "@/lib/posts";
+import { NewsletterSignupCard } from "@/components/newsletter/NewsletterSignupCard";
 
 interface PostsPageProps {
   searchParams: Promise<{
     page?: string;
+    q?: string;
   }>;
 }
 
@@ -27,12 +29,22 @@ function parsePageNumber(input?: string) {
   return page > 0 ? page : 1;
 }
 
-function getPageHref(page: number) {
-  return page === 1 ? "/posts" : `/posts?page=${page}`;
+function getPageHref(page: number, query: string) {
+  const params = new URLSearchParams();
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+  if (query) {
+    params.set("q", query);
+  }
+  const suffix = params.toString();
+  return suffix ? `/posts?${suffix}` : "/posts";
 }
 
 export default async function PostsPage({ searchParams }: PostsPageProps) {
-  const [{ page: rawPage }, allPosts] = await Promise.all([searchParams, getAllPosts()]);
+  const { page: rawPage, q: rawQuery } = await searchParams;
+  const query = (rawQuery ?? "").trim();
+  const allPosts = query ? await searchPosts(query) : await getAllPosts();
 
   const postsPerPage = siteConfig.postsPerPage;
   const totalPages = Math.max(1, Math.ceil(allPosts.length / postsPerPage));
@@ -62,8 +74,32 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           </Link>
         </div>
         <p className="mt-4 text-sm leading-7 text-muted-fg">
-          共 {allPosts.length} 篇文章，当前第 {currentPage}/{totalPages} 页。
+          {query
+            ? `关键词「${query}」共命中 ${allPosts.length} 篇文章，当前第 ${currentPage}/${totalPages} 页。`
+            : `共 ${allPosts.length} 篇文章，当前第 ${currentPage}/${totalPages} 页。`}
         </p>
+        <form className="mt-5 flex flex-wrap items-center gap-2" method="get" action="/posts">
+          <input
+            name="q"
+            defaultValue={query}
+            placeholder="搜索标题、标签、摘要或正文内容"
+            className="w-full max-w-xl rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+          />
+          <button
+            type="submit"
+            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+          >
+            搜索
+          </button>
+          {query ? (
+            <Link
+              href="/posts"
+              className="inline-flex rounded-full border border-border/70 bg-surface-soft px-4 py-2 text-sm text-muted-fg transition-colors hover:text-foreground"
+            >
+              清除关键词
+            </Link>
+          ) : null}
+        </form>
       </header>
 
       {paginatedPosts.length === 0 ? (
@@ -82,7 +118,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
 
       <nav aria-label="文章分页" className="mt-8 flex flex-wrap items-center justify-center gap-2">
         <Link
-          href={getPageHref(Math.max(1, currentPage - 1))}
+          href={getPageHref(Math.max(1, currentPage - 1), query)}
           aria-disabled={currentPage <= 1}
           className={`rounded-full border px-4 py-2 text-sm transition-colors ${
             currentPage <= 1
@@ -98,7 +134,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           return (
             <Link
               key={page}
-              href={getPageHref(page)}
+              href={getPageHref(page, query)}
               aria-current={isCurrent ? "page" : undefined}
               className={`rounded-full border px-3.5 py-2 text-sm transition-colors ${
                 isCurrent
@@ -112,7 +148,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
         })}
 
         <Link
-          href={getPageHref(Math.min(totalPages, currentPage + 1))}
+          href={getPageHref(Math.min(totalPages, currentPage + 1), query)}
           aria-disabled={currentPage >= totalPages}
           className={`rounded-full border px-4 py-2 text-sm transition-colors ${
             currentPage >= totalPages
@@ -123,6 +159,8 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           下一页
         </Link>
       </nav>
+
+      <NewsletterSignupCard className="mt-8" />
     </div>
   );
 }

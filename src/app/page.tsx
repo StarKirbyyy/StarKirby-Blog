@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomePostThumbCard } from "@/components/home/HomePostThumbCard";
+import { NewsletterSignupCard } from "@/components/newsletter/NewsletterSignupCard";
 import { siteConfig } from "@/config/site";
 import { getAllPosts } from "@/lib/posts";
 
@@ -45,6 +46,8 @@ export default async function HomePage() {
                   ))}
                 </>
               )}
+
+              <NewsletterSignupCard className="mt-8" source="home" />
             </main>
             <div id="pagination" />
           </div>

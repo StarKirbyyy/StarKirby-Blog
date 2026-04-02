@@ -23,6 +23,23 @@ enum CommentStatus {
   hidden
 }
 
+enum NewsletterStatus {
+  active
+  unsubscribed
+}
+
+enum NewsletterCampaignStatus {
+  queued
+  partial
+  sent
+  failed
+}
+
+enum NewsletterDeliveryStatus {
+  sent
+  failed
+}
+
 model User {
   id            String      @id @default(cuid())
   name          String?
@@ -38,6 +55,7 @@ model User {
   posts         Post[]
   editedPostRevisions PostRevision[] @relation("PostRevisionEditor")
   comments      Comment[]
+  newsletterCampaigns NewsletterCampaign[] @relation("NewsletterCampaignCreator")
   auditLogsAsActor AuditLog[] @relation("AuditActor")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -119,6 +137,7 @@ model Post {
   coverUrl    String?
   sourceUrl   String
   readingTime String
+  viewCount   Int      @default(0)
   draft       Boolean  @default(false)
   authorId    String?
   author      User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
@@ -129,6 +148,7 @@ model Post {
 
   @@index([date, createdAt])
   @@index([draft, date])
+  @@index([viewCount])
   @@index([authorId, createdAt])
 }
 
@@ -159,4 +179,66 @@ model GlobalSetting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  status         NewsletterStatus @default(active)
+  source         String?
+  userAgent      String?
+  ipHash         String?
+  subscribedAt   DateTime         @default(now())
+  unsubscribedAt DateTime?
+  deliveries     NewsletterDelivery[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([status, subscribedAt])
+  @@index([createdAt])
+}
+
+model NewsletterCampaign {
+  id              String                   @id @default(cuid())
+  subject         String
+  bodyText        String                   @db.Text
+  bodyHtml        String                   @db.Text
+  provider        String
+  segmentTags     String[]                 @default([])
+  status          NewsletterCampaignStatus @default(queued)
+  totalRecipients Int                      @default(0)
+  sentCount       Int                      @default(0)
+  failedCount     Int                      @default(0)
+  senderEmail     String
+  replyToEmail    String?
+  errorSummary    String?                  @db.Text
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdByUserId String?
+  createdByUser   User?                    @relation("NewsletterCampaignCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  deliveries      NewsletterDelivery[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdByUserId, createdAt])
+}
+
+model NewsletterDelivery {
+  id               String                   @id @default(cuid())
+  campaignId       String
+  campaign         NewsletterCampaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriberId     String?
+  subscriber       NewsletterSubscriber?    @relation(fields: [subscriberId], references: [id], onDelete: SetNull)
+  email            String
+  status           NewsletterDeliveryStatus
+  providerMessageId String?
+  errorMessage     String?                  @db.Text
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status, createdAt])
+  @@index([subscriberId, createdAt])
 }
