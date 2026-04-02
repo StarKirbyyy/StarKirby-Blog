@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PostListCard } from "@/components/posts/PostListCard";
 import { siteConfig } from "@/config/site";
 import { getAllPosts, searchPosts } from "@/lib/posts";
-import { NewsletterSignupCard } from "@/components/newsletter/NewsletterSignupCard";
 
 interface PostsPageProps {
   searchParams: Promise<{
@@ -159,8 +158,6 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           下一页
         </Link>
       </nav>
-
-      <NewsletterSignupCard className="mt-8" />
     </div>
   );
 }

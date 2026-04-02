@@ -22,8 +22,13 @@ export const siteConfig = {
     ],
     social: {
       github: "https://github.com/StarKirbyyy",
-      twitter: "", // 填入 Twitter/X 链接
-      email: "mailto:hello@starkirby.dev",
+      twitter: "",
+      bilibili: "https://space.bilibili.com/362804733?spm_id_from=333.1007.0.0",
+      xiaohongshu: "https://www.xiaohongshu.com/user/profile/678f4e07000000000403e936",
+      neteaseMusic: "https://music.163.com/#/user/home?id=1668965599",
+      steam: "https://steamcommunity.com/profiles/76561198911186906/",
+      gmail: "mailto:exusiaisakuraa@gmail.com",
+      email: "", // 兼容旧字段（建议改用 gmail）
     },
   },
 

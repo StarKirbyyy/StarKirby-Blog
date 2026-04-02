@@ -7,7 +7,6 @@ const adminNavItems = [
   { href: "/admin/publish", label: "发布文章" },
   { href: "/admin/posts", label: "文章管理" },
   { href: "/admin/comments", label: "评论管理" },
-  { href: "/admin/newsletter", label: "Newsletter" },
   { href: "/admin/theme", label: "主题设置" },
 ];
 

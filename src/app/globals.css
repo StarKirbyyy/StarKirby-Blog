@@ -289,9 +289,27 @@ a {
   position: relative;
   min-height: 100vh;
   margin: 0;
+  overflow: hidden;
+}
+
+.hero-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  transition: opacity 0.76s ease;
+  will-change: opacity;
+}
+
+.hero-bg-layer.is-active {
+  opacity: 1;
+}
+
+.hero-bg-layer.is-transitioning {
+  transition-duration: 0.76s;
 }
 
 .centerbg::after {
@@ -517,6 +535,25 @@ a {
   font-weight: 600;
   backdrop-filter: saturate(170%) blur(10px);
   -webkit-backdrop-filter: saturate(170%) blur(10px);
+}
+
+.top-social-icon-image {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.top-social-icon-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .hero-tools {
