@@ -327,7 +327,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
 
   if (loading) {
     return (
-      <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <div className="content-shell admin-shell pb-10 pt-5 sm:pt-7">
         <p className="text-sm text-muted-fg">正在加载文章...</p>
       </div>
     );
@@ -335,7 +335,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
 
   if (!post) {
     return (
-      <div className="content-shell pb-10 pt-5 sm:pt-7">
+      <div className="content-shell admin-shell pb-10 pt-5 sm:pt-7">
         <p className="text-sm text-red-700 dark:text-red-300">
           {error || "文章不存在或加载失败。"}
         </p>
@@ -344,9 +344,10 @@ export function PostEditorPanel({ postId }: { postId: string }) {
   }
 
   return (
-    <div className="content-shell pb-10 pt-5 sm:pt-7">
-      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
+    <div className="content-shell admin-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel admin-hero-panel rounded-[10px] p-6 sm:p-7">
+        <p className="admin-kicker">Admin Workspace</p>
+        <h1 className="sakurairo-page-title mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           编辑文章
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -377,7 +378,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           event.preventDefault();
           void submitUpdate(draft, draft ? "save_draft" : "publish");
         }}
-        className="glass-panel mt-6 space-y-5 rounded-[10px] p-5 sm:p-6"
+        className="glass-panel admin-list-card mt-6 space-y-5 rounded-[10px] p-5 sm:p-6"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-2">
@@ -386,7 +387,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               required
-              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
 
@@ -396,7 +397,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               value={slug}
               onChange={(event) => setSlug(event.target.value)}
               required
-              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
         </div>
@@ -408,7 +409,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
             required
-            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           />
         </label>
 
@@ -420,7 +421,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               value={date}
               onChange={(event) => setDate(event.target.value)}
               required
-              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
 
@@ -430,11 +431,11 @@ export function PostEditorPanel({ postId }: { postId: string }) {
               type="date"
               value={updated}
               onChange={(event) => setUpdated(event.target.value)}
-              className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+              className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             />
           </label>
 
-          <div className="flex items-center self-end rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground">
+          <div className="flex items-center self-end rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground">
             当前状态：{draft ? "草稿" : "已发布"}
           </div>
         </div>
@@ -444,7 +445,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
           <input
             value={tags}
             onChange={(event) => setTags(event.target.value)}
-            className="w-full rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="w-full rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             placeholder="Next.js,TypeScript,AI"
           />
         </label>
@@ -512,7 +513,7 @@ export function PostEditorPanel({ postId }: { postId: string }) {
         </div>
       </form>
 
-      <section className="glass-panel mt-6 rounded-[10px] p-5 sm:p-6">
+      <section className="glass-panel admin-list-card mt-6 rounded-[10px] p-5 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-foreground">版本历史（最近 20 条）</h2>
           <button

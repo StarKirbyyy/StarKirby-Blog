@@ -161,9 +161,10 @@ export function PostManagementPanel() {
   };
 
   return (
-    <div className="content-shell pb-10 pt-5 sm:pt-7">
-      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
+    <div className="content-shell admin-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel admin-hero-panel rounded-[10px] p-6 sm:p-7">
+        <p className="admin-kicker">Admin Workspace</p>
+        <h1 className="sakurairo-page-title mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           文章管理
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -171,7 +172,7 @@ export function PostManagementPanel() {
         </p>
       </header>
 
-      <section className="glass-panel mt-6 rounded-[10px] p-4 sm:p-5">
+      <section className="glass-panel admin-list-card mt-6 rounded-[10px] p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-[220px_1fr_auto]">
           <select
             value={statusFilter}
@@ -179,7 +180,7 @@ export function PostManagementPanel() {
               setStatusFilter(event.target.value as "all" | "published" | "draft");
               setPage(1);
             }}
-            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           >
             <option value="all">全部状态</option>
             <option value="published">仅已发布</option>
@@ -189,14 +190,14 @@ export function PostManagementPanel() {
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             placeholder="搜索标题/slug/描述"
           />
 
           <button
             type="button"
             onClick={onApplySearch}
-            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg shadow-[var(--shadow-soft)] transition-colors hover:bg-accent-hover"
           >
             应用过滤
           </button>
@@ -221,7 +222,7 @@ export function PostManagementPanel() {
           <p className="text-sm text-muted-fg">当前筛选条件下暂无文章。</p>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="glass-panel rounded-2xl p-4">
+            <article key={post.id} className="glass-panel admin-list-card card-hover rounded-[10px] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-base font-semibold text-foreground">

@@ -692,6 +692,163 @@ a {
   opacity: 1 !important;
 }
 
+.admin-shell {
+  position: relative;
+}
+
+.admin-shell .admin-hero-panel {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in oklab, var(--accent) 26%, var(--border));
+  background:
+    linear-gradient(
+      128deg,
+      color-mix(in oklab, var(--accent) 12%, transparent),
+      color-mix(in oklab, var(--surface) 90%, transparent) 34%,
+      color-mix(in oklab, var(--surface) 94%, transparent)
+    );
+}
+
+.dark .admin-shell .admin-hero-panel {
+  background:
+    linear-gradient(
+      128deg,
+      color-mix(in oklab, var(--accent) 20%, transparent),
+      color-mix(in oklab, var(--surface) 74%, transparent) 34%,
+      color-mix(in oklab, var(--surface) 80%, transparent)
+    );
+}
+
+.admin-shell .admin-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--border));
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  padding: 0.32rem 0.72rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+
+.admin-shell .admin-nav-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.admin-shell .admin-nav-shell {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem 0.85rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.admin-shell .admin-nav-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 24%, var(--border));
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  color: var(--muted-fg);
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-shell .admin-nav-home:hover {
+  color: var(--foreground);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
+.admin-shell .admin-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-shell .admin-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.34rem 0.95rem;
+  font-size: 0.86rem;
+  color: var(--muted-fg);
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-shell .admin-nav-link:hover {
+  color: var(--foreground);
+  border-color: color-mix(in oklab, var(--accent) 32%, var(--border));
+  background: color-mix(in oklab, var(--accent) 9%, transparent);
+}
+
+.admin-shell .admin-nav-link.is-active {
+  color: var(--foreground);
+  border-color: color-mix(in oklab, var(--accent) 46%, var(--border));
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
+.admin-shell .admin-list-card {
+  border: 1px solid color-mix(in oklab, var(--accent) 16%, var(--border));
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-shell input:not([type="checkbox"]):not([type="range"]):not([type="color"]):not([type="file"]),
+.admin-shell textarea,
+.admin-shell select {
+  border-radius: 10px;
+  border-color: color-mix(in oklab, var(--accent) 16%, var(--border));
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+}
+
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell select:focus {
+  border-color: color-mix(in oklab, var(--accent) 42%, var(--border));
+}
+
+.admin-shell .admin-editor-toolbar button {
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 20%, var(--border));
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  padding: 0.3rem 0.62rem;
+  color: var(--muted-fg);
+}
+
+.admin-shell .admin-editor-toolbar button:hover {
+  color: var(--foreground);
+  border-color: color-mix(in oklab, var(--accent) 36%, var(--border));
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.admin-shell .admin-editor-shell {
+  border-radius: var(--style_menu_radius);
+  border: 1px solid color-mix(in oklab, var(--accent) 15%, var(--border));
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+}
+
+@media (max-width: 640px) {
+  .admin-shell .admin-nav-shell {
+    justify-content: center;
+  }
+
+  .admin-shell .admin-nav-links {
+    justify-content: center;
+  }
+}
+
 .post-list-thumb {
   float: left;
   width: 100%;
