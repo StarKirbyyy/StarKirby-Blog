@@ -12,7 +12,11 @@ interface TagPageProps {
 }
 
 export const dynamicParams = true;
-export const revalidate = 3600;
+// Some tags contain non-ASCII characters (e.g. Chinese). In production, Next.js
+// may include route-derived cache tags in `x-next-cache-tags`, which must be
+// ASCII-only header content. Force dynamic render here to avoid header errors.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function decodeTag(tag: string) {
   try {
@@ -20,16 +24,6 @@ function decodeTag(tag: string) {
   } catch {
     return tag;
   }
-}
-
-export async function generateStaticParams() {
-  const isDatabaseContentSource =
-    (process.env.CONTENT_SOURCE ?? "").trim().toLowerCase() === "database";
-  if (isDatabaseContentSource) {
-    return [];
-  }
-  const tags = await getAllTags();
-  return tags.map((item) => ({ tag: item.tag }));
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {

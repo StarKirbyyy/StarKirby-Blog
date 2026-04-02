@@ -184,9 +184,10 @@ export function CommentModerationPanel() {
   };
 
   return (
-    <div className="content-shell pb-10 pt-5 sm:pt-7">
-      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
+    <div className="content-shell admin-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel admin-hero-panel rounded-[10px] p-6 sm:p-7">
+        <p className="admin-kicker">Admin Workspace</p>
+        <h1 className="sakurairo-page-title mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           评论管理
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -194,7 +195,7 @@ export function CommentModerationPanel() {
         </p>
       </header>
 
-      <section className="glass-panel mt-6 rounded-[10px] p-4 sm:p-5">
+      <section className="glass-panel admin-list-card mt-6 rounded-[10px] p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-[220px_1fr_auto]">
           <select
             value={statusFilter}
@@ -202,7 +203,7 @@ export function CommentModerationPanel() {
               setStatusFilter(event.target.value as "all" | "visible" | "hidden");
               setPage(1);
             }}
-            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
           >
             <option value="all">全部状态</option>
             <option value="visible">仅显示中</option>
@@ -212,14 +213,14 @@ export function CommentModerationPanel() {
           <input
             value={postSlugInput}
             onChange={(event) => setPostSlugInput(event.target.value)}
-            className="rounded-2xl border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
+            className="rounded-[10px] border border-border/70 bg-background px-3 py-2 text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2"
             placeholder="按 postSlug 过滤，例如 hello-starkirby-blog"
           />
 
           <button
             type="button"
             onClick={onApplyPostSlugFilter}
-            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-colors hover:bg-accent-hover"
+            className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg shadow-[var(--shadow-soft)] transition-colors hover:bg-accent-hover"
           >
             应用过滤
           </button>
@@ -249,7 +250,7 @@ export function CommentModerationPanel() {
             return (
               <article
                 key={comment.id}
-                className="glass-panel rounded-2xl p-4"
+                className="glass-panel admin-list-card card-hover rounded-[10px] p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>

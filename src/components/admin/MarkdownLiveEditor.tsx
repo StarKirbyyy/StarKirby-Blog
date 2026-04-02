@@ -828,7 +828,7 @@ export function MarkdownLiveEditor({
         className="hidden"
         onChange={onImageInputChange}
       />
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="admin-editor-toolbar flex flex-wrap items-center gap-2">
         <button
           type="button"
           disabled={disabled}
@@ -996,7 +996,7 @@ export function MarkdownLiveEditor({
               onKeyDown={onEditorKeyDown}
               rows={22}
               disabled={disabled}
-              className="h-[560px] w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="admin-editor-shell h-[560px] w-full border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none ring-accent/30 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
             />
             <p className="mt-2 text-xs text-muted-fg">
               快捷键：Ctrl/Cmd+B 加粗，Ctrl/Cmd+I 斜体，Ctrl/Cmd+K 链接，Ctrl/Cmd+Shift+K 代码块。
@@ -1005,7 +1005,7 @@ export function MarkdownLiveEditor({
         ) : null}
 
         {viewMode === "split" || viewMode === "preview" ? (
-          <div className="min-w-0 rounded-md border border-border bg-background p-4">
+          <div className="admin-editor-shell min-w-0 border border-border bg-background p-4">
             {previewError ? (
               <pre className="whitespace-pre-wrap text-xs text-red-700 dark:text-red-300">
                 预览编译失败：{previewError}

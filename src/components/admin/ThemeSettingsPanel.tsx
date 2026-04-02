@@ -471,9 +471,10 @@ export function ThemeSettingsPanel() {
   };
 
   return (
-    <div className="content-shell pb-10 pt-5 sm:pt-7">
-      <header className="glass-panel rounded-[10px] p-6 sm:p-7">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
+    <div className="content-shell admin-shell pb-10 pt-5 sm:pt-7">
+      <header className="glass-panel admin-hero-panel rounded-[10px] p-6 sm:p-7">
+        <p className="admin-kicker">Admin Workspace</p>
+        <h1 className="sakurairo-page-title mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
           主题设置
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-fg">
@@ -481,7 +482,7 @@ export function ThemeSettingsPanel() {
         </p>
       </header>
 
-      <section className="glass-panel mt-6 rounded-[10px] p-5 sm:p-6">
+      <section className="glass-panel admin-list-card mt-6 rounded-[10px] p-5 sm:p-6">
         {loading ? <p className="text-sm text-muted-fg">主题设置加载中...</p> : null}
 
         {!loading ? (
