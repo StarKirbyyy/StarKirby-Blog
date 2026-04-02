@@ -31,21 +31,12 @@ export function extractTableOfContents(
   const slugCount = new Map<string, number>();
   const toc: TocItem[] = [];
   let inCodeFence = false;
+  let pendingSetextHeadingText: string | null = null;
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("```")) {
-      inCodeFence = !inCodeFence;
-      continue;
-    }
-    if (inCodeFence) continue;
-
-    const match = line.match(/^(#{1,6})\s+(.+)$/);
-    if (!match) continue;
-
-    const level = match[1].length as 1 | 2 | 3 | 4 | 5 | 6;
-    const text = stripInlineMarkdown(match[2]);
-    if (!text) continue;
+  const pushTocItem = (rawLevel: number, rawText: string) => {
+    const level = Math.min(6, Math.max(1, rawLevel)) as 1 | 2 | 3 | 4 | 5 | 6;
+    const text = stripInlineMarkdown(rawText);
+    if (!text) return;
 
     const baseSlug = slugify(text);
     const duplicateIndex = slugCount.get(baseSlug) ?? 0;
@@ -53,6 +44,53 @@ export function extractTableOfContents(
     const id = duplicateIndex === 0 ? baseSlug : `${baseSlug}-${duplicateIndex}`;
 
     toc.push({ id, text, level });
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("```")) {
+      inCodeFence = !inCodeFence;
+      pendingSetextHeadingText = null;
+      continue;
+    }
+    if (inCodeFence) continue;
+
+    if (!trimmed) {
+      pendingSetextHeadingText = null;
+      continue;
+    }
+
+    const htmlHeadingMatch = trimmed.match(
+      /^<h([1-6])(?:\s[^>]*)?>([\s\S]*?)<\/h\1>\s*$/i,
+    );
+    if (htmlHeadingMatch) {
+      pushTocItem(Number(htmlHeadingMatch[1]), htmlHeadingMatch[2]);
+      pendingSetextHeadingText = null;
+      continue;
+    }
+
+    const atxHeadingMatch = line.match(/^\s{0,3}(#{1,6})\s*(.+?)\s*#*\s*$/);
+    if (atxHeadingMatch) {
+      pushTocItem(atxHeadingMatch[1].length, atxHeadingMatch[2]);
+      pendingSetextHeadingText = null;
+      continue;
+    }
+
+    // Setext heading support:
+    // Heading text
+    // ---- (h2) or ==== (h1)
+    if (/^={2,}\s*$/.test(trimmed) && pendingSetextHeadingText) {
+      pushTocItem(1, pendingSetextHeadingText);
+      pendingSetextHeadingText = null;
+      continue;
+    }
+    if (/^-{2,}\s*$/.test(trimmed) && pendingSetextHeadingText) {
+      pushTocItem(2, pendingSetextHeadingText);
+      pendingSetextHeadingText = null;
+      continue;
+    }
+
+    pendingSetextHeadingText = trimmed;
   }
 
   return toc;
