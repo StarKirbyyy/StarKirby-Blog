@@ -9,6 +9,7 @@ interface MdxLightboxImageProps {
   width: number;
   height: number;
   isRemote: boolean;
+  useNativeImage?: boolean;
 }
 
 export function MdxLightboxImage({
@@ -17,6 +18,7 @@ export function MdxLightboxImage({
   width,
   height,
   isRemote,
+  useNativeImage = false,
 }: MdxLightboxImageProps) {
   const [open, setOpen] = useState(false);
 
@@ -44,15 +46,27 @@ export function MdxLightboxImage({
         data-mdx-image="true"
         aria-label={alt ? `查看大图：${alt}` : "查看图片大图"}
       >
-        <Image
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          sizes="(min-width: 1024px) 768px, 100vw"
-          className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"
-          unoptimized={isRemote}
-        />
+        {useNativeImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"
+            loading="lazy"
+          />
+        ) : (
+          <Image
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            sizes="(min-width: 1024px) 768px, 100vw"
+            className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"
+            unoptimized={isRemote}
+          />
+        )}
         <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-black/65 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
           点击放大
         </span>
@@ -78,16 +92,28 @@ export function MdxLightboxImage({
             className="w-full max-w-5xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <Image
-              src={src}
-              alt={alt}
-              width={width}
-              height={height}
-              sizes="100vw"
-              className="mx-auto h-auto max-h-[85vh] w-auto"
-              unoptimized={isRemote}
-              priority
-            />
+            {useNativeImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={src}
+                alt={alt}
+                width={width}
+                height={height}
+                className="mx-auto h-auto max-h-[85vh] w-auto"
+                loading="eager"
+              />
+            ) : (
+              <Image
+                src={src}
+                alt={alt}
+                width={width}
+                height={height}
+                sizes="100vw"
+                className="mx-auto h-auto max-h-[85vh] w-auto"
+                unoptimized={isRemote}
+                priority
+              />
+            )}
             {alt ? (
               <p className="mt-3 text-center text-sm text-white/90">{alt}</p>
             ) : null}
