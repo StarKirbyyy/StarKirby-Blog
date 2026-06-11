@@ -15,6 +15,7 @@ function formatDate(input: string) {
 }
 
 export function HomePostThumbCard({ post }: HomePostThumbCardProps) {
+  const downloadHref = `/api/posts/${encodeURIComponent(post.slug)}/download`;
   const viewCountText =
     typeof post.viewCount === "number"
       ? `浏览量 ${post.viewCount.toLocaleString("zh-CN")}`
@@ -69,6 +70,16 @@ export function HomePostThumbCard({ post }: HomePostThumbCardProps) {
           <p>{post.description}</p>
         </div>
       </Link>
+
+      <a
+        href={downloadHref}
+        download
+        aria-label={`下载 Markdown：${post.title}`}
+        title="下载 Markdown"
+        className="absolute bottom-4 right-4 z-[7] inline-flex h-8 items-center rounded-full border border-white/65 bg-white/78 px-3 text-xs font-medium text-black/80 shadow-sm backdrop-blur transition-colors hover:border-white hover:text-accent focus:outline-none focus:ring-2 focus:ring-white/55 dark:border-white/25 dark:bg-black/56 dark:text-white/90 dark:hover:text-accent"
+      >
+        下载 MD
+      </a>
     </article>
   );
 }

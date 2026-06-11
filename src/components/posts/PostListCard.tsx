@@ -17,6 +17,7 @@ function formatDate(date: string) {
 
 export function PostListCard({ post, href }: PostListCardProps) {
   const target = href ?? `/posts/${encodeURIComponent(post.slug)}`;
+  const downloadHref = `/api/posts/${encodeURIComponent(post.slug)}/download`;
   const hasCover = Boolean(post.cover);
   const tags = post.tags ?? [];
   const viewCountText =
@@ -48,10 +49,10 @@ export function PostListCard({ post, href }: PostListCardProps) {
       <Link
         href={target}
         aria-label={`阅读：${post.title}`}
-        className="relative z-10 flex h-full w-full flex-col justify-between p-4"
+        className="relative z-10 flex h-full w-full flex-col justify-between p-4 pr-28"
       >
         <div>
-          <div className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-surface-soft px-2 py-1 text-xs text-muted-fg">
+          <div className="inline-flex max-w-[calc(100%-7rem)] items-center gap-2 overflow-hidden rounded-md border border-border/70 bg-surface-soft px-2 py-1 text-xs text-muted-fg">
             <span>{formatDate(post.date)}</span>
             <span>·</span>
             <span>{post.readingTime}</span>
@@ -83,6 +84,16 @@ export function PostListCard({ post, href }: PostListCardProps) {
           </div>
         ) : null}
       </Link>
+
+      <a
+        href={downloadHref}
+        download
+        aria-label={`下载 Markdown：${post.title}`}
+        title="下载 Markdown"
+        className="absolute right-3 top-3 z-20 inline-flex h-8 items-center rounded-full border border-border/70 bg-surface/88 px-3 text-xs font-medium text-muted-fg shadow-sm backdrop-blur transition-colors hover:border-accent/45 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/35"
+      >
+        下载 MD
+      </a>
 
       {hasCover ? (
         <div className="relative z-[1] hidden w-[42%] overflow-hidden md:block">

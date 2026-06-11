@@ -122,6 +122,7 @@ export default async function PostDetailPage({ params }: PageProps) {
       ? allPosts[currentIndex + 1]
       : null;
   const tocItems = [{ id: "post-top", text: post.title, level: 1 as const }, ...toc];
+  const downloadHref = `/api/posts/${encodeURIComponent(post.slug)}/download`;
   const postUrl = toAbsoluteUrl(`/posts/${encodeURIComponent(post.slug)}`);
   const ogImageUrl = toAbsoluteUrl(
     `/posts/${encodeURIComponent(post.slug)}/opengraph-image`,
@@ -209,6 +210,15 @@ export default async function PostDetailPage({ params }: PageProps) {
                       : currentMeta?.viewCount
                   }
                 />
+                <span>·</span>
+                <a
+                  href={downloadHref}
+                  download
+                  aria-label={`下载 Markdown：${post.title}`}
+                  className="inline-flex rounded-full border border-white/45 bg-white/14 px-3 py-1 text-sm font-medium text-white transition-colors hover:border-white/70 hover:bg-white/22 focus:outline-none focus:ring-2 focus:ring-white/55"
+                >
+                  下载 MD
+                </a>
               </div>
             </div>
           </div>
